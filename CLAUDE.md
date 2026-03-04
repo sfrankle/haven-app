@@ -20,6 +20,19 @@ npx eslint . --ext .ts,.tsx  # lint
 npm test -- --ci        # unit tests
 ```
 
+## Where things live
+
+| What | Where |
+|------|-------|
+| Product vision, principles, tab map | `docs/vision.md` |
+| Entry type definitions, label vocabulary | `docs/data/entry-types.md` |
+| Database schema | `docs/data/schema.md` |
+| Architectural decisions | `docs/decisions.md` |
+| Roadmap and milestone scope | GitHub Milestones |
+| User stories and acceptance criteria | GitHub Issues |
+| Implementation details | Code + PR descriptions |
+| Changelog | `docs/changelog.md` — one row per code-changing PR |
+
 ## Development workflow
 Read `.claude/SDLC_Workflow.md` before starting any implementation work. It covers the full issue-driven workflow, PR conventions, testing philosophy, and definition of done.
 
