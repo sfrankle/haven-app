@@ -11,6 +11,9 @@ Default to taps over typing. Surface recent and frequent options first. Keep pri
 **One primary action per screen.**
 Each screen has a single dominant purpose. Secondary actions are visually quiet and optional.
 
+**No setup before first use.**
+First launch goes straight to Tend with sensible defaults. No onboarding wizard, no required configuration. Users can adjust preferences in Settings whenever they choose.
+
 **Insights are pull, not push.**
 Users opt into insights in Weave. Do not inject analytics into the Tend logging flow.
 
