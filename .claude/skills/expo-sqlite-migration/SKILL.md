@@ -22,7 +22,7 @@ When a schema change is needed, follow these steps in order:
    - Assert the schema is correct AND the original data is intact
    - Assert no user rows were deleted, overwritten, or corrupted
 
-6. **Commit a schema snapshot** — export the current schema as a JSON or SQL file in `docs/schema/` so migrations are reviewable in diffs
+6. **Commit a schema snapshot** — export the current schema in `docs/data/schema.sql` so migrations are reviewable in diffs
 
 7. **Run all migration tests** and confirm they pass before opening the PR
 

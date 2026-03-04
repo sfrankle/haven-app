@@ -72,7 +72,7 @@ gh issue create \
   --title "<title>" \
   --milestone "<MILESTONE TITLE>" \
   --label "technical-task,<area-label>,ai-authored" \
-  --body "
+  --body "<TEMPLATE>"
 ```
 
 ### 8. Set blocking relationships between technical tasks

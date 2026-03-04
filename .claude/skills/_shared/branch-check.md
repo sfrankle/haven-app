@@ -1,7 +1,5 @@
 # Branch Check
 
-Shared procedure used by `next-task` and `work-technical-task` before starting any new work.
-
 ## Steps
 
 ```bash
