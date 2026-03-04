@@ -1,0 +1,14 @@
+appId: com.haven.app
+---
+- launchApp
+- assertVisible: "Tend"
+- tapOn: "Trace"
+- assertVisible: "Trace"
+- tapOn: "Weave"
+- assertVisible: "Weave"
+- tapOn: "Anchor"
+- assertVisible: "Anchor"
+- tapOn: "Settings"
+- assertVisible: "Settings"
+- tapOn: "Tend"
+- assertVisible: "Tend"
