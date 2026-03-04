@@ -54,7 +54,6 @@ Haven uses an issue-driven development workflow. All work flows through GitHub I
    - PRs that **only** update Claude instructions or docs do not need a related issue
 5. Claude dispatches **`haven-reviewer`** when implementation is complete
 6. Human reviews; Claude uses **`superpowers:receiving-code-review`** to process feedback
-   - TODO: add a `haven-review-feedback` skill to coordinate receiving and actioning review feedback
 7. Human merges; Claude checks out main and pulls
 8. **User stories are closed manually** by the human after all contributing technical tasks are merged
 
