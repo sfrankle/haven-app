@@ -1,0 +1,4 @@
+# Implementation plans are local-only — never committed
+docs/plans/
+
+.claude/local/
