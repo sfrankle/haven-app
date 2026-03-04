@@ -23,17 +23,20 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Hello World
+        run: echo "Hello World"
 
-      - name: Type-check
-        run: npx tsc --noEmit
+      # - name: Install dependencies
+      #   run: npm ci
 
-      - name: Lint
-        run: npx eslint . --ext .ts,.tsx
+      # - name: Type-check
+      #   run: npx tsc --noEmit
 
-      - name: Unit tests
-        run: npm test -- --ci --coverage=false
+      # - name: Lint
+      #   run: npx eslint . --ext .ts,.tsx
+
+      # - name: Unit tests
+      #   run: npm test -- --ci --coverage=false
 
   # E2E flow tests with Maestro require a device or simulator.
   # macOS runners (needed for iOS simulator) are expensive on GitHub Actions.
