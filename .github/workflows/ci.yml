@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.claude/**'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Type-check, Lint, Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint . --ext .ts,.tsx
+
+      - name: Unit tests
+        run: npm test -- --ci --coverage=false
+
+  # E2E flow tests with Maestro require a device or simulator.
+  # macOS runners (needed for iOS simulator) are expensive on GitHub Actions.
+  # Options when ready to enable:
+  #   - Maestro Cloud (maestro.mobile.dev) — managed runners, pay per run
+  #   - Self-hosted macOS runner
+  #   - Android emulator on ubuntu-latest (cheaper, Android-only)
+  #
+  # e2e:
+  #   name: Flow Tests (Maestro)
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Install Maestro
+  #       run: curl -Ls "https://get.maestro.mobile.dev" | bash
+  #     - name: Run flows
+  #       run: maestro test .maestro/
