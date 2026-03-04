@@ -41,6 +41,7 @@ Haven is private-first — all data stays on device. Flag immediately:
 - PR must reference a user story: `Contributes to #M` — never `Closes` on user stories
 - Exception: PRs that only update Claude instructions or docs do not need issue references
 - `docs/changelog.md` must have exactly 1 new row for this PR
+- Exception: PRs that only update Claude instructions or docs do not need a changelog update
 - If schema changed, verify a schema snapshot was committed to `docs/schema/`
 
 ## What to Report
@@ -53,3 +54,13 @@ Flag only real issues. Do not nitpick style. Focus on:
 - Missing workflow artifacts (changelog, issue references)
 
 Be specific: cite the file, line, and the rule being violated. Suggest a fix where possible.
+
+## Output
+
+Post findings as an advisory comment directly on the PR. Determine the PR number from the current branch using `gh pr view --json number -q .number`, then post:
+
+```bash
+gh pr review <PR_NUMBER> --comment --body "..."
+```
+
+Format the comment as a markdown list grouped by category (Privacy, Data Safety, Design, Architecture, Workflow). If no issues are found, still post a comment confirming the review passed with no concerns.
