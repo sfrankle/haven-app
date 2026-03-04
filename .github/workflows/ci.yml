@@ -20,22 +20,19 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20.19'
 
-      - name: Hello World
-        run: echo "Hello World"
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
 
-      # - name: Install dependencies
-      #   run: npm ci
+      - name: Type-check
+        run: npx tsc --noEmit
 
-      # - name: Type-check
-      #   run: npx tsc --noEmit
+      - name: Lint
+        run: npx eslint . --ext .ts,.tsx
 
-      # - name: Lint
-      #   run: npx eslint . --ext .ts,.tsx
-
-      # - name: Unit tests
-      #   run: npm test -- --ci --coverage=false
+      - name: Unit tests
+        run: npm test -- --ci --coverage=false
 
   # E2E flow tests with Maestro require a device or simulator.
   # macOS runners (needed for iOS simulator) are expensive on GitHub Actions.

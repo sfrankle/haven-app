@@ -34,12 +34,12 @@ Use semantic colors at low opacity for backgrounds (tinted wash + ink text), not
 
 ### Dark Mode
 
-| Role | Value |
-|------|-------|
-| Background | `#1B0F22` |
-| Surface | `#24142D` |
-| Text | `#FFF3E6` (base warm) |
-| Secondary text | `#FFF3E6` at 78% opacity |
+| Token | Value | Name | Role |
+|-------|-------|------|------|
+| `background` | #1B0F22 | Deep Plum Night | App background (dark mode default) |
+| `surface` | #24142D | Plum Surface | Cards, sheets, modals on top of dark background |
+| `text` | #FFF3E6 | Warm Ivory | Primary text on dark surfaces (body + headings) |
+| `textSecondary` | rgba(255,243,230,0.78) | Soft Ivory | Secondary/meta text (timestamps, helper text, labels) |
 
 ### Brand Gradient
 
