@@ -1,60 +1,101 @@
 # Haven Visual Style
 
-Version: 1.0
+Version: 1.1
 Scope: Color tokens, typography, component patterns, and motion.
 
 ## Color System
 
-Palette derived directly from the app icon. The cool tones (indigo, teal, plum) are dominant; warm tones (rose, yellow) are accents. Cohesion comes from usage discipline — let the cool family carry the UI, warm tones appear rarely and intentionally.
+Palette derived directly from the app icon. The cool tones (indigo, teal, plum) are dominant; warm tones (peach, yellow) are accents. Cohesion comes from usage discipline — let the cool family carry the UI, warm tones appear rarely and intentionally.
 
 ### Core Palette
 
 | Token | Value | Name | Role |
 |-------|-------|------|------|
-| `primary` | `#4F557D` | dusty grape | Main buttons, active states, key UI elements |
+| `ink` | `#361B45` | deep plum | All body text, headings, nav — the primary ink color |
+| `interactive` | `#3B4E77` | night sky | Buttons, links, selected states, key interactive elements |
 | `secondary` | `#7393A1` | air force blue | Supporting elements, quieter chrome |
-| `tertiary` | `#EFC5BB` | almond silk | Warm highlights, gentle accents |
-| `accent` | `#FEEFBA` | vanilla custard | Sparse warmth — use like a candle, not a floodlight |
-| `error` | `#AE4C56` | dusty mauve | Error and alert states only |
-| `background` | `#F4F2F8` | ghost white | Screen backgrounds (light mode default) |
-| `surfaceVariant` | `#EAE7F0` | — | Card and container surfaces |
-| `onBackground` | `#462048` | blackberry cream | Primary text color |
-| Dark surface | `#462048` | blackberry cream | Dark mode backgrounds — not pure black |
+| `background` | `#FFF3E6` | base warm | Screen backgrounds (light mode default) |
+| `surface` | `#FFFFFF` | white | Cards and sheet surfaces on top of background |
+| `surfaceVariant` | `rgba(59,78,119,0.06)` | sky wash | Grouped sections, secondary surfaces |
+| `glow` | `#F6C7B9` | glow peach | Warm accent — focus rings, insight highlights, gentle warmth |
+| `accent` | `#FEEFBA` | vanilla custard | Warmest accent — use like candlelight, very sparingly |
+
+### Semantic Colors
+
+Always pair with an icon and label — never rely on color alone.
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `success` | `#2F6F62` | Confirmation states |
+| `warning` | `#A6712A` | Caution states |
+| `error` | `#9B3A4A` | Error states only |
+
+Use semantic colors at low opacity for backgrounds (tinted wash + ink text), not as solid fills.
+
+### Dark Mode
+
+| Role | Value |
+|------|-------|
+| Background | `#1B0F22` |
+| Surface | `#24142D` |
+| Text | `#FFF3E6` (base warm) |
+| Secondary text | `#FFF3E6` at 78% opacity |
 
 ### Brand Gradient
 
 For icon and hero use only: `#EFC5BB` → `#4F557D` → `#7393A1`
 
-### Usage guidance
+### Usage Guidance
 
-- Haven is light mode by default; dark mode uses `#462048`-family surfaces
-- 60% neutral surfaces (`background`, `surfaceVariant`)
-- 30% cool brand tones (`primary`, `secondary`)
-- 10% warm accents (`tertiary`, `accent`) — keep them meaningful and rare
-- `error` (`#AE4C56`) appears only for genuine errors, never for style
+- Haven is light mode by default
+- 60% neutral surfaces (`background`, `surface`)
+- 30% cool brand tones (`interactive`, `secondary`)
+- 10% warm accents (`glow`, `accent`) — keep meaningful and rare
+- Semantic colors appear only for their intended states, never decoratively
 
 ## Typography
 
-Primary font family: **Philosopher** — bundled locally in `app/src/main/res/font/`.
+Two font families:
 
-Decision: V1 is locked to Philosopher for brand voice consistency. Inter and Plus Jakarta Sans are noted alternatives but are not current defaults.
+| Family | Role | Source |
+|--------|------|--------|
+| **Philosopher** | Display, headlines, titles | Bundled locally — the brand voice, use for magic moments |
+| **Lexend** | Body, labels, UI text | Bundled locally — optimised for readability at small sizes |
 
-| Role | Weight |
-|------|--------|
-| Display / Headline / Title | Philosopher Bold |
-| Body / Label | Philosopher Regular |
+| Text role | Family | Weight |
+|-----------|--------|--------|
+| Display / H1 / H2 | Philosopher | Bold |
+| H3 / prominent labels | Philosopher | Regular |
+| Body / caption / meta | Lexend | Regular |
+| UI labels / buttons | Lexend | Medium |
 
 - Follow Material 3 type scale sizing
-- Slightly increase letter spacing on large headers where readability benefits
-- Favor readability over stylization
+- Body text: minimum 16sp, line-height 1.5–1.65
+- Max line length for notes/body: 60–75 characters
+- Avoid ultra-light weights
+- Philosopher carries the brand's reflective quality — reserve it for moments that earn it
+
+## Data Visualisation
+
+For pattern charts and correlation displays (Weave):
+
+- Grid/axis lines: `ink` at 10% opacity
+- Primary data series: `interactive` (`#3B4E77`)
+- Highlight / insight points: `glow` (`#F6C7B9`)
+- "Today" marker: ink text + glow halo
+- Never use more than one warm highlight per chart — it keeps the moment special
 
 ## Components
 
-**Buttons:** pill-shaped or large-rounded corners; calm contrast, no aggressive saturated fills.
+**Buttons (primary):** `interactive` fill, `background` text, pill-shaped or large-rounded corners.
 
-**Cards:** rounded corners, subtle elevation only, spacious internal padding.
+**Buttons (secondary):** transparent fill, `ink` border at 22% opacity, `ink` text.
+
+**Cards:** rounded corners, subtle elevation only, spacious internal padding, `surface` background.
 
 **Entry type grid:** rounded tiles, clear icon + label, consistent height and touch targets.
+
+**Focus rings:** `glow` (`#F6C7B9`) — feels warm and safe rather than alarming.
 
 ## Motion
 
@@ -69,4 +110,5 @@ Do not introduce:
 - Gamified visuals (trophies, streak flames, confetti)
 - Character mascots
 - Dense dashboards on primary logging screens
-- Red or warning tones for non-error states
+- Semantic colors used decoratively
+- Ultra-light font weights

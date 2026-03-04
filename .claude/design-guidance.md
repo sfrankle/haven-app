@@ -20,7 +20,11 @@ Specific failure modes:
 
 ## Typography
 
-Philosopher is Haven's brand font. It is bundled locally. Use it. Do not substitute.
+Haven uses two fonts — both bundled locally:
+- **Philosopher** for display, headlines, and titles — the brand voice, reserved for moments that earn it
+- **Lexend** for body text, UI labels, and captions — optimised for readability
+
+Do not substitute either. Philosopher is magical but should not carry every text element — that's what Lexend is for.
 
 ## Motion (React Native)
 
