@@ -6,7 +6,7 @@ Scope: Frontend design principles to follow when building Haven UI.
 
 Haven has a defined visual identity. Always follow the palette, typography, and component patterns in `docs/design/visual-style.md` before making any visual decisions. Do not invent new colors or fonts.
 
-Haven's muted mauve (`#A77CA4`) is an intentional brand color and should be used. The caution below about purple applies to generic, saturated purple-on-white — not Haven's palette.
+Haven's palette is derived from the app icon — cool indigo/teal/plum tones dominant, warm rose/yellow as rare accents. The primary color is `#4F557D` (dusty grape). The caution below about purple applies to generic, saturated purple-on-white — not Haven's palette.
 
 ## Avoid Generic AI Aesthetics
 

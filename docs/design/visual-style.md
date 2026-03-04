@@ -5,27 +5,33 @@ Scope: Color tokens, typography, component patterns, and motion.
 
 ## Color System
 
+Palette derived directly from the app icon. The cool tones (indigo, teal, plum) are dominant; warm tones (rose, yellow) are accents. Cohesion comes from usage discipline — let the cool family carry the UI, warm tones appear rarely and intentionally.
+
 ### Core Palette
 
-| Token | Value | Name |
-|-------|-------|------|
-| `primary` | `#2E2A3A` | deep night |
-| `secondary` | `#7FA38A` | dusty sage |
-| `tertiary` | `#A77CA4` | muted mauve |
-| `accent` | `#F6C177` | warm glow |
-| `background` | `#F4F1F3` | soft fog |
-| `surfaceVariant` | `#EAE6EB` | — |
+| Token | Value | Name | Role |
+|-------|-------|------|------|
+| `primary` | `#4F557D` | dusty grape | Main buttons, active states, key UI elements |
+| `secondary` | `#7393A1` | air force blue | Supporting elements, quieter chrome |
+| `tertiary` | `#EFC5BB` | almond silk | Warm highlights, gentle accents |
+| `accent` | `#FEEFBA` | vanilla custard | Sparse warmth — use like a candle, not a floodlight |
+| `error` | `#AE4C56` | dusty mauve | Error and alert states only |
+| `background` | `#F4F2F8` | ghost white | Screen backgrounds (light mode default) |
+| `surfaceVariant` | `#EAE7F0` | — | Card and container surfaces |
+| `onBackground` | `#462048` | blackberry cream | Primary text color |
+| Dark surface | `#462048` | blackberry cream | Dark mode backgrounds — not pure black |
 
 ### Brand Gradient
 
-For icon and hero use only: `#D8A7B1` → `#A77CA4` → `#5E8B8C`
+For icon and hero use only: `#EFC5BB` → `#4F557D` → `#7393A1`
 
 ### Usage guidance
 
-- 60% neutral surfaces
-- 30% muted brand tones
-- 10% accent — keep warm accent meaningful and rare
-- Dark mode: deep charcoal/navy surfaces, no pure black primaries
+- Haven is light mode by default; dark mode uses `#462048`-family surfaces
+- 60% neutral surfaces (`background`, `surfaceVariant`)
+- 30% cool brand tones (`primary`, `secondary`)
+- 10% warm accents (`tertiary`, `accent`) — keep them meaningful and rare
+- `error` (`#AE4C56`) appears only for genuine errors, never for style
 
 ## Typography
 
