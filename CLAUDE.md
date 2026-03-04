@@ -1,7 +1,7 @@
 # Haven
 
 ## What
-Haven is a personal notebook with intelligence — a private, non-judgmental space for noticing patterns in daily life. Users log what they eat, how they feel, what they do, and how they slept. Haven quietly finds the connections. The goal isn't to tell you what to do — it's to surface the data that confirms what you already suspect.
+Haven is a personal notebook with intelligence — a private space for noticing patterns in daily life. Users log what they eat, how they feel, what they do, and how they slept. Haven quietly finds the connections. The goal isn't to tell you what to do — it's to surface the data that confirms what you already suspect.
 
 **Litmus phrase:** a spellbook you could show your doctor.
 

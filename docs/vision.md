@@ -2,7 +2,7 @@
 
 ## What it is
 
-Haven is a personal notebook with intelligence — a private, non-judgmental space for noticing patterns in daily life.
+Haven is a personal notebook with intelligence — a private space for noticing patterns in daily life.
 
 You log what you eat, how you feel, what you do, and how you slept. Haven quietly finds the connections. The goal isn't to tell you what to do — it's to surface the data that confirms what you already suspect: the things that are supposed to make you feel better actually do.
 
@@ -46,7 +46,7 @@ The logging has no value without the patterns. The patterns have no value withou
 
 ## Design principles
 
-**Non-judgmental.** No scores, no streaks, no "you missed 3 days." Missing days is fine. The app holds space without pressure.
+**No pressure.** No scores, no streaks, no "you missed 3 days." Missing days is fine. The app holds space without friction.
 
 **Calm by default.** Muted palette, minimal motion, quiet confirmations. "Saved." is enough.
 

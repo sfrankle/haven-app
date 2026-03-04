@@ -6,8 +6,6 @@ Haven is a personal notebook with intelligence — a private space for noticing 
 
 You log what you eat, how you feel, what you do, and how you slept. Haven quietly finds the connections. The goal isn't to tell you what to do — it's to show you the data that confirms what you already suspect: the things that are supposed to make you feel better actually do.
 
-Built first for one specific person, designed to work for others too.
-
 ---
 
 ## What it does
@@ -32,7 +30,7 @@ Every entry type is reachable in three taps or fewer. The app finds correlations
 
 ## Design philosophy
 
-- **Non-judgmental.** No scores, no streaks, no "you missed 3 days." Missing days is fine.
+- **No pressure.** No scores, no streaks, no reminders that you missed a day.
 - **Calm by default.** Muted palette, minimal motion, quiet confirmations.
 - **Tap-first.** Quick selections over typing. Recent and frequent options surface automatically.
 - **Exploration over prescription.** Insights are observations: *"You logged bloating 7/10 times after dairy."* Never: *"You should cut dairy."*

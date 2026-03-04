@@ -5,7 +5,7 @@ Scope: Brand essence, voice, microcopy rules, privacy language, and accessibilit
 
 ## Brand Essence
 
-Haven is a private, non-judgmental space for noticing patterns in daily life.
+Haven is a private space for noticing patterns in daily life.
 
 Design adjectives: safe, airy, grounding, reliable, reflective.
 
