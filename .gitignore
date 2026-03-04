@@ -2,3 +2,31 @@
 docs/plans/
 
 .claude/local/
+
+# Expo / React Native
+node_modules/
+.expo/
+dist/
+web-build/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+.idea/
+android/
+ios/
+
+# macOS
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Typescript
+*.tsbuildinfo
