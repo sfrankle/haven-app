@@ -11,14 +11,14 @@ Palette derived directly from the app icon. The cool tones (indigo, teal, plum) 
 
 | Token | Value | Name | Role |
 |-------|-------|------|------|
-| `ink` | `#361B45` | deep plum | All body text, headings, nav — the primary ink color |
-| `interactive` | `#3B4E77` | night sky | Buttons, links, selected states, key interactive elements |
-| `secondary` | `#7393A1` | air force blue | Supporting elements, quieter chrome |
-| `background` | `#FFF3E6` | base warm | Screen backgrounds (light mode default) |
-| `surface` | `#FFFFFF` | white | Cards and sheet surfaces on top of background |
-| `surfaceVariant` | `rgba(59,78,119,0.06)` | sky wash | Grouped sections, secondary surfaces |
-| `glow` | `#F6C7B9` | glow peach | Warm accent — focus rings, insight highlights, gentle warmth |
-| `accent` | `#FEEFBA` | vanilla custard | Warmest accent — use like candlelight, very sparingly |
+| `ink` | #361B45 | Deep Plum | Primary ink for all text (body + headings), core icons, nav labels |
+| `interactive` | #3B4E77 | Night Sky | Primary buttons, links, selected states, active tab/icon, key interactive UI |
+| `chrome` | #7393A1 | Air Force Blue | Quiet supporting UI (inactive icons, subtle illustrations, large low-contrast fills); **not** for body text |
+| `background` | #FFF3E6 | Base Warm | Default screen background (light mode), reduces glare and adds grounded warmth |
+| `surface` | #FFFFFF | Paper White | Cards, sheets, modals sitting on `background` |
+| `surfaceVariant` | rgba(59,78,119,0.06) | Sky Wash | Grouped sections, secondary panels, subtle containers (very light tint) |
+| `glow` | #F6C7B9 | Glow Peach | Warm emotional accent: focus rings, insight highlights, “saved” warmth moments (sparingly) |
+| `candlelight` | #FEEFBA | Vanilla Custard | Ultra-sparing sparkle/candlelight: constellation dots, micro-badges, tiny highlights (never for buttons/text) |
 
 ### Semantic Colors
 
@@ -26,9 +26,9 @@ Always pair with an icon and label — never rely on color alone.
 
 | Token | Value | Use |
 |-------|-------|-----|
-| `success` | `#2F6F62` | Confirmation states |
-| `warning` | `#A6712A` | Caution states |
-| `error` | `#9B3A4A` | Error states only |
+| `success` | #2F6F62 | Confirmation states |
+| `warning` | #A6712A | Caution states |
+| `error` | #9B3A4A | Error states only |
 
 Use semantic colors at low opacity for backgrounds (tinted wash + ink text), not as solid fills.
 
