@@ -5,7 +5,7 @@
  * separately so the schema-integrity test can execute it directly with
  * better-sqlite3 (Node-native) without requiring the expo-sqlite native module.
  *
- * The `migrations` array is consumed by migrateDbIfNeededAsync in database.ts.
+ * The `migrations` array is consumed by the custom migration runner in database.ts.
  * Index 0 = version 1, index 1 = version 2, etc.
  */
 
