@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "expo": "~55.0.4",
+    "expo-font": "~55.0.4",
     "expo-router": "~55.0.3",
+    "expo-splash-screen": "~55.0.10",
     "expo-status-bar": "~55.0.4",
     "react": "19.2.0",
     "react-native": "0.83.2",
@@ -22,10 +24,38 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.2.2",
+    "babel-preset-expo": "^55.0.10",
     "eslint": "^8.57.1",
     "eslint-config-expo": "^55.0.0",
+    "jest": "^30.2.0",
+    "jest-expo": "^55.0.9",
     "typescript": "~5.9.2"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "testEnvironmentOptions": {},
+    "projects": [
+      {
+        "displayName": "node",
+        "testEnvironment": "node",
+        "testMatch": [
+          "<rootDir>/src/**/__tests__/**/*.test.ts"
+        ],
+        "transform": {
+          "^.+\\.(ts|tsx)$": "babel-jest"
+        }
+      },
+      {
+        "displayName": "ios",
+        "preset": "jest-expo/ios",
+        "testMatch": [
+          "<rootDir>/app/**/__tests__/**/*.test.{ts,tsx}",
+          "<rootDir>/__tests__/**/*.test.{ts,tsx}"
+        ]
+      }
+    ]
   },
   "private": true
 }
