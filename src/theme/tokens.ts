@@ -47,8 +47,10 @@ export const brandGradient = ['#EFC5BB', '#4F557D', '#7393A1'] as const;
 // ---------------------------------------------------------------------------
 
 export const fontFamilies = {
-  philosopher: 'Philosopher',
-  lexend:      'Lexend',
+  philosopher:     'Philosopher',
+  philosopherBold: 'Philosopher-Bold',
+  lexend:          'Lexend',
+  lexendMedium:    'Lexend-Medium',
 } as const;
 
 export const fontWeights = {
@@ -70,13 +72,13 @@ export const fontWeights = {
 export const typeScale = {
   // Display — Philosopher Bold — hero moments only
   displayLarge: {
-    family:               fontFamilies.philosopher,
+    family:               fontFamilies.philosopherBold,
     weight:               fontWeights.bold,
     size:                 57,
     lineHeightMultiplier: 1.12,
   },
   displayMedium: {
-    family:               fontFamilies.philosopher,
+    family:               fontFamilies.philosopherBold,
     weight:               fontWeights.bold,
     size:                 45,
     lineHeightMultiplier: 1.15,
@@ -84,13 +86,13 @@ export const typeScale = {
 
   // Headlines — Philosopher Bold
   headlineLarge: {
-    family:               fontFamilies.philosopher,
+    family:               fontFamilies.philosopherBold,
     weight:               fontWeights.bold,
     size:                 32,
     lineHeightMultiplier: 1.25,
   },
   headlineMedium: {
-    family:               fontFamilies.philosopher,
+    family:               fontFamilies.philosopherBold,
     weight:               fontWeights.bold,
     size:                 28,
     lineHeightMultiplier: 1.28,
@@ -132,19 +134,19 @@ export const typeScale = {
 
   // Labels / UI — Lexend Medium — buttons, nav labels, form fields
   labelLarge: {
-    family:               fontFamilies.lexend,
+    family:               fontFamilies.lexendMedium,
     weight:               fontWeights.medium,
     size:                 14,
     lineHeightMultiplier: 1.42,
   },
   labelMedium: {
-    family:               fontFamilies.lexend,
+    family:               fontFamilies.lexendMedium,
     weight:               fontWeights.medium,
     size:                 12,
     lineHeightMultiplier: 1.33,
   },
   labelSmall: {
-    family:               fontFamilies.lexend,
+    family:               fontFamilies.lexendMedium,
     weight:               fontWeights.medium,
     size:                 11,
     lineHeightMultiplier: 1.45,

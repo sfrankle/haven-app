@@ -40,7 +40,7 @@ describe('typeScale', () => {
     expect(entry.size).toBeGreaterThan(0);
   });
 
-  it('body sizes are at least 16sp per brand spec', () => {
+  it('bodyLarge is at least 16sp per brand spec', () => {
     // visual-style.md: "Body text: minimum 16sp"
     expect(typeScale.bodyLarge.size).toBeGreaterThanOrEqual(16);
   });
@@ -56,9 +56,11 @@ describe('spacing', () => {
 });
 
 describe('fontFamilies', () => {
-  it('uses Philosopher and Lexend', () => {
+  it('exports all four font keys matching useFonts aliases', () => {
     expect(fontFamilies.philosopher).toBe('Philosopher');
+    expect(fontFamilies.philosopherBold).toBe('Philosopher-Bold');
     expect(fontFamilies.lexend).toBe('Lexend');
+    expect(fontFamilies.lexendMedium).toBe('Lexend-Medium');
   });
 });
 
