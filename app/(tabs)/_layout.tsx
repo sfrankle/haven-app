@@ -1,17 +1,14 @@
 import { Tabs } from 'expo-router';
-
-const TAB_ACTIVE = '#3B4E77';
-const TAB_INACTIVE = '#7393A1';
-const TAB_BG = '#FFFFFF';
+import { colors } from '../../constants/theme';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: TAB_ACTIVE,
-        tabBarInactiveTintColor: TAB_INACTIVE,
-        tabBarStyle: { backgroundColor: TAB_BG },
+        tabBarActiveTintColor: colors.interactive,
+        tabBarInactiveTintColor: colors.chrome,
+        tabBarStyle: { backgroundColor: colors.surface },
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Tend' }} />

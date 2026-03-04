@@ -34,28 +34,7 @@
     "typescript": "~5.9.2"
   },
   "jest": {
-    "preset": "jest-expo",
-    "testEnvironmentOptions": {},
-    "projects": [
-      {
-        "displayName": "node",
-        "testEnvironment": "node",
-        "testMatch": [
-          "<rootDir>/src/**/__tests__/**/*.test.ts"
-        ],
-        "transform": {
-          "^.+\\.(ts|tsx)$": "babel-jest"
-        }
-      },
-      {
-        "displayName": "ios",
-        "preset": "jest-expo/ios",
-        "testMatch": [
-          "<rootDir>/app/**/__tests__/**/*.test.{ts,tsx}",
-          "<rootDir>/__tests__/**/*.test.{ts,tsx}"
-        ]
-      }
-    ]
+    "preset": "jest-expo"
   },
   "private": true
 }
