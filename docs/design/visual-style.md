@@ -11,14 +11,14 @@ Palette derived directly from the app icon. The cool tones (indigo, teal, plum) 
 
 | Token | Value | Name | Role |
 |-------|-------|------|------|
-| `ink` | #361B45 | Deep Plum | Primary ink for all text (body + headings), core icons, nav labels |
-| `interactive` | #3B4E77 | Night Sky | Primary buttons, links, selected states, active tab/icon, key interactive UI |
-| `chrome` | #7393A1 | Air Force Blue | Quiet supporting UI (inactive icons, subtle illustrations, large low-contrast fills); **not** for body text |
-| `background` | #FFF3E6 | Base Warm | Default screen background (light mode), reduces glare and adds grounded warmth |
-| `surface` | #FFFFFF | Paper White | Cards, sheets, modals sitting on `background` |
-| `surfaceVariant` | rgba(59,78,119,0.06) | Sky Wash | Grouped sections, secondary panels, subtle containers (very light tint) |
-| `glow` | #F6C7B9 | Glow Peach | Warm emotional accent: focus rings, insight highlights, “saved” warmth moments (sparingly) |
-| `candlelight` | #FEEFBA | Vanilla Custard | Ultra-sparing sparkle/candlelight: constellation dots, micro-badges, tiny highlights (never for buttons/text) |
+| `ink` | <div style="width:40px;height:20px;background:#361B45;border-radius:4px;"></div> #361B45 | Deep Plum | Primary ink for all text (body + headings), core icons, nav labels |
+| `interactive` | <div style="width:40px;height:20px;background:#3B4E77;border-radius:4px;"></div> #3B4E77 | Night Sky | Primary buttons, links, selected states, active tab/icon, key interactive UI |
+| `chrome` |<div style="width:40px;height:20px;background:#7393A1;border-radius:4px;"></div> #7393A1 | Air Force Blue | Quiet supporting UI (inactive icons, subtle illustrations, large low-contrast fills); **not** for body text |
+| `background` |<div style="width:40px;height:20px;background:#FFF3E6;border-radius:4px;"></div> #FFF3E6 | Base Warm | Default screen background (light mode), reduces glare and adds grounded warmth |
+| `surface` |<div style="width:40px;height:20px;background:#FFFFFF;border-radius:4px;"></div> #FFFFFF | Paper White | Cards, sheets, modals sitting on `background` |
+| `surfaceVariant` |<div style="width:40px;height:20px;background:rgba(59,78,119,0.06);border-radius:4px;"></div> rgba(59,78,119,0.06) | Sky Wash | Grouped sections, secondary panels, subtle containers (very light tint) |
+| `glow` |<div style="width:40px;height:20px;background:#F6C7B9;border-radius:4px;"></div> #F6C7B9 | Glow Peach | Warm emotional accent: focus rings, insight highlights, “saved” warmth moments (sparingly) |
+| `candlelight` |<div style="width:40px;height:20px;background:#FEEFBA;border-radius:4px;"></div> #FEEFBA | Vanilla Custard | Ultra-sparing sparkle/candlelight: constellation dots, micro-badges, tiny highlights (never for buttons/text) |
 
 ### Semantic Colors
 
