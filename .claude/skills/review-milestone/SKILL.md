@@ -9,6 +9,8 @@ This skill is a planning review — it does not create or modify issues. It prod
 
 ## Process
 
+> For all `gh` commands, use `.claude/gh-commands.md` as the canonical reference.
+
 ### 1. Read the milestone
 
 ```bash

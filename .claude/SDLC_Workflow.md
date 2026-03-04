@@ -1,6 +1,9 @@
 ## Starting work
 
-Say **"what's next?"** — Claude runs `next-task`, which checks branch state and returns the highest-priority unblocked task. That's the entry point for every session.
+Natural language triggers for skills:
+- **"what's next?"** → Claude runs `next-task`
+- **"let's review milestone #N"** or **"is milestone #N ready?"** → Claude runs `review-milestone`
+- **"let's break down milestone #N"** → Claude runs `break-down-user-stories`
 
 ---
 
@@ -49,8 +52,9 @@ Haven uses an issue-driven development workflow. All work flows through GitHub I
    - PRs that **only** update Claude instructions or docs do not need a related issue
 4. PRs reference user stories with "Contributes to #M" — never `Closes` on user stories
    - PRs that **only** update Claude instructions or docs do not need a related issue
-5. Claude dispatches **`haven-reviewer`** (via `superpowers:requesting-code-review`) when implementation is complete
+5. Claude dispatches **`haven-reviewer`** when implementation is complete
 6. Human reviews; Claude uses **`superpowers:receiving-code-review`** to process feedback
+   - TODO: add a `haven-review-feedback` skill to coordinate receiving and actioning review feedback
 7. Human merges; Claude checks out main and pulls
 8. **User stories are closed manually** by the human after all contributing technical tasks are merged
 
@@ -67,38 +71,14 @@ Haven uses an issue-driven development workflow. All work flows through GitHub I
 ---
 
 ### Definition of Done
-A technical task is done when all of the following are true:
-- [ ] All acceptance criteria in the issue are met
-- [ ] Flow tests written or updated for any user-facing behavior (see Testing below)
-- [ ] Migration test written if any schema change was made
-- [ ] CI passes (lint, type-check, tests)
-- [ ] `docs/changelog.md` has an entry for this PR
-- [ ] Relevant docs updated (`docs/decisions.md`, schema snapshots, design/, ux/) if applicable
-- [ ] No open PR comments
+Defined in `haven-implementer.md` (Quality Checklist). That is the canonical source — do not duplicate it here.
 
 ---
 
 ### Testing Philosophy
 
-**Principle:** Test user flows, not lines of code. Every user-facing behavior should have a flow test. We do not track line coverage.
+Defined in `app/CLAUDE.md`.
 
-**Flow tests (E2E):**
-- Use Maestro — declarative YAML flows that map to user-facing behavior
-- Organized by feature/flow in the codebase, not by issue number
-- Each technical task PR must include or update flow tests for any user-facing behavior it touches
-- When a feature changes an existing flow, update the existing flow test — don't add a parallel one
-
-**Data integrity tests:**
-- Every schema migration must have a test (see `expo-sqlite-migration` skill)
-- Tests must verify: schema is correct after migration AND original user data is intact
-- Data safety is non-negotiable — corrupting local user data is the worst possible outcome
-
-**Unit/integration tests:**
-- Use Jest + React Native Testing Library for component and business logic tests
-- Required for any non-trivial logic (calculations, transformations, state management)
-
-**TDD:**
-- Claude invokes **`superpowers:test-driven-development`** before writing implementation code
 
 ---
 

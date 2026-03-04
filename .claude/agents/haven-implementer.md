@@ -21,7 +21,6 @@ Before starting, confirm:
 5. **Verify** — run all checks before opening the PR (see Quality Checklist below)
 6. **Open a draft PR** with the correct references and description
 7. **Update changelog** — add 1 row to `docs/changelog.md`
-8. **Delete the local plan file** from `docs/plans/` — it is gitignored and should not linger after the PR is open
 
 ## Implementation Rules
 
@@ -31,38 +30,11 @@ Before starting, confirm:
 - Document significant architectural decisions in `docs/decisions.md`
 - No network calls, no external APIs, nothing that sends data off-device — Haven is private-first
 - No judgmental language in any user-facing string — no scores, streaks, "good"/"bad"
-- If the plan includes a schema change, follow the `expo-sqlite-migration` skill exactly
+- If the plan includes a schema change, follow the `expo-sqlite-migration` skill exactly and update `docs/data/schema.md`
 
 ## PR Format
 
-When creating a PR via CLI, always use this body format exactly (GitHub won't apply the template automatically for CLI-created PRs):
-
-```
-## Summary
-- [the goal — what this achieves]
-- [the motivation — why it's needed]
-- [the approach — how it's done]
-
-Closes #N
-Contributes to #M
-
-## What to review
-[key files, non-obvious decisions, judgment calls — skip anything mechanical]
-
-## Testing
-[what changed that needs testing and how it was tested — `N/A` if no source code changed]
-
-## Checklist
-- [ ] Acceptance criteria met
-- [ ] Flow tests (Maestro) added or updated for any user-facing behavior
-- [ ] Migration test written if schema changed
-- [ ] CI passing
-- [ ] `docs/changelog.md` updated
-- [ ] No judgmental language in UI strings
-- [ ] No network calls or off-device data transmission introduced
-```
-
-Always open as **draft**: `gh pr create --draft`
+When creating a PR via CLI, GitHub won't apply the template automatically — copy the body from `.github/pull_request_template.md` and fill it in. Always open as **draft**: `gh pr create --draft`
 
 ## Quality Checklist (before opening PR)
 
@@ -74,4 +46,5 @@ Always open as **draft**: `gh pr create --draft`
 - [ ] `docs/changelog.md` updated with 1 row for this PR
 - [ ] No network calls or off-device data transmission introduced
 - [ ] No judgmental language in UI strings
-- [ ] Significant architectural decisions logged in `docs/decisions.md`
+- [ ] Relevant docs updated (`docs/decisions.md`, `docs/data/schema.md`, `design/`, `ux/`) if applicable
+- [ ] No open PR comments

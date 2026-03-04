@@ -1,14 +1,12 @@
 # Architecture Decisions
 
-Significant technical decisions made during development. Each entry explains the context, the choice, and why.
+Significant technical decisions made during development.
 
----
+| Date | Decision | Context | Rationale | Consequences |
+|------|----------|---------|-----------|--------------|
+| — | — | — | — | — |
 
-<!-- Template:
-## [Short title]
-**Date:** YYYY-MM-DD
-**Context:** Why this decision was needed.
-**Decision:** What was decided.
-**Rationale:** Why this approach over alternatives.
-**Consequences:** Trade-offs or things to watch for.
+<!--
+Add a row per decision. If the context/rationale is too long for a table cell,
+create a dedicated file at docs/decisions/<slug>.md and link to it from this table.
 -->

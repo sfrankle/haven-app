@@ -5,9 +5,11 @@ description: Analyze user stories in a GitHub milestone and create detailed tech
 
 ## Process
 
+> For all `gh` commands, use `.claude/gh-commands.md` as the canonical reference.
+
 ### 1. Read the milestone
 
-Fetch all user stories and existing technical tasks in the target milestone:
+Fetch all user stories and existing technical tasks in the target milestone (see `gh-commands.md` Issues section):
 ```bash
 gh issue list --milestone "<MILESTONE TITLE>" --label "user-story" --state open --limit 100 --json number,title,body
 gh issue list --milestone "<MILESTONE TITLE>" --label "technical-task" --state all --limit 100 --json number,title,body,state

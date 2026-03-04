@@ -37,6 +37,7 @@ Post this format as a comment on the issue:
 
 **What will change:**
 - [high-level list of files/areas affected]
+- [any docs to update: `docs/decisions.md`, `docs/spec.md`, `docs/data/schema.md`, etc.]
 
 **Testing approach:**
 - [flow tests and unit tests planned]

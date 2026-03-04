@@ -79,6 +79,17 @@ gh pr checks <NUMBER>
 
 # Merge a PR
 gh pr merge <NUMBER> --squash --delete-branch
+
+# List inline review comments on a PR
+gh api repos/sfrankle/haven-app/pulls/<NUMBER>/comments --jq '.[] | {id, path, line, body, user: .user.login}'
+
+# Reply to an inline review comment (not a top-level comment)
+gh api repos/sfrankle/haven-app/pulls/<NUMBER>/comments/<COMMENT_ID>/replies \
+  --method POST \
+  --field body="<reply text>"
+
+# List top-level PR review threads (reviews with bodies)
+gh api repos/sfrankle/haven-app/pulls/<NUMBER>/reviews --jq '.[] | {id, state, body, user: .user.login}'
 ```
 
 ---

@@ -5,6 +5,8 @@ description: Determine the next technical task to pick up from a milestone. Use 
 
 ## Process
 
+> For all `gh` commands, use `.claude/gh-commands.md` as the canonical reference.
+
 ### 0. Check branch state
 Follow the shared procedure in `.claude/skills/_shared/branch-check.md`. Do not proceed until you are on `main`.
 
