@@ -1,0 +1,37 @@
+# Haven Design Guidance for Claude
+
+Scope: Frontend design principles to follow when building Haven UI.
+
+## Follow the Established Design System
+
+Haven has a defined visual identity. Always follow the palette, typography, and component patterns in `docs/design/visual-style.md` before making any visual decisions. Do not invent new colors or fonts.
+
+Haven's palette is derived from the app icon — cool indigo/teal/plum tones dominant, warm rose/yellow as rare accents. The primary color is `#4F557D` (dusty grape). The caution below about purple applies to generic, saturated purple-on-white — not Haven's palette.
+
+## Avoid Generic AI Aesthetics
+
+You tend to converge toward predictable, "on distribution" outputs. In frontend design this produces what users call the AI-slop aesthetic. Avoid it.
+
+Specific failure modes:
+- Overused fonts (Inter, Roboto, Arial, system fonts) — Haven uses Philosopher, use that
+- Clichéd color schemes — e.g. saturated purple gradients on stark white backgrounds (note: Haven's muted mauve on soft fog surfaces is intentional and correct)
+- Predictable layouts and component patterns that lack context-specific character
+- Cookie-cutter designs that could belong to any app
+
+## Typography
+
+Haven uses two fonts — both bundled locally:
+- **Philosopher** for display, headlines, and titles — the brand voice, reserved for moments that earn it
+- **Lexend** for body text, UI labels, and captions — optimised for readability
+
+Do not substitute either. Philosopher is magical but should not carry every text element — that's what Lexend is for.
+
+## Motion (React Native)
+
+Use React Native Reanimated or the built-in Animated API for transitions and micro-interactions. Motion/Framer Motion is web-only and does not apply here.
+
+Focus animation effort on high-impact moments — a well-orchestrated screen entry with staggered reveals creates more delight than scattered micro-interactions. Follow Haven's motion guidelines: subtle, low-frequency, no bounce or celebratory motion.
+
+## Backgrounds and Surfaces
+
+Use the Haven surface tokens to create depth and atmosphere. Avoid defaulting to flat white or stark black. Layer surfaces using `background` and `surfaceVariant` tokens with appropriate elevation.
