@@ -8,6 +8,16 @@ For the database schema, see `schema.md`.
 
 ## Entry types
 
+## Notes field
+
+Every entry type supports an optional free-text notes field. Notes are not a standalone entry type — they are a field on the entry itself. They are excluded from correlation logic.
+
+---
+
+---
+
+## Entry types
+
 ### Sleep
 - Logs hours of sleep (numeric)
 - Once-daily typical use
