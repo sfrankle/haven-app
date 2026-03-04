@@ -38,7 +38,7 @@ Log fast  →  See patterns  →  Get proof the good stuff works
 
 1. **Log fast** — every entry type reachable in ≤3 taps from the main screen
 2. **See patterns** — automatic correlation discovery; the app tells you what it notices
-3. **Act on it** — reinforcement that sleep, water, movement, and calm actually change how you feel
+3. **Act on it** — reinforcement that the small things — rest, water, movement, a moment outside — actually do what they're supposed to
 
 The logging has no value without the patterns. The patterns have no value without enough logging. Both are core to the product.
 
