@@ -8,6 +8,10 @@
  * All inserts use INSERT OR IGNORE with name-based deduplication via UNIQUE
  * constraints on name columns. No explicit integer IDs are used; FK references
  * are resolved at insert time via subquery SELECTs by name.
+ *
+ * label inserts omit is_default, is_enabled, sort_order, and seed_version —
+ * all covered by schema defaults (1, 1, 0, 1). Only entry_type_id, name, and
+ * optionally parent_id or category_id are specified.
  */
 
 export const SEED_V1_MEASUREMENT_TYPES = `
@@ -70,124 +74,69 @@ INSERT OR IGNORE INTO tag (name, tag_group, seed_version) VALUES
  * Food labels — flat, no parent, no category.
  */
 export const SEED_V1_LABELS_FOOD = `
-INSERT OR IGNORE INTO label (entry_type_id, name, parent_id, category_id, is_default, is_enabled, sort_order, seed_version)
-SELECT id, 'White rice',    NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Brown rice',    NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Oats',          NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Bread, Wheat',  NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Pasta',         NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Corn tortilla', NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Cheese',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Milk',          NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Milk, Almond',  NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Milk, Oat',     NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Yogurt',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Butter',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Cream',         NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Ice cream',     NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Chicken',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Beef',          NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Pork',          NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Fish',          NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Eggs',          NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Tofu',          NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Beans',         NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Lentils',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Broccoli',      NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Spinach',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Kale',          NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Onion',         NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Garlic',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Tomato',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Pepper',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Carrot',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Cucumber',      NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Zucchini',      NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Potato',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Sweet potato',  NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Mushroom',      NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Apple',         NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Banana',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Berries',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Orange',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Avocado',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Grapes',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Olive oil',     NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Seeds',         NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Almonds',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Cashews',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Hazelnuts',     NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Macadamia',     NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Peanuts',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Pecans',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Pistachios',    NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Walnuts',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Chocolate, Dark',NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Coffee',        NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Tea',           NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Alcohol',       NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Bread, White',  NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Chips, Potato', NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Chips, Corn',   NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food'
-UNION ALL
-SELECT id, 'Crackers',      NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 'Food';
+WITH v(name) AS (VALUES
+  ('White rice'),
+  ('Brown rice'),
+  ('Oats'),
+  ('Bread, Wheat'),
+  ('Pasta'),
+  ('Corn tortilla'),
+  ('Cheese'),
+  ('Milk'),
+  ('Milk, Almond'),
+  ('Milk, Oat'),
+  ('Yogurt'),
+  ('Butter'),
+  ('Cream'),
+  ('Ice cream'),
+  ('Chicken'),
+  ('Beef'),
+  ('Pork'),
+  ('Fish'),
+  ('Eggs'),
+  ('Tofu'),
+  ('Beans'),
+  ('Lentils'),
+  ('Broccoli'),
+  ('Spinach'),
+  ('Kale'),
+  ('Onion'),
+  ('Garlic'),
+  ('Tomato'),
+  ('Pepper'),
+  ('Carrot'),
+  ('Cucumber'),
+  ('Zucchini'),
+  ('Potato'),
+  ('Sweet potato'),
+  ('Mushroom'),
+  ('Apple'),
+  ('Banana'),
+  ('Berries'),
+  ('Orange'),
+  ('Avocado'),
+  ('Grapes'),
+  ('Olive oil'),
+  ('Seeds'),
+  ('Almonds'),
+  ('Cashews'),
+  ('Hazelnuts'),
+  ('Macadamia'),
+  ('Peanuts'),
+  ('Pecans'),
+  ('Pistachios'),
+  ('Walnuts'),
+  ('Chocolate, Dark'),
+  ('Coffee'),
+  ('Tea'),
+  ('Alcohol'),
+  ('Bread, White'),
+  ('Chips, Potato'),
+  ('Chips, Corn'),
+  ('Crackers')
+)
+INSERT OR IGNORE INTO label (entry_type_id, name)
+SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Food';
 `;
 
 /**
@@ -195,10 +144,8 @@ SELECT id, 'Crackers',      NULL, NULL, 1, 1, 0, 1 FROM entry_type WHERE name = 
  */
 export const SEED_V1_LABELS_EMOTION_L1 = `
 WITH v(name) AS (VALUES ('Bright'), ('Warm'), ('Still'), ('Heavy'), ('Charged'))
-INSERT OR IGNORE INTO label (entry_type_id, name, parent_id, category_id, is_default, is_enabled, sort_order, seed_version)
-SELECT et.id, v.name, NULL, NULL, 1, 1, 0, 1
-FROM entry_type et, v
-WHERE et.name = 'Emotion';
+INSERT OR IGNORE INTO label (entry_type_id, name)
+SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Emotion';
 `;
 
 /**
@@ -233,8 +180,8 @@ WITH v(parent, child) AS (VALUES
   ('Charged', 'Panicked'),
   ('Charged', 'Disgusted')
 )
-INSERT OR IGNORE INTO label (entry_type_id, name, parent_id, category_id, is_default, is_enabled, sort_order, seed_version)
-SELECT et.id, v.child, pl.id, NULL, 1, 1, 0, 1
+INSERT OR IGNORE INTO label (entry_type_id, name, parent_id)
+SELECT et.id, v.child, pl.id
 FROM entry_type et
 JOIN v ON 1=1
 JOIN label pl ON pl.entry_type_id = et.id AND pl.name = v.parent
@@ -353,8 +300,8 @@ WITH v(parent, child) AS (VALUES
   ('Disgusted',     'Appalled'),
   ('Disgusted',     'Revolted')
 )
-INSERT OR IGNORE INTO label (entry_type_id, name, parent_id, category_id, is_default, is_enabled, sort_order, seed_version)
-SELECT et.id, v.child, pl.id, NULL, 1, 1, 0, 1
+INSERT OR IGNORE INTO label (entry_type_id, name, parent_id)
+SELECT et.id, v.child, pl.id
 FROM entry_type et
 JOIN v ON 1=1
 JOIN label pl ON pl.entry_type_id = et.id AND pl.name = v.parent
@@ -369,230 +316,140 @@ WITH v(name) AS (VALUES
   ('Head'), ('Gut'), ('Chest'), ('Joints'),
   ('Skin'), ('Energy'), ('Sleep quality'), ('Whole body')
 )
-INSERT OR IGNORE INTO label (entry_type_id, name, parent_id, category_id, is_default, is_enabled, sort_order, seed_version)
-SELECT et.id, v.name, NULL, NULL, 1, 1, 0, 1
-FROM entry_type et, v
-WHERE et.name = 'Physical State';
+INSERT OR IGNORE INTO label (entry_type_id, name)
+SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Physical State';
 `;
 
 /**
  * Physical State child labels — requires parents to exist first.
  */
 export const SEED_V1_LABELS_PHYSICAL_CHILDREN = `
-INSERT OR IGNORE INTO label (entry_type_id, name, parent_id, category_id, is_default, is_enabled, sort_order, seed_version)
-SELECT et.id, 'Headache',            pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Head'
-UNION ALL
-SELECT et.id, 'Migraine',            pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Head'
-UNION ALL
-SELECT et.id, 'Brain fog',           pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Head'
-UNION ALL
-SELECT et.id, 'Clear-headed',        pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Head'
-UNION ALL
-SELECT et.id, 'Sharp focus',         pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Head'
-UNION ALL
-SELECT et.id, 'Sinus pressure',      pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Head'
-UNION ALL
-SELECT et.id, 'Eye strain',          pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Head'
-UNION ALL
-SELECT et.id, 'Dizziness',           pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Head'
-UNION ALL
-SELECT et.id, 'Bloating',            pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Cramping',            pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Nausea',              pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Acid reflux',         pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Constipation',        pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Diarrhea',            pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Gas',                 pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Comfortable',         pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Full',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Empty',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Gut'
-UNION ALL
-SELECT et.id, 'Tight',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Chest'
-UNION ALL
-SELECT et.id, 'Open',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Chest'
-UNION ALL
-SELECT et.id, 'Palpitations',        pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Chest'
-UNION ALL
-SELECT et.id, 'Shortness of breath', pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Chest'
-UNION ALL
-SELECT et.id, 'Calm',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Chest'
-UNION ALL
-SELECT et.id, 'Chest pain',          pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Chest'
-UNION ALL
-SELECT et.id, 'Stiff',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Joints'
-UNION ALL
-SELECT et.id, 'Sore',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Joints'
-UNION ALL
-SELECT et.id, 'Pain',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Joints'
-UNION ALL
-SELECT et.id, 'Swollen',             pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Joints'
-UNION ALL
-SELECT et.id, 'Flexible',            pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Joints'
-UNION ALL
-SELECT et.id, 'Warm',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Joints'
-UNION ALL
-SELECT et.id, 'Itchy',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Skin'
-UNION ALL
-SELECT et.id, 'Rash',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Skin'
-UNION ALL
-SELECT et.id, 'Dry',                 pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Skin'
-UNION ALL
-SELECT et.id, 'Clear',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Skin'
-UNION ALL
-SELECT et.id, 'Flushed',             pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Skin'
-UNION ALL
-SELECT et.id, 'Hives',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Skin'
-UNION ALL
-SELECT et.id, 'Fatigue',             pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Energy'
-UNION ALL
-SELECT et.id, 'Exhausted',           pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Energy'
-UNION ALL
-SELECT et.id, 'Alert',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Energy'
-UNION ALL
-SELECT et.id, 'Rested',              pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Energy'
-UNION ALL
-SELECT et.id, 'Wired',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Energy'
-UNION ALL
-SELECT et.id, 'Sluggish',            pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Energy'
-UNION ALL
-SELECT et.id, 'Restless',            pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Sleep quality'
-UNION ALL
-SELECT et.id, 'Interrupted',         pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Sleep quality'
-UNION ALL
-SELECT et.id, 'Deep',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Sleep quality'
-UNION ALL
-SELECT et.id, 'Light',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Sleep quality'
-UNION ALL
-SELECT et.id, 'Nightmares',          pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Sleep quality'
-UNION ALL
-SELECT et.id, 'Well-rested',         pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Sleep quality'
-UNION ALL
-SELECT et.id, 'Achy',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Whole body'
-UNION ALL
-SELECT et.id, 'Tense',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Whole body'
-UNION ALL
-SELECT et.id, 'Relaxed',             pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Whole body'
-UNION ALL
-SELECT et.id, 'Inflamed',            pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Whole body'
-UNION ALL
-SELECT et.id, 'Strong',              pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Whole body'
-UNION ALL
-SELECT et.id, 'Weak',                pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Whole body'
-UNION ALL
-SELECT et.id, 'Shaky',               pl.id, NULL, 1, 1, 0, 1 FROM entry_type et JOIN label pl ON pl.entry_type_id = et.id WHERE et.name = 'Physical State' AND pl.name = 'Whole body';
+WITH v(parent, child) AS (VALUES
+  ('Head',          'Headache'),
+  ('Head',          'Migraine'),
+  ('Head',          'Brain fog'),
+  ('Head',          'Clear-headed'),
+  ('Head',          'Sharp focus'),
+  ('Head',          'Sinus pressure'),
+  ('Head',          'Eye strain'),
+  ('Head',          'Dizziness'),
+  ('Gut',           'Bloating'),
+  ('Gut',           'Cramping'),
+  ('Gut',           'Nausea'),
+  ('Gut',           'Acid reflux'),
+  ('Gut',           'Constipation'),
+  ('Gut',           'Diarrhea'),
+  ('Gut',           'Gas'),
+  ('Gut',           'Comfortable'),
+  ('Gut',           'Full'),
+  ('Gut',           'Empty'),
+  ('Chest',         'Tight'),
+  ('Chest',         'Open'),
+  ('Chest',         'Palpitations'),
+  ('Chest',         'Shortness of breath'),
+  ('Chest',         'Calm'),
+  ('Chest',         'Chest pain'),
+  ('Joints',        'Stiff'),
+  ('Joints',        'Sore'),
+  ('Joints',        'Pain'),
+  ('Joints',        'Swollen'),
+  ('Joints',        'Flexible'),
+  ('Joints',        'Warm'),
+  ('Skin',          'Itchy'),
+  ('Skin',          'Rash'),
+  ('Skin',          'Dry'),
+  ('Skin',          'Clear'),
+  ('Skin',          'Flushed'),
+  ('Skin',          'Hives'),
+  ('Energy',        'Fatigue'),
+  ('Energy',        'Exhausted'),
+  ('Energy',        'Alert'),
+  ('Energy',        'Rested'),
+  ('Energy',        'Wired'),
+  ('Energy',        'Sluggish'),
+  ('Sleep quality', 'Restless'),
+  ('Sleep quality', 'Interrupted'),
+  ('Sleep quality', 'Deep'),
+  ('Sleep quality', 'Light'),
+  ('Sleep quality', 'Nightmares'),
+  ('Sleep quality', 'Well-rested'),
+  ('Whole body',    'Achy'),
+  ('Whole body',    'Tense'),
+  ('Whole body',    'Relaxed'),
+  ('Whole body',    'Inflamed'),
+  ('Whole body',    'Strong'),
+  ('Whole body',    'Weak'),
+  ('Whole body',    'Shaky')
+)
+INSERT OR IGNORE INTO label (entry_type_id, name, parent_id)
+SELECT et.id, v.child, pl.id
+FROM entry_type et
+JOIN v ON 1=1
+JOIN label pl ON pl.entry_type_id = et.id AND pl.name = v.parent
+WHERE et.name = 'Physical State';
 `;
 
 /**
- * Activity labels — flat, with category_id resolved by name.
+ * Activity labels — flat, with category resolved by name.
  */
 export const SEED_V1_LABELS_ACTIVITY = `
-INSERT OR IGNORE INTO label (entry_type_id, name, parent_id, category_id, is_default, is_enabled, sort_order, seed_version)
-SELECT et.id, 'Walk',                     NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Run',                      NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Cycle',                    NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Swim',                     NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Yoga',                     NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Stretching',               NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Weight training',          NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'HIIT',                     NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Dancing',                  NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Hiking',                   NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Climbing',                 NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Pilates',                  NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Move'
-UNION ALL
-SELECT et.id, 'Drawing',                  NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Create'
-UNION ALL
-SELECT et.id, 'Painting',                 NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Create'
-UNION ALL
-SELECT et.id, 'Writing',                  NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Create'
-UNION ALL
-SELECT et.id, 'Journaling',               NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Create'
-UNION ALL
-SELECT et.id, 'Photography',              NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Create'
-UNION ALL
-SELECT et.id, 'Music',                    NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Create'
-UNION ALL
-SELECT et.id, 'Crafts',                   NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Create'
-UNION ALL
-SELECT et.id, 'Cooking',                  NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Create'
-UNION ALL
-SELECT et.id, 'Gardening',                NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Create'
-UNION ALL
-SELECT et.id, 'Call a friend',            NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Connect'
-UNION ALL
-SELECT et.id, 'Spend time with family',   NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Connect'
-UNION ALL
-SELECT et.id, 'Social meal',              NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Connect'
-UNION ALL
-SELECT et.id, 'Date',                     NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Connect'
-UNION ALL
-SELECT et.id, 'Group activity',           NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Connect'
-UNION ALL
-SELECT et.id, 'Community event',          NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Connect'
-UNION ALL
-SELECT et.id, 'Nature walk',              NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Ground'
-UNION ALL
-SELECT et.id, 'Barefoot outside',         NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Ground'
-UNION ALL
-SELECT et.id, 'Quiet time',               NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Ground'
-UNION ALL
-SELECT et.id, 'Reading',                  NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Ground'
-UNION ALL
-SELECT et.id, 'Bath or shower',           NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Ground'
-UNION ALL
-SELECT et.id, 'Tidying',                  NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Ground'
-UNION ALL
-SELECT et.id, 'Meditation',               NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Breathe'
-UNION ALL
-SELECT et.id, 'Breathwork',               NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Breathe'
-UNION ALL
-SELECT et.id, 'Body scan',                NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Breathe'
-UNION ALL
-SELECT et.id, 'Progressive relaxation',   NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Breathe'
-UNION ALL
-SELECT et.id, 'Guided visualization',     NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Breathe'
-UNION ALL
-SELECT et.id, 'Gratitude list',           NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Reflect'
-UNION ALL
-SELECT et.id, 'Review goals',             NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Reflect'
-UNION ALL
-SELECT et.id, 'Planning',                 NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Reflect'
-UNION ALL
-SELECT et.id, 'Self-check-in',            NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Reflect'
-UNION ALL
-SELECT et.id, 'Meal prep',                NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Nourish'
-UNION ALL
-SELECT et.id, 'Mindful eating',           NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Nourish'
-UNION ALL
-SELECT et.id, 'Hydration focus',          NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Nourish'
-UNION ALL
-SELECT et.id, 'Rest',                     NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Nourish'
-UNION ALL
-SELECT et.id, 'Work block',               NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Structure'
-UNION ALL
-SELECT et.id, 'Study',                    NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Structure'
-UNION ALL
-SELECT et.id, 'Errand batch',             NULL, c.id, 1, 1, 0, 1 FROM entry_type et, category c WHERE et.name = 'Activity' AND c.name = 'Structure';
+WITH v(cat, name) AS (VALUES
+  ('Move',      'Walk'),
+  ('Move',      'Run'),
+  ('Move',      'Cycle'),
+  ('Move',      'Swim'),
+  ('Move',      'Yoga'),
+  ('Move',      'Stretching'),
+  ('Move',      'Weight training'),
+  ('Move',      'HIIT'),
+  ('Move',      'Dancing'),
+  ('Move',      'Hiking'),
+  ('Move',      'Climbing'),
+  ('Move',      'Pilates'),
+  ('Create',    'Drawing'),
+  ('Create',    'Painting'),
+  ('Create',    'Writing'),
+  ('Create',    'Journaling'),
+  ('Create',    'Photography'),
+  ('Create',    'Music'),
+  ('Create',    'Crafts'),
+  ('Create',    'Cooking'),
+  ('Create',    'Gardening'),
+  ('Connect',   'Call a friend'),
+  ('Connect',   'Spend time with family'),
+  ('Connect',   'Social meal'),
+  ('Connect',   'Date'),
+  ('Connect',   'Group activity'),
+  ('Connect',   'Community event'),
+  ('Ground',    'Nature walk'),
+  ('Ground',    'Barefoot outside'),
+  ('Ground',    'Quiet time'),
+  ('Ground',    'Reading'),
+  ('Ground',    'Bath or shower'),
+  ('Ground',    'Tidying'),
+  ('Breathe',   'Meditation'),
+  ('Breathe',   'Breathwork'),
+  ('Breathe',   'Body scan'),
+  ('Breathe',   'Progressive relaxation'),
+  ('Breathe',   'Guided visualization'),
+  ('Reflect',   'Gratitude list'),
+  ('Reflect',   'Review goals'),
+  ('Reflect',   'Planning'),
+  ('Reflect',   'Self-check-in'),
+  ('Nourish',   'Meal prep'),
+  ('Nourish',   'Mindful eating'),
+  ('Nourish',   'Hydration focus'),
+  ('Nourish',   'Rest'),
+  ('Structure', 'Work block'),
+  ('Structure', 'Study'),
+  ('Structure', 'Errand batch')
+)
+INSERT OR IGNORE INTO label (entry_type_id, name, category_id)
+SELECT et.id, v.name, c.id
+FROM entry_type et
+JOIN v ON 1=1
+JOIN category c ON c.name = v.cat
+WHERE et.name = 'Activity';
 `;
 
 /**

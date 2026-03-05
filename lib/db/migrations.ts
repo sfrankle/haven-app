@@ -38,10 +38,10 @@ CREATE TABLE IF NOT EXISTS label (
   name          TEXT NOT NULL,
   parent_id     INTEGER REFERENCES label(id),
   category_id   INTEGER REFERENCES category(id),
-  is_default    INTEGER NOT NULL DEFAULT 0,
+  is_default    INTEGER NOT NULL DEFAULT 1,
   is_enabled    INTEGER NOT NULL DEFAULT 1,
   sort_order    INTEGER NOT NULL DEFAULT 0,
-  seed_version  INTEGER NOT NULL DEFAULT 0,
+  seed_version  INTEGER NOT NULL DEFAULT 1,
   UNIQUE(entry_type_id, name)
 );
 
