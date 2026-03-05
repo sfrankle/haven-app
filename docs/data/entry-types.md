@@ -36,7 +36,8 @@ Every entry type supports an optional free-text notes field. Notes are not a sta
 - Labels carry ingredient tags (dairy, gluten, FODMAP, etc.) enabling food-symptom correlations
 
 ### Emotion
-- Two-step selection: valence first (Pleasant / Neutral / Unpleasant), then specific emotions (multi-select)
+- Three-step selection, each level saveable: arousal/valence zone first (Bright / Warm / Still / Heavy / Charged), then named emotion (multi-select), then granular specifics (multi-select, optional)
+- Top level encodes valence × arousal: Bright (positive, activated), Warm (positive, settled), Still (neutral), Heavy (negative, low energy), Charged (negative, activated)
 - Labels carry tags (nervous system, hormone, etc.) enabling correlations
 - Optional notes
 

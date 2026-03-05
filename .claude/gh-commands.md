@@ -35,6 +35,9 @@ gh issue view <NUMBER> --json body -q .body > /tmp/issue_body.md
 # ... append to /tmp/issue_body.md ...
 gh issue edit <NUMBER> --body "$(cat /tmp/issue_body.md)"
 
+# Comment on an issue
+gh issue comment <NUMBER> --repo sfrankle/haven-app --body "<comment>"
+
 # Close an issue with a comment
 gh issue close <NUMBER> --comment "<reason>"
 
