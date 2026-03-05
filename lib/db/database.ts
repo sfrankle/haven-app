@@ -38,10 +38,15 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
 export function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (_db) return Promise.resolve(_db);
   if (_initPromise) return _initPromise;
-  _initPromise = SQLite.openDatabaseAsync('haven.db').then(async (db) => {
-    await runMigrations(db);
-    _db = db;
-    return db;
-  });
+  _initPromise = SQLite.openDatabaseAsync('haven.db')
+    .then(async (db) => {
+      await runMigrations(db);
+      _db = db;
+      return db;
+    })
+    .catch((err) => {
+      _initPromise = null; // allow retry on next call
+      throw err;
+    });
   return _initPromise;
 }
