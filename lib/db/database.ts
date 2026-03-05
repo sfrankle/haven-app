@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { migrations } from './migrations';
+import { runSeeds } from './seeds';
 
 let _db: SQLite.SQLiteDatabase | null = null;
 let _initPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -41,6 +42,7 @@ export function getDb(): Promise<SQLite.SQLiteDatabase> {
   _initPromise = SQLite.openDatabaseAsync('haven.db')
     .then(async (db) => {
       await runMigrations(db);
+      await runSeeds(db);
       _db = db;
       return db;
     })
