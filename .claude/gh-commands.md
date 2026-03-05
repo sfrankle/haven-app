@@ -133,6 +133,11 @@ Blocked by: #N
 
 ---
 
+### Commit
+Prefer single line commits, unless real value is being added. Repo uses squash commits on PRs anyways.
+
+---
+
 ## Known Broken Commands
 
 | Command / Pattern | Error | Correct Alternative |
