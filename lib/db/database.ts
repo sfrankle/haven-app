@@ -17,10 +17,10 @@ let _initPromise: Promise<SQLite.SQLiteDatabase> | null = null;
  * a re-run on the next launch is idempotent.
  */
 async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
-  const result = await db.getAllAsync<{ user_version: number }>(
+  const result = await db.getFirstAsync<{ user_version: number }>(
     'PRAGMA user_version'
   );
-  const currentVersion = result[0]?.user_version ?? 0;
+  const currentVersion = result?.user_version ?? 0;
 
   for (let i = currentVersion; i < migrations.length; i++) {
     await db.withTransactionAsync(async () => {

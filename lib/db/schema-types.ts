@@ -1,3 +1,6 @@
+/** SQLite stores booleans as integers. 0 = false, 1 = true. */
+export type SQLiteBoolean = 0 | 1;
+
 export interface MeasurementTypeRow {
   id: number;
   name: string;
@@ -15,8 +18,8 @@ export interface EntryTypeRow {
   measurement_type_id: number | null;
   prompt: string | null;
   icon: string | null;
-  is_enabled: number;
-  is_default: number;
+  is_enabled: SQLiteBoolean;
+  is_default: SQLiteBoolean;
   sort_order: number;
 }
 
@@ -26,8 +29,8 @@ export interface LabelRow {
   name: string;
   parent_id: number | null;
   category_id: number | null;
-  is_default: number;
-  is_enabled: number;
+  is_default: SQLiteBoolean;
+  is_enabled: SQLiteBoolean;
   sort_order: number;
   seed_version: number;
 }
@@ -67,8 +70,8 @@ export interface AnchorActivityRow {
   icon: string | null;
   default_effort: number | null;
   user_effort: number | null;
-  is_enabled: number;
-  is_default: number;
+  is_enabled: SQLiteBoolean;
+  is_default: SQLiteBoolean;
   seed_version: number;
 }
 
@@ -81,7 +84,7 @@ export interface IssueRow {
   id: number;
   name: string;
   description: string | null;
-  is_archived: number;
+  is_archived: SQLiteBoolean;
   created_at: string;
 }
 

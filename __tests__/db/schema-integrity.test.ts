@@ -79,7 +79,7 @@ describe('schema integrity', () => {
         `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`
       )
       .all() as { name: string }[];
-    expect(tables).toHaveLength(12);
+    expect(tables).toHaveLength(Object.keys(EXPECTED_SCHEMA).length);
   });
 
   test.each(Object.entries(EXPECTED_SCHEMA))(
@@ -89,8 +89,7 @@ describe('schema integrity', () => {
         name: string;
       }[];
       const actualColumns = rows.map((r) => r.name);
-      expect(actualColumns).toEqual(expect.arrayContaining(expectedCols));
-      expect(actualColumns).toHaveLength(expectedCols.length);
+      expect(actualColumns).toEqual(expectedCols);
     }
   );
 });
