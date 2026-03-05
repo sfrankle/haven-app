@@ -4,24 +4,36 @@
  *
  * Uses better-sqlite3 (Node-native, synchronous) so the test runs in Jest
  * without a device or expo-sqlite native module — same pattern as schema-integrity.test.ts.
+ *
+ * No test asserts on specific integer IDs — all lookups use name-based queries.
  */
 import Database from 'better-sqlite3';
 import { MIGRATION_V1_SQL } from '../../lib/db/migrations';
 import {
   SEED_V1_MEASUREMENT_TYPES,
-  SEED_V1_ENTRY_TYPES,
   SEED_V1_CATEGORIES,
+  SEED_V1_ENTRY_TYPES,
   SEED_V1_TAGS,
-  SEED_V1_LABELS,
+  SEED_V1_LABELS_FOOD,
+  SEED_V1_LABELS_EMOTION_PARENTS,
+  SEED_V1_LABELS_EMOTION_CHILDREN,
+  SEED_V1_LABELS_PHYSICAL_PARENTS,
+  SEED_V1_LABELS_PHYSICAL_CHILDREN,
+  SEED_V1_LABELS_ACTIVITY,
   SEED_V1_LABEL_TAGS,
 } from '../../lib/db/seed-sql';
 
 function applySeeds(db: Database.Database): void {
   db.exec(SEED_V1_MEASUREMENT_TYPES);
-  db.exec(SEED_V1_ENTRY_TYPES);
   db.exec(SEED_V1_CATEGORIES);
+  db.exec(SEED_V1_ENTRY_TYPES);
   db.exec(SEED_V1_TAGS);
-  db.exec(SEED_V1_LABELS);
+  db.exec(SEED_V1_LABELS_FOOD);
+  db.exec(SEED_V1_LABELS_EMOTION_PARENTS);
+  db.exec(SEED_V1_LABELS_EMOTION_CHILDREN);
+  db.exec(SEED_V1_LABELS_PHYSICAL_PARENTS);
+  db.exec(SEED_V1_LABELS_PHYSICAL_CHILDREN);
+  db.exec(SEED_V1_LABELS_ACTIVITY);
   db.exec(SEED_V1_LABEL_TAGS);
 }
 
@@ -49,12 +61,12 @@ describe('seed integrity', () => {
 
   test('measurement_type: expected names present', () => {
     const rows = db
-      .prepare('SELECT name FROM measurement_type ORDER BY id')
+      .prepare('SELECT name FROM measurement_type ORDER BY name')
       .all() as { name: string }[];
-    expect(rows.map((r) => r.name)).toEqual([
-      'numeric',
+    expect(rows.map((r) => r.name).sort()).toEqual([
       'label_select',
       'label_select_severity',
+      'numeric',
     ]);
   });
 
@@ -67,18 +79,26 @@ describe('seed integrity', () => {
     expect(count).toBe(7);
   });
 
-  test('entry_type: Sleep uses measurement_type_id 1', () => {
+  test('entry_type: Sleep uses measurement_type numeric', () => {
     const row = db
-      .prepare('SELECT measurement_type_id FROM entry_type WHERE name = ?')
-      .get('Sleep') as { measurement_type_id: number };
-    expect(row.measurement_type_id).toBe(1);
+      .prepare(
+        `SELECT mt.name as mt_name FROM entry_type et
+         JOIN measurement_type mt ON et.measurement_type_id = mt.id
+         WHERE et.name = 'Sleep'`
+      )
+      .get() as { mt_name: string } | undefined;
+    expect(row?.mt_name).toBe('numeric');
   });
 
-  test('entry_type: Physical State uses measurement_type_id 3', () => {
+  test('entry_type: Physical State uses measurement_type label_select_severity', () => {
     const row = db
-      .prepare('SELECT measurement_type_id FROM entry_type WHERE name = ?')
-      .get('Physical State') as { measurement_type_id: number };
-    expect(row.measurement_type_id).toBe(3);
+      .prepare(
+        `SELECT mt.name as mt_name FROM entry_type et
+         JOIN measurement_type mt ON et.measurement_type_id = mt.id
+         WHERE et.name = 'Physical State'`
+      )
+      .get() as { mt_name: string } | undefined;
+    expect(row?.mt_name).toBe('label_select_severity');
   });
 
   test('entry_type: all 7 names correct', () => {
@@ -103,6 +123,22 @@ describe('seed integrity', () => {
       .prepare('SELECT COUNT(*) as count FROM category')
       .get() as { count: number };
     expect(count).toBe(8);
+  });
+
+  test('category: expected names present', () => {
+    const rows = db
+      .prepare('SELECT name FROM category ORDER BY name')
+      .all() as { name: string }[];
+    expect(rows.map((r) => r.name).sort()).toEqual([
+      'Breathe',
+      'Connect',
+      'Create',
+      'Ground',
+      'Move',
+      'Nourish',
+      'Reflect',
+      'Structure',
+    ]);
   });
 
   // ---- tag ----
@@ -141,34 +177,33 @@ describe('seed integrity', () => {
     expect(count).toBe(6);
   });
 
-  // ---- label spot-checks ----
+  // ---- label hierarchy: Emotion ----
 
-  test('label: emotion parent Pleasant exists with id 51', () => {
-    const row = db
-      .prepare('SELECT id, parent_id FROM label WHERE name = ? AND entry_type_id = 4')
-      .get('Pleasant') as { id: number; parent_id: number | null } | undefined;
-    expect(row).toBeDefined();
-    expect(row!.id).toBe(51);
-    expect(row!.parent_id).toBeNull();
-  });
-
-  test('label: emotion parent Neutral exists with id 52', () => {
-    const row = db
-      .prepare('SELECT id FROM label WHERE name = ? AND entry_type_id = 4')
-      .get('Neutral') as { id: number } | undefined;
-    expect(row?.id).toBe(52);
-  });
-
-  test('label: emotion parent Unpleasant exists with id 53', () => {
-    const row = db
-      .prepare('SELECT id FROM label WHERE name = ? AND entry_type_id = 4')
-      .get('Unpleasant') as { id: number } | undefined;
-    expect(row?.id).toBe(53);
-  });
-
-  test('label: Pleasant children have parent_id = 51', () => {
+  test('label: emotion parents exist with correct names and no parent', () => {
     const rows = db
-      .prepare('SELECT name FROM label WHERE parent_id = 51')
+      .prepare(
+        `SELECT name, parent_id FROM label
+         WHERE entry_type_id = (SELECT id FROM entry_type WHERE name = 'Emotion')
+           AND parent_id IS NULL
+         ORDER BY name`
+      )
+      .all() as { name: string; parent_id: number | null }[];
+    expect(rows.map((r) => r.name).sort()).toEqual([
+      'Neutral',
+      'Pleasant',
+      'Unpleasant',
+    ]);
+    rows.forEach((r) => expect(r.parent_id).toBeNull());
+  });
+
+  test('label: Pleasant has 10 children', () => {
+    const rows = db
+      .prepare(
+        `SELECT l.name FROM label l
+         JOIN label pl ON l.parent_id = pl.id
+         JOIN entry_type et ON et.id = l.entry_type_id
+         WHERE et.name = 'Emotion' AND pl.name = 'Pleasant'`
+      )
       .all() as { name: string }[];
     expect(rows.length).toBe(10);
     const names = rows.map((r) => r.name);
@@ -177,9 +212,26 @@ describe('seed integrity', () => {
     expect(names).toContain('Playful');
   });
 
-  test('label: Unpleasant children have parent_id = 53', () => {
+  test('label: Neutral has 6 children', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label l
+         JOIN label pl ON l.parent_id = pl.id
+         JOIN entry_type et ON et.id = l.entry_type_id
+         WHERE et.name = 'Emotion' AND pl.name = 'Neutral'`
+      )
+      .get() as { count: number };
+    expect(count).toBe(6);
+  });
+
+  test('label: Unpleasant has 12 children', () => {
     const rows = db
-      .prepare('SELECT name FROM label WHERE parent_id = 53')
+      .prepare(
+        `SELECT l.name FROM label l
+         JOIN label pl ON l.parent_id = pl.id
+         JOIN entry_type et ON et.id = l.entry_type_id
+         WHERE et.name = 'Emotion' AND pl.name = 'Unpleasant'`
+      )
       .all() as { name: string }[];
     expect(rows.length).toBe(12);
     const names = rows.map((r) => r.name);
@@ -187,87 +239,187 @@ describe('seed integrity', () => {
     expect(names).toContain('Hopeless');
   });
 
-  test('label: Food label Cheese exists (entry_type_id=3, no parent)', () => {
+  // ---- label: Food ----
+
+  test('label: Food label Cheese exists with no parent', () => {
     const row = db
       .prepare(
-        'SELECT entry_type_id, parent_id FROM label WHERE name = ?'
+        `SELECT l.parent_id FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Food' AND l.name = 'Cheese'`
       )
-      .get('Cheese') as { entry_type_id: number; parent_id: number | null } | undefined;
+      .get() as { parent_id: number | null } | undefined;
     expect(row).toBeDefined();
-    expect(row!.entry_type_id).toBe(3);
     expect(row!.parent_id).toBeNull();
   });
 
-  test('label: Activity label Walk exists with category_id = 1', () => {
+  test('label: Food has 50 labels', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Food'`
+      )
+      .get() as { count: number };
+    expect(count).toBe(50);
+  });
+
+  // ---- label: Physical State ----
+
+  test('label: Physical State parent Head exists with no parent', () => {
     const row = db
       .prepare(
-        'SELECT category_id FROM label WHERE name = ? AND entry_type_id = 7'
+        `SELECT l.parent_id FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Physical State' AND l.name = 'Head'`
       )
-      .get('Walk') as { category_id: number } | undefined;
+      .get() as { parent_id: number | null } | undefined;
     expect(row).toBeDefined();
-    expect(row!.category_id).toBe(1);
+    expect(row!.parent_id).toBeNull();
   });
 
-  test('label: Physical State parent Head exists with id 101', () => {
+  test('label: Headache is a child of Head', () => {
     const row = db
-      .prepare('SELECT id, parent_id FROM label WHERE name = ? AND entry_type_id = 5')
-      .get('Head') as { id: number; parent_id: number | null } | undefined;
-    expect(row?.id).toBe(101);
-    expect(row?.parent_id).toBeNull();
+      .prepare(
+        `SELECT pl.name as parent_name FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN label pl ON l.parent_id = pl.id
+         WHERE et.name = 'Physical State' AND l.name = 'Headache'`
+      )
+      .get() as { parent_name: string } | undefined;
+    expect(row?.parent_name).toBe('Head');
   });
 
-  test('label: Physical State Headache has parent_id = 101', () => {
+  test('label: Physical State has 8 parent labels', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Physical State' AND l.parent_id IS NULL`
+      )
+      .get() as { count: number };
+    expect(count).toBe(8);
+  });
+
+  // ---- label: Activity ----
+
+  test('label: Activity Walk exists with category Move', () => {
     const row = db
-      .prepare('SELECT parent_id FROM label WHERE name = ? AND entry_type_id = 5')
-      .get('Headache') as { parent_id: number } | undefined;
-    expect(row?.parent_id).toBe(101);
+      .prepare(
+        `SELECT c.name as cat_name FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN category c ON l.category_id = c.id
+         WHERE et.name = 'Activity' AND l.name = 'Walk'`
+      )
+      .get() as { cat_name: string } | undefined;
+    expect(row?.cat_name).toBe('Move');
+  });
+
+  test('label: Activity Meditation exists with category Breathe', () => {
+    const row = db
+      .prepare(
+        `SELECT c.name as cat_name FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN category c ON l.category_id = c.id
+         WHERE et.name = 'Activity' AND l.name = 'Meditation'`
+      )
+      .get() as { cat_name: string } | undefined;
+    expect(row?.cat_name).toBe('Breathe');
   });
 
   // ---- label_tag spot-checks ----
 
   test('label_tag: Cheese → dairy association exists', () => {
-    const cheeseRow = db
-      .prepare('SELECT id FROM label WHERE name = ?')
-      .get('Cheese') as { id: number };
-    const dairyTag = db
-      .prepare("SELECT id FROM tag WHERE name = 'dairy'")
-      .get() as { id: number };
     const assoc = db
       .prepare(
-        'SELECT 1 FROM label_tag WHERE label_id = ? AND tag_id = ?'
+        `SELECT 1 FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Food' AND l.name = 'Cheese' AND t.name = 'dairy'`
       )
-      .get(cheeseRow.id, dairyTag.id);
+      .get();
     expect(assoc).toBeDefined();
   });
 
   test('label_tag: Coffee → caffeine association exists', () => {
-    const coffeeRow = db
-      .prepare('SELECT id FROM label WHERE name = ?')
-      .get('Coffee') as { id: number };
-    const caffeineTag = db
-      .prepare("SELECT id FROM tag WHERE name = 'caffeine'")
-      .get() as { id: number };
     const assoc = db
       .prepare(
-        'SELECT 1 FROM label_tag WHERE label_id = ? AND tag_id = ?'
+        `SELECT 1 FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Food' AND l.name = 'Coffee' AND t.name = 'caffeine'`
       )
-      .get(coffeeRow.id, caffeineTag.id);
+      .get();
     expect(assoc).toBeDefined();
   });
 
   test('label_tag: Anxious → nervous_system association exists', () => {
-    const anxiousRow = db
-      .prepare('SELECT id FROM label WHERE name = ?')
-      .get('Anxious') as { id: number };
-    const nsTag = db
-      .prepare("SELECT id FROM tag WHERE name = 'nervous_system'")
-      .get() as { id: number };
     const assoc = db
       .prepare(
-        'SELECT 1 FROM label_tag WHERE label_id = ? AND tag_id = ?'
+        `SELECT 1 FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Emotion' AND l.name = 'Anxious' AND t.name = 'nervous_system'`
       )
-      .get(anxiousRow.id, nsTag.id);
+      .get();
     expect(assoc).toBeDefined();
+  });
+
+  test('label_tag: Anxious → hormone association exists', () => {
+    const assoc = db
+      .prepare(
+        `SELECT 1 FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Emotion' AND l.name = 'Anxious' AND t.name = 'hormone'`
+      )
+      .get();
+    expect(assoc).toBeDefined();
+  });
+
+  test('label_tag: all Pleasant children tagged nervous_system', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN label pl ON l.parent_id = pl.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Emotion' AND pl.name = 'Pleasant' AND t.name = 'nervous_system'`
+      )
+      .get() as { count: number };
+    expect(count).toBe(10);
+  });
+
+  test('label_tag: Walk → cardiovascular association exists', () => {
+    const assoc = db
+      .prepare(
+        `SELECT 1 FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Activity' AND l.name = 'Walk' AND t.name = 'cardiovascular'`
+      )
+      .get();
+    expect(assoc).toBeDefined();
+  });
+
+  test('label_tag: Breathe category labels all tagged mindfulness', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN category c ON l.category_id = c.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Activity' AND c.name = 'Breathe' AND t.name = 'mindfulness'`
+      )
+      .get() as { count: number };
+    expect(count).toBe(5);
   });
 
   // ---- idempotency ----
@@ -290,7 +442,6 @@ describe('seed integrity', () => {
       ).c,
     };
 
-    // Run seeds a second time
     applySeeds(db);
 
     expect(
