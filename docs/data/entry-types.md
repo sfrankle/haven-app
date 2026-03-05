@@ -6,13 +6,9 @@ For the database schema, see `schema.md`.
 
 ---
 
-## Entry types
-
 ## Notes field
 
 Every entry type supports an optional free-text notes field. Notes are not a standalone entry type — they are a field on the entry itself. They are excluded from correlation logic.
-
----
 
 ---
 
@@ -42,13 +38,33 @@ Every entry type supports an optional free-text notes field. Notes are not a sta
 - Optional notes
 
 ### Physical
-- Unified entry type covering energy, body area states, and whole-body states
-- Three modes, all stored as `Physical` entries with shared timestamp per submission:
-  - **Energy**: select the Energy label; numeric_value = 0–5 (required). Labels: [Energy]
-  - **Body area → state**: pick a body area parent label → pick state child labels (multi-select); optional severity 1–5 stored in numeric_value. Labels: [e.g. Hand, Pain]
-  - **Whole body → state**: pick Whole body parent → pick state child labels (multi-select); optional severity 1–5. Labels: [Whole body, Achy]
-- One submission can produce multiple entries (e.g. energy + hand pain + clear-headed = 3 rows), all sharing the same timestamp
-- Entries can be linked to a tracked Issue (see below)
+
+Covers energy, body area states, and whole-body states in a single unified flow. One submission produces one entry per thing logged; all entries from the same submission share the same timestamp.
+
+The logging screen has three sections:
+
+**Energy**
+- Horizontal slider, 0–5: Exhausted · Bit Tired · Average · Well Rested · Pumped
+- Optional — user can skip and log only body/general items
+- Stored as: `entry_labels = [Energy]`, `numeric_value = 0–5`
+
+**Body** (pick an area, then symptoms)
+- Body areas: Head, Arms, Chest, Gut, Legs
+- Each area shows two symptom lists:
+  - *Universal symptoms* (children of the `Body` label): Pain, Stiff, Numb, Tingling, Itchy, Rash, Swollen, Warm, Sore, Weak, Strong, Fine — shown for every area
+  - *Area-specific symptoms*: e.g. Head → Headache, Migraine, Brain fog, Clear-headed; Gut → Bloating, Nausea, Comfortable
+- Positive and negative states appear together — both are equally valid logs
+- Multi-select; user can log multiple areas in one submission
+- Optional severity 1–5 per area selection
+- Stored as: `entry_labels = [area, symptom(s)]`, `numeric_value = severity or null`
+
+**General** (whole-body, no specific area)
+- For systemic states — flu-like, full-body tension, etc.
+- States: Achy, Tense, Relaxed, Inflamed, Shaky (+ universal symptoms available)
+- Optional severity 1–5
+- Stored as: `entry_labels = [Whole body, state(s)]`, `numeric_value = severity or null`
+
+Entries can be linked to a tracked Issue (see below).
 
 ### Activity
 - Suggested chips (personalized: recently used + time-of-day context) + full search bar; multi-select
@@ -62,9 +78,9 @@ Every entry type supports an optional free-text notes field. Notes are not a sta
 
 A named health concern the user defines to monitor over time (e.g. "Carpal tunnel", "Gut / celiac").
 
-- Not an entry type — a lens for reviewing Physical State entries
+- Not an entry type — a lens for reviewing Physical entries
 - Created in Settings; stored locally; can be archived when no longer active
-- When logging Physical State, user can optionally link the entry to one or more tracked Issues
+- When logging Physical, user can optionally link the entry to one or more tracked Issues
 - In Trace, entries can be filtered by Issue — useful for summarizing for a doctor appointment
 
 ---
