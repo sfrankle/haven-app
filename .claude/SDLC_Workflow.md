@@ -55,8 +55,12 @@ Haven uses an issue-driven development workflow. All work flows through GitHub I
 5. Claude runs **`/simplify`** — reviews changed code for reuse, quality, and efficiency; fixes issues found
 6. Claude dispatches **`haven-reviewer`** when implementation is complete
 7. Human reviews; Claude uses **`superpowers:receiving-code-review`** to process feedback
-8. Human merges; Claude checks out main and pulls
-9. **User stories are closed manually** by the human after all contributing technical tasks are merged
+8. After applying review feedback, Claude:
+   - Checks the PR's CI pipeline (`gh pr checks <N>`) and confirms all checks pass
+   - Verifies all new or changed code has appropriate test coverage (new tests added or existing tests updated)
+   - Posts a comment on the PR summarising test status: which tests cover the changes, and confirmation that CI checks pass
+9. Human merges; Claude checks out main and pulls
+10. **User stories are closed manually** by the human after all contributing technical tasks are merged
 
 ### GitHub CLI
 - All agents and skills must use commands from `.claude/gh-commands.md` as the canonical reference
