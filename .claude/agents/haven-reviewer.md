@@ -44,6 +44,13 @@ Haven is private-first — all data stays on device. Flag immediately:
 - Exception: PRs that only update Claude instructions or docs do not need a changelog update
 - If schema changed, verify a schema snapshot was committed to `docs/schema/`
 
+## UX and Product Review
+
+In addition to code concerns, flag:
+- Unexpected or missing empty states introduced by the implementation
+- User flows that were changed or broken as a side effect (even if the issue didn't mention them)
+- Any data safety risk the user would experience, beyond schema correctness (e.g. data appears to vanish, timestamps shift, labels detach silently)
+
 ## What to Report
 
 Flag only real issues. Do not nitpick style. Focus on:
