@@ -15,8 +15,9 @@ import {
   SEED_V1_ENTRY_TYPES,
   SEED_V1_TAGS,
   SEED_V1_LABELS_FOOD,
-  SEED_V1_LABELS_EMOTION_PARENTS,
-  SEED_V1_LABELS_EMOTION_CHILDREN,
+  SEED_V1_LABELS_EMOTION_L1,
+  SEED_V1_LABELS_EMOTION_L2,
+  SEED_V1_LABELS_EMOTION_L3,
   SEED_V1_LABELS_PHYSICAL_PARENTS,
   SEED_V1_LABELS_PHYSICAL_CHILDREN,
   SEED_V1_LABELS_ACTIVITY,
@@ -29,8 +30,9 @@ function applySeeds(db: Database.Database): void {
   db.exec(SEED_V1_ENTRY_TYPES);
   db.exec(SEED_V1_TAGS);
   db.exec(SEED_V1_LABELS_FOOD);
-  db.exec(SEED_V1_LABELS_EMOTION_PARENTS);
-  db.exec(SEED_V1_LABELS_EMOTION_CHILDREN);
+  db.exec(SEED_V1_LABELS_EMOTION_L1);
+  db.exec(SEED_V1_LABELS_EMOTION_L2);
+  db.exec(SEED_V1_LABELS_EMOTION_L3);
   db.exec(SEED_V1_LABELS_PHYSICAL_PARENTS);
   db.exec(SEED_V1_LABELS_PHYSICAL_CHILDREN);
   db.exec(SEED_V1_LABELS_ACTIVITY);
@@ -72,11 +74,11 @@ describe('seed integrity', () => {
 
   // ---- entry_type ----
 
-  test('entry_type: count = 7', () => {
+  test('entry_type: count = 6', () => {
     const { count } = db
       .prepare('SELECT COUNT(*) as count FROM entry_type')
       .get() as { count: number };
-    expect(count).toBe(7);
+    expect(count).toBe(6);
   });
 
   test('entry_type: Sleep uses measurement_type numeric', () => {
@@ -101,7 +103,7 @@ describe('seed integrity', () => {
     expect(row?.mt_name).toBe('label_select_severity');
   });
 
-  test('entry_type: all 7 names correct', () => {
+  test('entry_type: all 6 names correct', () => {
     const rows = db
       .prepare('SELECT name FROM entry_type ORDER BY sort_order')
       .all() as { name: string }[];
@@ -111,7 +113,6 @@ describe('seed integrity', () => {
       'Food',
       'Emotion',
       'Physical State',
-      'Energy Level',
       'Activity',
     ]);
   });
@@ -143,11 +144,11 @@ describe('seed integrity', () => {
 
   // ---- tag ----
 
-  test('tag: count = 16', () => {
+  test('tag: count = 18', () => {
     const { count } = db
       .prepare('SELECT COUNT(*) as count FROM tag')
       .get() as { count: number };
-    expect(count).toBe(16);
+    expect(count).toBe(18);
   });
 
   test('tag: food_sensitivity group has 8 tags', () => {
@@ -177,66 +178,91 @@ describe('seed integrity', () => {
     expect(count).toBe(6);
   });
 
+  test('tag: allergy group has 2 tags', () => {
+    const { count } = db
+      .prepare(
+        "SELECT COUNT(*) as count FROM tag WHERE tag_group = 'allergy'"
+      )
+      .get() as { count: number };
+    expect(count).toBe(2);
+  });
+
   // ---- label hierarchy: Emotion ----
 
-  test('label: emotion parents exist with correct names and no parent', () => {
+  test('label: emotion L1 has 5 buckets with no parent', () => {
     const rows = db
       .prepare(
-        `SELECT name, parent_id FROM label
+        `SELECT name FROM label
          WHERE entry_type_id = (SELECT id FROM entry_type WHERE name = 'Emotion')
            AND parent_id IS NULL
          ORDER BY name`
       )
-      .all() as { name: string; parent_id: number | null }[];
-    expect(rows.map((r) => r.name).sort()).toEqual([
-      'Neutral',
-      'Pleasant',
-      'Unpleasant',
-    ]);
-    rows.forEach((r) => expect(r.parent_id).toBeNull());
-  });
-
-  test('label: Pleasant has 10 children', () => {
-    const rows = db
-      .prepare(
-        `SELECT l.name FROM label l
-         JOIN label pl ON l.parent_id = pl.id
-         JOIN entry_type et ON et.id = l.entry_type_id
-         WHERE et.name = 'Emotion' AND pl.name = 'Pleasant'`
-      )
       .all() as { name: string }[];
-    expect(rows.length).toBe(10);
-    const names = rows.map((r) => r.name);
-    expect(names).toContain('Happy');
-    expect(names).toContain('Calm');
-    expect(names).toContain('Playful');
+    expect(rows.map((r) => r.name).sort()).toEqual([
+      'Bright', 'Charged', 'Heavy', 'Still', 'Warm',
+    ]);
   });
 
-  test('label: Neutral has 6 children', () => {
+  test('label: emotion L2 has 25 clusters', () => {
     const { count } = db
       .prepare(
         `SELECT COUNT(*) as count FROM label l
          JOIN label pl ON l.parent_id = pl.id
-         JOIN entry_type et ON et.id = l.entry_type_id
-         WHERE et.name = 'Emotion' AND pl.name = 'Neutral'`
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Emotion' AND pl.parent_id IS NULL`
       )
       .get() as { count: number };
-    expect(count).toBe(6);
+    expect(count).toBe(25);
   });
 
-  test('label: Unpleasant has 12 children', () => {
+  test('label: Bright has 4 L2 clusters', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label l
+         JOIN label pl ON l.parent_id = pl.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Emotion' AND pl.name = 'Bright'`
+      )
+      .get() as { count: number };
+    expect(count).toBe(4);
+  });
+
+  test('label: Heavy has 7 L2 clusters', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label l
+         JOIN label pl ON l.parent_id = pl.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Emotion' AND pl.name = 'Heavy'`
+      )
+      .get() as { count: number };
+    expect(count).toBe(7);
+  });
+
+  test('label: Joyful has 4 L3 emotions', () => {
     const rows = db
       .prepare(
         `SELECT l.name FROM label l
          JOIN label pl ON l.parent_id = pl.id
-         JOIN entry_type et ON et.id = l.entry_type_id
-         WHERE et.name = 'Emotion' AND pl.name = 'Unpleasant'`
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Emotion' AND pl.name = 'Joyful'`
       )
       .all() as { name: string }[];
-    expect(rows.length).toBe(12);
-    const names = rows.map((r) => r.name);
-    expect(names).toContain('Anxious');
-    expect(names).toContain('Hopeless');
+    expect(rows.length).toBe(4);
+    expect(rows.map((r) => r.name)).toContain('Happy');
+    expect(rows.map((r) => r.name)).toContain('Playful');
+  });
+
+  test('label: Anxious has 5 L3 emotions', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label l
+         JOIN label pl ON l.parent_id = pl.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Emotion' AND pl.name = 'Anxious'`
+      )
+      .get() as { count: number };
+    expect(count).toBe(5);
   });
 
   // ---- label: Food ----
@@ -253,7 +279,7 @@ describe('seed integrity', () => {
     expect(row!.parent_id).toBeNull();
   });
 
-  test('label: Food has 50 labels', () => {
+  test('label: Food has 59 labels', () => {
     const { count } = db
       .prepare(
         `SELECT COUNT(*) as count FROM label l
@@ -261,7 +287,30 @@ describe('seed integrity', () => {
          WHERE et.name = 'Food'`
       )
       .get() as { count: number };
-    expect(count).toBe(50);
+    expect(count).toBe(59);
+  });
+
+  test('label: individual nut labels exist', () => {
+    const nuts = ['Almonds', 'Cashews', 'Hazelnuts', 'Macadamia', 'Peanuts', 'Pecans', 'Pistachios', 'Walnuts'];
+    for (const nut of nuts) {
+      const row = db
+        .prepare(
+          `SELECT 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id
+           WHERE et.name = 'Food' AND l.name = ?`
+        )
+        .get(nut);
+      expect(row).toBeDefined();
+    }
+  });
+
+  test('label: Sourdough not present', () => {
+    const row = db
+      .prepare(
+        `SELECT 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Food' AND l.name = 'Sourdough'`
+      )
+      .get();
+    expect(row).toBeUndefined();
   });
 
   // ---- label: Physical State ----
@@ -327,6 +376,18 @@ describe('seed integrity', () => {
     expect(row?.cat_name).toBe('Breathe');
   });
 
+  test('label: Morning routine and Evening routine not present', () => {
+    for (const name of ['Morning routine', 'Evening routine']) {
+      const row = db
+        .prepare(
+          `SELECT 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id
+           WHERE et.name = 'Activity' AND l.name = ?`
+        )
+        .get(name);
+      expect(row).toBeUndefined();
+    }
+  });
+
   // ---- label_tag spot-checks ----
 
   test('label_tag: Cheese → dairy association exists', () => {
@@ -355,44 +416,56 @@ describe('seed integrity', () => {
     expect(assoc).toBeDefined();
   });
 
-  test('label_tag: Anxious → nervous_system association exists', () => {
+  test('label_tag: Peanuts → peanuts association exists', () => {
     const assoc = db
       .prepare(
         `SELECT 1 FROM label_tag lt
          JOIN label l ON lt.label_id = l.id
          JOIN entry_type et ON l.entry_type_id = et.id
          JOIN tag t ON lt.tag_id = t.id
-         WHERE et.name = 'Emotion' AND l.name = 'Anxious' AND t.name = 'nervous_system'`
+         WHERE et.name = 'Food' AND l.name = 'Peanuts' AND t.name = 'peanuts'`
       )
       .get();
     expect(assoc).toBeDefined();
   });
 
-  test('label_tag: Anxious → hormone association exists', () => {
+  test('label_tag: Hazelnuts → tree_nuts association exists', () => {
     const assoc = db
       .prepare(
         `SELECT 1 FROM label_tag lt
          JOIN label l ON lt.label_id = l.id
          JOIN entry_type et ON l.entry_type_id = et.id
          JOIN tag t ON lt.tag_id = t.id
-         WHERE et.name = 'Emotion' AND l.name = 'Anxious' AND t.name = 'hormone'`
+         WHERE et.name = 'Food' AND l.name = 'Hazelnuts' AND t.name = 'tree_nuts'`
       )
       .get();
     expect(assoc).toBeDefined();
   });
 
-  test('label_tag: all Pleasant children tagged nervous_system', () => {
+  test('label_tag: Peanuts not tagged tree_nuts', () => {
+    const assoc = db
+      .prepare(
+        `SELECT 1 FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Food' AND l.name = 'Peanuts' AND t.name = 'tree_nuts'`
+      )
+      .get();
+    expect(assoc).toBeUndefined();
+  });
+
+  test('label_tag: 7 tree nut labels tagged tree_nuts', () => {
     const { count } = db
       .prepare(
         `SELECT COUNT(*) as count FROM label_tag lt
          JOIN label l ON lt.label_id = l.id
-         JOIN label pl ON l.parent_id = pl.id
          JOIN entry_type et ON l.entry_type_id = et.id
          JOIN tag t ON lt.tag_id = t.id
-         WHERE et.name = 'Emotion' AND pl.name = 'Pleasant' AND t.name = 'nervous_system'`
+         WHERE et.name = 'Food' AND t.name = 'tree_nuts'`
       )
       .get() as { count: number };
-    expect(count).toBe(10);
+    expect(count).toBe(7);
   });
 
   test('label_tag: Walk → cardiovascular association exists', () => {
