@@ -74,11 +74,11 @@ describe('seed integrity', () => {
 
   // ---- entry_type ----
 
-  test('entry_type: count = 6', () => {
+  test('entry_type: count = 7', () => {
     const { count } = db
       .prepare('SELECT COUNT(*) as count FROM entry_type')
       .get() as { count: number };
-    expect(count).toBe(6);
+    expect(count).toBe(7);
   });
 
   test('entry_type: Sleep uses measurement_type numeric', () => {
@@ -103,7 +103,7 @@ describe('seed integrity', () => {
     expect(row?.mt_name).toBe('label_select_severity');
   });
 
-  test('entry_type: all 6 names correct', () => {
+  test('entry_type: all 7 names correct', () => {
     const rows = db
       .prepare('SELECT name FROM entry_type ORDER BY sort_order')
       .all() as { name: string }[];
@@ -113,6 +113,7 @@ describe('seed integrity', () => {
       'Food',
       'Emotion',
       'Physical State',
+      'Energy',
       'Activity',
     ]);
   });
@@ -279,7 +280,7 @@ describe('seed integrity', () => {
     expect(row!.parent_id).toBeNull();
   });
 
-  test('label: Food has 59 labels', () => {
+  test('label: Food has 58 labels', () => {
     const { count } = db
       .prepare(
         `SELECT COUNT(*) as count FROM label l
@@ -287,7 +288,7 @@ describe('seed integrity', () => {
          WHERE et.name = 'Food'`
       )
       .get() as { count: number };
-    expect(count).toBe(59);
+    expect(count).toBe(58);
   });
 
   test('label: individual nut labels exist', () => {
@@ -339,7 +340,7 @@ describe('seed integrity', () => {
     expect(row?.parent_name).toBe('Head');
   });
 
-  test('label: Physical State has 8 parent labels', () => {
+  test('label: Physical State has 6 parent labels', () => {
     const { count } = db
       .prepare(
         `SELECT COUNT(*) as count FROM label l
@@ -347,7 +348,7 @@ describe('seed integrity', () => {
          WHERE et.name = 'Physical State' AND l.parent_id IS NULL`
       )
       .get() as { count: number };
-    expect(count).toBe(8);
+    expect(count).toBe(6);
   });
 
   // ---- label: Activity ----

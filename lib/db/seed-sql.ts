@@ -45,7 +45,9 @@ SELECT 'Emotion', id, 'How are you feeling?', 'heart', 1, 1, 4 FROM measurement_
 UNION ALL
 SELECT 'Physical State', id, 'How does your body feel?', 'body', 1, 1, 5 FROM measurement_type WHERE name = 'label_select_severity'
 UNION ALL
-SELECT 'Activity', id, 'What did you do?', 'activity', 1, 1, 6 FROM measurement_type WHERE name = 'label_select';
+SELECT 'Energy', id, 'What is your energy level?', 'bolt', 1, 1, 6 FROM measurement_type WHERE name = 'numeric'
+UNION ALL
+SELECT 'Activity', id, 'What did you do?', 'activity', 1, 1, 7 FROM measurement_type WHERE name = 'label_select';
 `;
 
 export const SEED_V1_TAGS = `
@@ -58,6 +60,8 @@ INSERT OR IGNORE INTO tag (name, tag_group, seed_version) VALUES
   ('alcohol',        'food_sensitivity', 1),
   ('high_sugar',     'food_sensitivity', 1),
   ('high_fat',       'food_sensitivity', 1),
+  ('tree_nuts',      'allergy',          1),
+  ('peanuts',        'allergy',          1),
   ('nervous_system', 'emotion_system',   1),
   ('hormone',        'emotion_system',   1),
   ('cardiovascular', 'activity_type',    1),
@@ -65,9 +69,7 @@ INSERT OR IGNORE INTO tag (name, tag_group, seed_version) VALUES
   ('flexibility',    'activity_type',    1),
   ('mindfulness',    'activity_type',    1),
   ('social',         'activity_type',    1),
-  ('creative',       'activity_type',    1),
-  ('tree_nuts',      'allergy',          1),
-  ('peanuts',        'allergy',          1);
+  ('creative',       'activity_type',    1);
 `;
 
 /**
@@ -75,10 +77,10 @@ INSERT OR IGNORE INTO tag (name, tag_group, seed_version) VALUES
  */
 export const SEED_V1_LABELS_FOOD = `
 WITH v(name) AS (VALUES
-  ('White rice'),
-  ('Brown rice'),
+  ('Rice, White'),
+  ('Rice, Brown'),
   ('Oats'),
-  ('Bread, Wheat'),
+  ('Bread'),
   ('Pasta'),
   ('Corn tortilla'),
   ('Cheese'),
@@ -130,7 +132,6 @@ WITH v(name) AS (VALUES
   ('Coffee'),
   ('Tea'),
   ('Alcohol'),
-  ('Bread, White'),
   ('Chips, Potato'),
   ('Chips, Corn'),
   ('Crackers')
@@ -159,7 +160,7 @@ WITH v(parent, child) AS (VALUES
   ('Bright',  'Empowered'),
   ('Bright',  'Inspired'),
   ('Warm',    'Grateful'),
-  ('Warm',    'Loved'),
+  ('Warm',    'Connected'),
   ('Warm',    'Tender'),
   ('Warm',    'Hopeful'),
   ('Warm',    'Calm'),
@@ -176,9 +177,9 @@ WITH v(parent, child) AS (VALUES
   ('Charged', 'Anxious'),
   ('Charged', 'Dread'),
   ('Charged', 'Overwhelmed'),
-  ('Charged', 'Angry'),
   ('Charged', 'Panicked'),
-  ('Charged', 'Disgusted')
+  ('Charged', 'Disgusted'),
+  ('Charged', 'Angry')
 )
 INSERT OR IGNORE INTO label (entry_type_id, name, parent_id)
 SELECT et.id, v.child, pl.id
@@ -213,11 +214,11 @@ WITH v(parent, child) AS (VALUES
   ('Grateful',      'Appreciative'),
   ('Grateful',      'Moved'),
   ('Grateful',      'Touched'),
-  ('Loved',         'Connected'),
-  ('Loved',         'Accepted'),
-  ('Loved',         'Valued'),
-  ('Loved',         'Safe'),
-  ('Loved',         'Cherished'),
+  ('Connected',     'Loved'),
+  ('Connected',     'Accepted'),
+  ('Connected',     'Valued'),
+  ('Connected',     'Safe'),
+  ('Connected',     'Cherished'),
   ('Tender',        'Compassionate'),
   ('Tender',        'Affectionate'),
   ('Tender',        'Gentle'),
@@ -228,7 +229,7 @@ WITH v(parent, child) AS (VALUES
   ('Calm',          'Relieved'),
   ('Calm',          'Content'),
   ('Calm',          'Settled'),
-  ('Calm',          'At ease'),
+  ('Calm',          'At-ease'),
   ('Calm',          'Comfortable'),
   ('Curious',       'Interested'),
   ('Curious',       'Inquisitive'),
@@ -287,13 +288,13 @@ WITH v(parent, child) AS (VALUES
   ('Overwhelmed',   'Scattered'),
   ('Overwhelmed',   'Flooded'),
   ('Overwhelmed',   'Frozen'),
+  ('Overwhelmed',   'Helpless'),
   ('Angry',         'Frustrated'),
   ('Angry',         'Irritated'),
   ('Angry',         'Resentful'),
   ('Angry',         'Bitter'),
   ('Angry',         'Mad'),
   ('Panicked',      'Terrified'),
-  ('Panicked',      'Helpless'),
   ('Panicked',      'Out of control'),
   ('Panicked',      'Alarmed'),
   ('Disgusted',     'Repulsed'),
@@ -314,7 +315,7 @@ WHERE et.name = 'Emotion';
 export const SEED_V1_LABELS_PHYSICAL_PARENTS = `
 WITH v(name) AS (VALUES
   ('Head'), ('Gut'), ('Chest'), ('Joints'),
-  ('Skin'), ('Energy'), ('Sleep quality'), ('Whole body')
+  ('Skin'), ('Whole body')
 )
 INSERT OR IGNORE INTO label (entry_type_id, name)
 SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Physical State';
@@ -361,18 +362,6 @@ WITH v(parent, child) AS (VALUES
   ('Skin',          'Clear'),
   ('Skin',          'Flushed'),
   ('Skin',          'Hives'),
-  ('Energy',        'Fatigue'),
-  ('Energy',        'Exhausted'),
-  ('Energy',        'Alert'),
-  ('Energy',        'Rested'),
-  ('Energy',        'Wired'),
-  ('Energy',        'Sluggish'),
-  ('Sleep quality', 'Restless'),
-  ('Sleep quality', 'Interrupted'),
-  ('Sleep quality', 'Deep'),
-  ('Sleep quality', 'Light'),
-  ('Sleep quality', 'Nightmares'),
-  ('Sleep quality', 'Well-rested'),
   ('Whole body',    'Achy'),
   ('Whole body',    'Tense'),
   ('Whole body',    'Relaxed'),
@@ -421,6 +410,7 @@ WITH v(cat, name) AS (VALUES
   ('Connect',   'Date'),
   ('Connect',   'Group activity'),
   ('Connect',   'Community event'),
+  ('Connect',   'Pet time'),
   ('Ground',    'Nature walk'),
   ('Ground',    'Barefoot outside'),
   ('Ground',    'Quiet time'),
@@ -476,13 +466,11 @@ UNION ALL
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_sugar' WHERE et.name = 'Food' AND l.name = 'Ice cream'
 UNION ALL
 -- Food: gluten
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name = 'Bread, Wheat'
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name = 'Bread'
 UNION ALL
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name = 'Pasta'
 UNION ALL
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name = 'Crackers'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name = 'Bread, White'
 UNION ALL
 -- Food: fodmap
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fodmap' WHERE et.name = 'Food' AND l.name = 'Onion'
