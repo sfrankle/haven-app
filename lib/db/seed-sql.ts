@@ -43,11 +43,9 @@ SELECT 'Food', id, 'What did you eat?', 'utensils', 1, 1, 3 FROM measurement_typ
 UNION ALL
 SELECT 'Emotion', id, 'How are you feeling?', 'heart', 1, 1, 4 FROM measurement_type WHERE name = 'label_select'
 UNION ALL
-SELECT 'Physical State', id, 'How does your body feel?', 'body', 1, 1, 5 FROM measurement_type WHERE name = 'label_select_severity'
+SELECT 'Physical', id, 'How does your body feel?', 'body', 1, 1, 5 FROM measurement_type WHERE name = 'label_select_severity'
 UNION ALL
-SELECT 'Energy', id, 'What is your energy level?', 'bolt', 1, 1, 6 FROM measurement_type WHERE name = 'numeric'
-UNION ALL
-SELECT 'Activity', id, 'What did you do?', 'activity', 1, 1, 7 FROM measurement_type WHERE name = 'label_select';
+SELECT 'Activity', id, 'What did you do?', 'activity', 1, 1, 6 FROM measurement_type WHERE name = 'label_select';
 `;
 
 export const SEED_V1_TAGS = `
@@ -310,72 +308,88 @@ WHERE et.name = 'Emotion';
 `;
 
 /**
- * Physical State parent labels (body areas) — must be inserted before children.
+ * Physical parent labels — must be inserted before children.
+ * 'Body' is the universal symptom pool (not a selectable area in the UI).
  */
 export const SEED_V1_LABELS_PHYSICAL_PARENTS = `
 WITH v(name) AS (VALUES
-  ('Head'), ('Gut'), ('Chest'), ('Joints'),
-  ('Skin'), ('Whole body')
+  ('Energy'), ('Head'), ('Arms'), ('Chest'), ('Gut'),
+  ('Legs'), ('Whole body'), ('Body')
 )
 INSERT OR IGNORE INTO label (entry_type_id, name)
-SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Physical State';
+SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Physical';
 `;
 
 /**
- * Physical State child labels — requires parents to exist first.
+ * Physical 'Body' children — symptoms that apply to any body area.
+ * Parented to 'Body' (the universal symptom pool, not a selectable area).
+ * Must be inserted after SEED_V1_LABELS_PHYSICAL_PARENTS.
+ */
+export const SEED_V1_LABELS_PHYSICAL_UNIVERSALS = `
+WITH v(name) AS (VALUES
+  ('Pain'), ('Stiff'), ('Numb'), ('Tingling'),
+  ('Itchy'), ('Rash'), ('Swollen'), ('Warm'), ('Sore'),
+  ('Weak'), ('Strong'), ('Fine')
+)
+INSERT OR IGNORE INTO label (entry_type_id, name, parent_id)
+SELECT et.id, v.name, pl.id
+FROM entry_type et
+JOIN v ON 1=1
+JOIN label pl ON pl.entry_type_id = et.id AND pl.name = 'Body'
+WHERE et.name = 'Physical';
+`;
+
+/**
+ * Physical area-specific child labels — requires parents to exist first.
+ * Universal symptoms are stored separately (parentless) and shown by the UI
+ * for every body area.
  */
 export const SEED_V1_LABELS_PHYSICAL_CHILDREN = `
 WITH v(parent, child) AS (VALUES
-  ('Head',          'Headache'),
-  ('Head',          'Migraine'),
-  ('Head',          'Brain fog'),
-  ('Head',          'Clear-headed'),
-  ('Head',          'Sharp focus'),
-  ('Head',          'Sinus pressure'),
-  ('Head',          'Eye strain'),
-  ('Head',          'Dizziness'),
-  ('Gut',           'Bloating'),
-  ('Gut',           'Cramping'),
-  ('Gut',           'Nausea'),
-  ('Gut',           'Acid reflux'),
-  ('Gut',           'Constipation'),
-  ('Gut',           'Diarrhea'),
-  ('Gut',           'Gas'),
-  ('Gut',           'Comfortable'),
-  ('Gut',           'Full'),
-  ('Gut',           'Empty'),
-  ('Chest',         'Tight'),
-  ('Chest',         'Open'),
-  ('Chest',         'Palpitations'),
-  ('Chest',         'Shortness of breath'),
-  ('Chest',         'Calm'),
-  ('Chest',         'Chest pain'),
-  ('Joints',        'Stiff'),
-  ('Joints',        'Sore'),
-  ('Joints',        'Pain'),
-  ('Joints',        'Swollen'),
-  ('Joints',        'Flexible'),
-  ('Joints',        'Warm'),
-  ('Skin',          'Itchy'),
-  ('Skin',          'Rash'),
-  ('Skin',          'Dry'),
-  ('Skin',          'Clear'),
-  ('Skin',          'Flushed'),
-  ('Skin',          'Hives'),
-  ('Whole body',    'Achy'),
-  ('Whole body',    'Tense'),
-  ('Whole body',    'Relaxed'),
-  ('Whole body',    'Inflamed'),
-  ('Whole body',    'Strong'),
-  ('Whole body',    'Weak'),
-  ('Whole body',    'Shaky')
+  -- Head
+  ('Head',       'Headache'),
+  ('Head',       'Migraine'),
+  ('Head',       'Brain fog'),
+  ('Head',       'Dizziness'),
+  ('Head',       'Eye strain'),
+  ('Head',       'Sinus pressure'),
+  ('Head',       'Sore throat'),
+  ('Head',       'Clear-headed'),
+  ('Head',       'Sharp focus'),
+  -- Arms: specific (Weak/Strong/Fine are parentless cross-area labels)
+  -- Chest
+  ('Chest',      'Tight'),
+  ('Chest',      'Palpitations'),
+  ('Chest',      'Shortness of breath'),
+  ('Chest',      'Open'),
+  ('Chest',      'Calm'),
+  -- Gut
+  ('Gut',        'Bloating'),
+  ('Gut',        'Cramping'),
+  ('Gut',        'Nausea'),
+  ('Gut',        'Acid reflux'),
+  ('Gut',        'Gas'),
+  ('Gut',        'Constipation'),
+  ('Gut',        'Diarrhea'),
+  ('Gut',        'Comfortable'),
+  ('Gut',        'Full'),
+  ('Gut',        'Empty'),
+  -- Legs: specific (Weak/Strong/Fine are parentless cross-area labels)
+  ('Legs',       'Heavy'),
+  ('Legs',       'Restless'),
+  -- Whole body: specific (Strong/Weak are parentless cross-area labels)
+  ('Whole body', 'Achy'),
+  ('Whole body', 'Tense'),
+  ('Whole body', 'Relaxed'),
+  ('Whole body', 'Inflamed'),
+  ('Whole body', 'Shaky')
 )
 INSERT OR IGNORE INTO label (entry_type_id, name, parent_id)
 SELECT et.id, v.child, pl.id
 FROM entry_type et
 JOIN v ON 1=1
 JOIN label pl ON pl.entry_type_id = et.id AND pl.name = v.parent
-WHERE et.name = 'Physical State';
+WHERE et.name = 'Physical';
 `;
 
 /**

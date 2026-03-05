@@ -136,10 +136,10 @@ Join table linking entries to tracked issues.
 
 **entry.source_type** — `"log"` (timestamped, in-the-moment) or `"reflect"` (end-of-day, date-associated). Reflect mode UI is deferred; the field is captured now to avoid a future migration.
 
-**entry.numeric_value** — used for: hours (sleep), oz/ml (hydration), severity 1–5 (physical state labels), energy level 0–5. For energy level entries, no labels are selected — numeric_value is the full payload.
+**entry.numeric_value** — used for: hours (sleep), oz/ml (hydration), energy 0–5 (Physical entries with Energy label), severity 1–5 (Physical entries with body area/whole body labels).
 
-**label.parent_id** — self-referencing FK enabling two-level hierarchies: valence → specific emotions (Emotion), body area → symptoms/states (Physical State).
+**label.parent_id** — self-referencing FK enabling two-level hierarchies: valence → specific emotions (Emotion), body area → symptoms/states (Physical).
 
 **label.seed_version** — incremented when new seed rows are introduced in an app update. On app open, only rows where `seed_version > last_applied_version` are inserted (via `INSERT OR IGNORE`), so user-deleted associations are never re-applied.
 
-**entry_type.measurement_type_id** — drives which logging form is shown. Types: `numeric` (sleep, hydration, energy), `label_select` (food, emotion, activity), `label_select_severity` (physical state).
+**entry_type.measurement_type_id** — drives which logging form is shown. Types: `numeric` (sleep, hydration), `label_select` (food, emotion, activity), `label_select_severity` (physical).

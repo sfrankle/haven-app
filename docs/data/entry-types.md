@@ -41,17 +41,14 @@ Every entry type supports an optional free-text notes field. Notes are not a sta
 - Labels carry tags (nervous system, hormone, etc.) enabling correlations
 - Optional notes
 
-### Physical State
-- Covers both positive ("feeling fine", "no pain") and negative ("bloating", "wrist pain") states — both are equally valuable for correlations
-- Two-step flow: pick body area → pick state labels for that area (multi-select)
-- Optional severity/intensity slider (1–5) after label selection
+### Physical
+- Unified entry type covering energy, body area states, and whole-body states
+- Three modes, all stored as `Physical` entries with shared timestamp per submission:
+  - **Energy**: select the Energy label; numeric_value = 0–5 (required). Labels: [Energy]
+  - **Body area → state**: pick a body area parent label → pick state child labels (multi-select); optional severity 1–5 stored in numeric_value. Labels: [e.g. Hand, Pain]
+  - **Whole body → state**: pick Whole body parent → pick state child labels (multi-select); optional severity 1–5. Labels: [Whole body, Achy]
+- One submission can produce multiple entries (e.g. energy + hand pain + clear-headed = 3 rows), all sharing the same timestamp
 - Entries can be linked to a tracked Issue (see below)
-
-### Energy Level
-- A fast single-step log: 0–5 scale (0 = exhausted, 5 = high energy)
-- Stored as a Physical State entry with `numeric_value`; a sub-type flag distinguishes it from label-based physical state logs
-- No labels selected — the numeric value is the full payload
-- Designed for high-frequency use (multiple times per day)
 
 ### Activity
 - Suggested chips (personalized: recently used + time-of-day context) + full search bar; multi-select

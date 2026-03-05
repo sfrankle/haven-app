@@ -19,6 +19,7 @@ import {
   SEED_V1_LABELS_EMOTION_L2,
   SEED_V1_LABELS_EMOTION_L3,
   SEED_V1_LABELS_PHYSICAL_PARENTS,
+  SEED_V1_LABELS_PHYSICAL_UNIVERSALS,
   SEED_V1_LABELS_PHYSICAL_CHILDREN,
   SEED_V1_LABELS_ACTIVITY,
   SEED_V1_LABEL_TAGS,
@@ -34,6 +35,7 @@ function applySeeds(db: Database.Database): void {
   db.exec(SEED_V1_LABELS_EMOTION_L2);
   db.exec(SEED_V1_LABELS_EMOTION_L3);
   db.exec(SEED_V1_LABELS_PHYSICAL_PARENTS);
+  db.exec(SEED_V1_LABELS_PHYSICAL_UNIVERSALS);
   db.exec(SEED_V1_LABELS_PHYSICAL_CHILDREN);
   db.exec(SEED_V1_LABELS_ACTIVITY);
   db.exec(SEED_V1_LABEL_TAGS);
@@ -74,11 +76,11 @@ describe('seed integrity', () => {
 
   // ---- entry_type ----
 
-  test('entry_type: count = 7', () => {
+  test('entry_type: count = 6', () => {
     const { count } = db
       .prepare('SELECT COUNT(*) as count FROM entry_type')
       .get() as { count: number };
-    expect(count).toBe(7);
+    expect(count).toBe(6);
   });
 
   test('entry_type: Sleep uses measurement_type numeric', () => {
@@ -92,18 +94,18 @@ describe('seed integrity', () => {
     expect(row?.mt_name).toBe('numeric');
   });
 
-  test('entry_type: Physical State uses measurement_type label_select_severity', () => {
+  test('entry_type: Physical uses measurement_type label_select_severity', () => {
     const row = db
       .prepare(
         `SELECT mt.name as mt_name FROM entry_type et
          JOIN measurement_type mt ON et.measurement_type_id = mt.id
-         WHERE et.name = 'Physical State'`
+         WHERE et.name = 'Physical'`
       )
       .get() as { mt_name: string } | undefined;
     expect(row?.mt_name).toBe('label_select_severity');
   });
 
-  test('entry_type: all 7 names correct', () => {
+  test('entry_type: all 6 names correct', () => {
     const rows = db
       .prepare('SELECT name FROM entry_type ORDER BY sort_order')
       .all() as { name: string }[];
@@ -112,8 +114,7 @@ describe('seed integrity', () => {
       'Hydration',
       'Food',
       'Emotion',
-      'Physical State',
-      'Energy',
+      'Physical',
       'Activity',
     ]);
   });
@@ -314,14 +315,14 @@ describe('seed integrity', () => {
     expect(row).toBeUndefined();
   });
 
-  // ---- label: Physical State ----
+  // ---- label: Physical ----
 
-  test('label: Physical State parent Head exists with no parent', () => {
+  test('label: Physical parent Head exists with no parent', () => {
     const row = db
       .prepare(
         `SELECT l.parent_id FROM label l
          JOIN entry_type et ON l.entry_type_id = et.id
-         WHERE et.name = 'Physical State' AND l.name = 'Head'`
+         WHERE et.name = 'Physical' AND l.name = 'Head'`
       )
       .get() as { parent_id: number | null } | undefined;
     expect(row).toBeDefined();
@@ -334,21 +335,115 @@ describe('seed integrity', () => {
         `SELECT pl.name as parent_name FROM label l
          JOIN entry_type et ON l.entry_type_id = et.id
          JOIN label pl ON l.parent_id = pl.id
-         WHERE et.name = 'Physical State' AND l.name = 'Headache'`
+         WHERE et.name = 'Physical' AND l.name = 'Headache'`
       )
       .get() as { parent_name: string } | undefined;
     expect(row?.parent_name).toBe('Head');
   });
 
-  test('label: Physical State has 6 parent labels', () => {
+  test('label: Physical has 8 parentless labels (Energy, Head, Arms, Chest, Gut, Legs, Whole body, Body)', () => {
     const { count } = db
       .prepare(
         `SELECT COUNT(*) as count FROM label l
          JOIN entry_type et ON l.entry_type_id = et.id
-         WHERE et.name = 'Physical State' AND l.parent_id IS NULL`
+         WHERE et.name = 'Physical' AND l.parent_id IS NULL`
       )
       .get() as { count: number };
-    expect(count).toBe(6);
+    expect(count).toBe(8);
+  });
+
+  test('label: Energy exists as a top-level Physical label with no parent', () => {
+    const row = db
+      .prepare(
+        `SELECT l.parent_id FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         WHERE et.name = 'Physical' AND l.name = 'Energy'`
+      )
+      .get() as { parent_id: number | null } | undefined;
+    expect(row).toBeDefined();
+    expect(row!.parent_id).toBeNull();
+  });
+
+  test('label: universal symptoms are children of Body', () => {
+    const universals = ['Pain', 'Stiff', 'Numb', 'Tingling', 'Itchy', 'Rash', 'Swollen', 'Warm', 'Sore', 'Weak', 'Strong', 'Fine'];
+    for (const name of universals) {
+      const row = db
+        .prepare(
+          `SELECT pl.name as parent_name FROM label l
+           JOIN entry_type et ON l.entry_type_id = et.id
+           JOIN label pl ON l.parent_id = pl.id
+           WHERE et.name = 'Physical' AND l.name = ?`
+        )
+        .get(name) as { parent_name: string } | undefined;
+      expect(row?.parent_name).toBe('Body');
+    }
+  });
+
+  test('label: Body has 12 universal symptom children', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN label pl ON l.parent_id = pl.id
+         WHERE et.name = 'Physical' AND pl.name = 'Body'`
+      )
+      .get() as { count: number };
+    expect(count).toBe(12);
+  });
+
+  test('label: Head has area-specific symptoms', () => {
+    const specific = ['Headache', 'Migraine', 'Brain fog', 'Sore throat', 'Clear-headed'];
+    for (const name of specific) {
+      const row = db
+        .prepare(
+          `SELECT 1 FROM label l
+           JOIN entry_type et ON l.entry_type_id = et.id
+           JOIN label pl ON l.parent_id = pl.id
+           WHERE et.name = 'Physical' AND pl.name = 'Head' AND l.name = ?`
+        )
+        .get(name);
+      expect(row).toBeDefined();
+    }
+  });
+
+  test('label: Gut has area-specific symptoms including positive states', () => {
+    const gutLabels = ['Bloating', 'Nausea', 'Comfortable', 'Full', 'Empty'];
+    for (const name of gutLabels) {
+      const row = db
+        .prepare(
+          `SELECT 1 FROM label l
+           JOIN entry_type et ON l.entry_type_id = et.id
+           JOIN label pl ON l.parent_id = pl.id
+           WHERE et.name = 'Physical' AND pl.name = 'Gut' AND l.name = ?`
+        )
+        .get(name);
+      expect(row).toBeDefined();
+    }
+  });
+
+  test('label: Whole body has 5 area-specific states', () => {
+    const { count } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN label pl ON l.parent_id = pl.id
+         WHERE et.name = 'Physical' AND pl.name = 'Whole body'`
+      )
+      .get() as { count: number };
+    expect(count).toBe(5);
+  });
+
+  test('label: Joints and Skin do not exist as Physical labels', () => {
+    for (const name of ['Joints', 'Skin']) {
+      const row = db
+        .prepare(
+          `SELECT 1 FROM label l
+           JOIN entry_type et ON l.entry_type_id = et.id
+           WHERE et.name = 'Physical' AND l.name = ?`
+        )
+        .get(name);
+      expect(row).toBeUndefined();
+    }
   });
 
   // ---- label: Activity ----

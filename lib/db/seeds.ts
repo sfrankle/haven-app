@@ -18,6 +18,7 @@ import {
   SEED_V1_LABELS_EMOTION_L2,
   SEED_V1_LABELS_EMOTION_L3,
   SEED_V1_LABELS_PHYSICAL_PARENTS,
+  SEED_V1_LABELS_PHYSICAL_UNIVERSALS,
   SEED_V1_LABELS_PHYSICAL_CHILDREN,
   SEED_V1_LABELS_ACTIVITY,
   SEED_V1_LABEL_TAGS,
@@ -34,6 +35,7 @@ export async function runSeeds(db: SQLite.SQLiteDatabase): Promise<void> {
     await db.execAsync(SEED_V1_LABELS_EMOTION_L2);
     await db.execAsync(SEED_V1_LABELS_EMOTION_L3);
     await db.execAsync(SEED_V1_LABELS_PHYSICAL_PARENTS);
+    await db.execAsync(SEED_V1_LABELS_PHYSICAL_UNIVERSALS);
     await db.execAsync(SEED_V1_LABELS_PHYSICAL_CHILDREN);
     await db.execAsync(SEED_V1_LABELS_ACTIVITY);
     await db.execAsync(SEED_V1_LABEL_TAGS);
