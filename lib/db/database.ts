@@ -15,6 +15,10 @@ let _initPromise: Promise<SQLite.SQLiteDatabase> | null = null;
  * so setting it inside would permanently skip a migration that fails mid-way.
  * Setting it after is safe because all tables use CREATE TABLE IF NOT EXISTS —
  * a re-run on the next launch is idempotent.
+ *
+ * CONTRACT: every migration SQL file MUST use `INSERT OR IGNORE` (never bare
+ * `INSERT`) so that a re-run after a partial failure produces no duplicates.
+ * Schema migrations must use `CREATE TABLE IF NOT EXISTS` for the same reason.
  */
 async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
   const result = await db.getFirstAsync<{ user_version: number }>(

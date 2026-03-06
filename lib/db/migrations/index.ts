@@ -5,6 +5,10 @@
  * To add a migration: create vN__description.sql and append it here.
  * sql-loader.js (registered in metro.config.js) makes Metro serve .sql files
  * as string modules.
+ *
+ * CONTRACT: every .sql file added here must use `INSERT OR IGNORE` (not bare
+ * `INSERT`) and `CREATE TABLE IF NOT EXISTS` so the runner can safely re-apply
+ * a migration after a partial failure without producing duplicates.
  */
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
