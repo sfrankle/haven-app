@@ -1,5 +1,7 @@
 # Haven Database Schema
 
+The source of truth is `lib/db/migrations/`. The ER diagram below reflects what is currently implemented.
+
 ```mermaid
 erDiagram
     measurement_type {
@@ -64,36 +66,6 @@ erDiagram
         INTEGER label_id FK
     }
 
-    anchor_activity {
-        INTEGER id PK
-        INTEGER label_id FK
-        TEXT title
-        TEXT icon
-        INTEGER default_effort
-        INTEGER user_effort
-        INTEGER is_enabled
-        INTEGER is_default
-        INTEGER seed_version
-    }
-
-    anchor_tag {
-        INTEGER anchor_activity_id FK
-        INTEGER tag_id FK
-    }
-
-    issue {
-        INTEGER id PK
-        TEXT name
-        TEXT description
-        INTEGER is_archived
-        TEXT created_at
-    }
-
-    entry_issue {
-        INTEGER entry_id FK
-        INTEGER issue_id FK
-    }
-
     measurement_type ||--o{ entry_type : "used by"
     entry_type ||--o{ label : "has"
     entry_type ||--o{ entry : "has"
@@ -103,43 +75,25 @@ erDiagram
     tag ||--o{ label_tag : "applied via"
     entry ||--o{ entry_label : "has"
     label ||--o{ entry_label : "selected in"
-    label ||--o{ anchor_activity : "referenced by"
-    anchor_activity ||--o{ anchor_tag : "tagged via"
-    tag ||--o{ anchor_tag : "applied via"
-    entry ||--o{ entry_issue : "linked via"
-    issue ||--o{ entry_issue : "linked via"
 ```
 
-## Additional Tables
+## Planned tables (not yet implemented)
 
-### issue
-User-defined named health concern for grouping physical state entries over time (e.g. "Carpal tunnel", "Gut / celiac").
+| Table | Purpose |
+|-------|---------|
+| `issue` | User-defined named health concern (e.g. "Carpal tunnel") for grouping physical state entries over time |
+| `entry_issue` | Join table linking entries to tracked issues |
+| `anchor_activity` | Grounding activity suggestions with effort tracking |
+| `anchor_tag` | Join table linking anchor activities to tags |
 
-| Column | Type | Notes |
-|---|---|---|
-| id | INTEGER PK | |
-| name | TEXT NOT NULL | e.g. "Carpal tunnel" |
-| description | TEXT | optional |
-| is_archived | INTEGER (bool) | hidden when no longer being tracked |
-| created_at | TEXT NOT NULL | ISO 8601 |
-
-### entry_issue
-Join table linking entries to tracked issues.
-
-| Column | Type | Notes |
-|---|---|---|
-| entry_id | INTEGER FK | → entry |
-| issue_id | INTEGER FK | → issue |
-| PRIMARY KEY | (entry_id, issue_id) | composite |
-
-## Notes on Specific Columns
+## Notes on specific columns
 
 **entry.source_type** — `"log"` (timestamped, in-the-moment) or `"reflect"` (end-of-day, date-associated). Reflect mode UI is deferred; the field is captured now to avoid a future migration.
 
-**entry.numeric_value** — used for: hours (sleep), oz/ml (hydration), severity 1–5 (physical state labels), energy level 0–5. For energy level entries, no labels are selected — numeric_value is the full payload.
+**entry.numeric_value** — used for: hours (sleep), oz/ml (hydration), energy 0–5 (Physical entries with Energy label), severity 1–5 (Physical entries with body area/whole body labels).
 
-**label.parent_id** — self-referencing FK enabling two-level hierarchies: valence → specific emotions (Emotion), body area → symptoms/states (Physical State).
+**label.parent_id** — self-referencing FK enabling two-level hierarchies: valence → specific emotions (Emotion), body area → symptoms/states (Physical).
 
 **label.seed_version** — incremented when new seed rows are introduced in an app update. On app open, only rows where `seed_version > last_applied_version` are inserted (via `INSERT OR IGNORE`), so user-deleted associations are never re-applied.
 
-**entry_type.measurement_type_id** — drives which logging form is shown. Types: `numeric` (sleep, hydration, energy), `label_select` (food, emotion, activity), `label_select_severity` (physical state).
+**entry_type.measurement_type_id** — drives which logging form is shown. Types: `numeric` (sleep, hydration), `label_select` (food, emotion, activity), `label_select_severity` (physical).

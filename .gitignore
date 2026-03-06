@@ -1,6 +1,9 @@
 # Implementation plans are local-only — never committed
 docs/plans/
 
+# Local
+local/
+
 .claude/local/
 
 # Expo / React Native

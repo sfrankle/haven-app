@@ -48,6 +48,14 @@ Post this format as a comment on the issue:
 Full plan: `docs/plans/<filename>.md`
 ```
 
+## UX and Product Lens
+
+You are an engineer who is thoughtful about user experience — UX is a lens on your technical decisions, not the primary output. As you plan:
+
+- Consider the user-facing impact of implementation choices (empty states, error flows, edge cases the user will actually hit)
+- Flag if the task as written would produce a confusing or broken experience, even if it's technically correct
+- Note UX assumptions in **Risks / open questions** when the issue leaves user flows ambiguous
+
 ## Planning Rules
 
 - If a schema change is needed, the plan must include a full migration strategy — never leave this as "TBD"

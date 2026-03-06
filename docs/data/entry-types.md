@@ -6,13 +6,9 @@ For the database schema, see `schema.md`.
 
 ---
 
-## Entry types
-
 ## Notes field
 
 Every entry type supports an optional free-text notes field. Notes are not a standalone entry type — they are a field on the entry itself. They are excluded from correlation logic.
-
----
 
 ---
 
@@ -36,21 +32,39 @@ Every entry type supports an optional free-text notes field. Notes are not a sta
 - Labels carry ingredient tags (dairy, gluten, FODMAP, etc.) enabling food-symptom correlations
 
 ### Emotion
-- Two-step selection: valence first (Pleasant / Neutral / Unpleasant), then specific emotions (multi-select)
+- Three-step selection, each level saveable: arousal/valence zone first (Bright / Warm / Still / Heavy / Charged), then named emotion (multi-select), then granular specifics (multi-select, optional)
+- Top level encodes valence × arousal: Bright (positive, activated), Warm (positive, settled), Still (neutral), Heavy (negative, low energy), Charged (negative, activated)
 - Labels carry tags (nervous system, hormone, etc.) enabling correlations
 - Optional notes
 
-### Physical State
-- Covers both positive ("feeling fine", "no pain") and negative ("bloating", "wrist pain") states — both are equally valuable for correlations
-- Two-step flow: pick body area → pick state labels for that area (multi-select)
-- Optional severity/intensity slider (1–5) after label selection
-- Entries can be linked to a tracked Issue (see below)
+### Physical
 
-### Energy Level
-- A fast single-step log: 0–5 scale (0 = exhausted, 5 = high energy)
-- Stored as a Physical State entry with `numeric_value`; a sub-type flag distinguishes it from label-based physical state logs
-- No labels selected — the numeric value is the full payload
-- Designed for high-frequency use (multiple times per day)
+Covers energy, body area states, and whole-body states in a single unified flow. One submission produces one entry per thing logged; all entries from the same submission share the same timestamp.
+
+The logging screen has three sections:
+
+**Energy**
+- Horizontal slider, 0–5: Exhausted · Bit Tired · Average · Well Rested · Pumped
+- Optional — user can skip and log only body/general items
+- Stored as: `entry_labels = [Energy]`, `numeric_value = 0–5`
+
+**Body** (pick an area, then symptoms)
+- Body areas: Head, Arms, Chest, Gut, Legs
+- Each area shows two symptom lists:
+  - *Universal symptoms* (children of the `Body` label): Pain, Stiff, Numb, Tingling, Itchy, Rash, Swollen, Warm, Sore, Weak, Strong, Fine — shown for every area
+  - *Area-specific symptoms*: e.g. Head → Headache, Migraine, Brain fog, Clear-headed; Gut → Bloating, Nausea, Comfortable
+- Positive and negative states appear together — both are equally valid logs
+- Multi-select; user can log multiple areas in one submission
+- Optional severity 1–5 per area selection
+- Stored as: `entry_labels = [area, symptom(s)]`, `numeric_value = severity or null`
+
+**General** (whole-body, no specific area)
+- For systemic states — flu-like, full-body tension, etc.
+- States: Achy, Tense, Relaxed, Inflamed, Shaky (+ universal symptoms available)
+- Optional severity 1–5
+- Stored as: `entry_labels = [Whole body, state(s)]`, `numeric_value = severity or null`
+
+Entries can be linked to a tracked Issue (see below).
 
 ### Activity
 - Suggested chips (personalized: recently used + time-of-day context) + full search bar; multi-select
@@ -64,9 +78,9 @@ Every entry type supports an optional free-text notes field. Notes are not a sta
 
 A named health concern the user defines to monitor over time (e.g. "Carpal tunnel", "Gut / celiac").
 
-- Not an entry type — a lens for reviewing Physical State entries
+- Not an entry type — a lens for reviewing Physical entries
 - Created in Settings; stored locally; can be archived when no longer active
-- When logging Physical State, user can optionally link the entry to one or more tracked Issues
+- When logging Physical, user can optionally link the entry to one or more tracked Issues
 - In Trace, entries can be filtered by Issue — useful for summarizing for a doctor appointment
 
 ---
