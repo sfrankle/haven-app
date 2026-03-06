@@ -13,37 +13,13 @@
  *   belong in seed SQL review, not here — they break on legitimate vocabulary changes.
  * - CRUD tests belong alongside the repository/service layer, not here.
  */
-import Database from 'better-sqlite3';
-import { readFileSync } from 'fs';
-import path from 'path';
-
-const MIGRATIONS_DIR = path.join(__dirname, '../../lib/db/migrations');
-
-// Read SQL files referenced by the production manifest so the test applies
-// exactly the same migrations in exactly the same order as the running app.
-// (Discovering files from disk by sort order can diverge from the manifest.)
-const MIGRATION_FILES = [
-  'v1__schema.sql',
-  'v2__seed-base.sql',
-  'v3__seed-food.sql',
-  'v4__seed-fodmap.sql',
-  'v5__seed-emotions.sql',
-  'v6__seed-activity.sql',
-  'v7__seed-physical.sql',
-];
-
-function applyAllMigrations(db: Database.Database): void {
-  for (const file of MIGRATION_FILES) {
-    db.exec(readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8'));
-  }
-}
+import { applyAllMigrations, openTestDb } from '../../lib/db/test-helpers';
 
 describe('seed integrity', () => {
-  let db: Database.Database;
+  let db: ReturnType<typeof openTestDb>;
 
   beforeAll(() => {
-    db = new Database(':memory:');
-    db.pragma('foreign_keys = ON');
+    db = openTestDb();
     applyAllMigrations(db);
   });
 

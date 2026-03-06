@@ -5,16 +5,9 @@
  * Uses better-sqlite3 (Node-native, synchronous) so the test runs in Jest
  * without a device or expo-sqlite native module.
  */
-import Database from 'better-sqlite3';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { openTestDb, readMigration } from '../../lib/db/test-helpers';
 
-const MIGRATIONS_DIR = path.join(__dirname, '../../lib/db/migrations');
-
-const SCHEMA_SQL = readFileSync(
-  path.join(MIGRATIONS_DIR, 'v1__schema.sql'),
-  'utf8'
-);
+const SCHEMA_SQL = readMigration('v1__schema.sql');
 
 const EXPECTED_SCHEMA: Record<string, string[]> = {
   measurement_type: ['id', 'name', 'display_name'],
@@ -55,11 +48,10 @@ const EXPECTED_SCHEMA: Record<string, string[]> = {
 };
 
 describe('schema integrity', () => {
-  let db: Database.Database;
+  let db: ReturnType<typeof openTestDb>;
 
   beforeAll(() => {
-    db = new Database(':memory:');
-    db.pragma('foreign_keys = ON');
+    db = openTestDb();
     db.exec(SCHEMA_SQL);
   });
 
