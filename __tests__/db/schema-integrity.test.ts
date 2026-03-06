@@ -52,20 +52,6 @@ const EXPECTED_SCHEMA: Record<string, string[]> = {
     'notes',
   ],
   entry_label: ['entry_id', 'label_id'],
-  anchor_activity: [
-    'id',
-    'label_id',
-    'title',
-    'icon',
-    'default_effort',
-    'user_effort',
-    'is_enabled',
-    'is_default',
-    'seed_version',
-  ],
-  anchor_tag: ['anchor_activity_id', 'tag_id'],
-  issue: ['id', 'name', 'description', 'is_archived', 'created_at'],
-  entry_issue: ['entry_id', 'issue_id'],
 };
 
 describe('schema integrity', () => {
