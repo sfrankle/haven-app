@@ -62,35 +62,3 @@ CREATE TABLE IF NOT EXISTS entry_label (
   label_id INTEGER NOT NULL REFERENCES label(id),
   PRIMARY KEY (entry_id, label_id)
 );
-
-CREATE TABLE IF NOT EXISTS anchor_activity (
-  id             INTEGER PRIMARY KEY,
-  label_id       INTEGER REFERENCES label(id),
-  title          TEXT NOT NULL,
-  icon           TEXT,
-  default_effort INTEGER,
-  user_effort    INTEGER,
-  is_enabled     INTEGER NOT NULL DEFAULT 1,
-  is_default     INTEGER NOT NULL DEFAULT 0,
-  seed_version   INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS anchor_tag (
-  anchor_activity_id INTEGER NOT NULL REFERENCES anchor_activity(id),
-  tag_id             INTEGER NOT NULL REFERENCES tag(id),
-  PRIMARY KEY (anchor_activity_id, tag_id)
-);
-
-CREATE TABLE IF NOT EXISTS issue (
-  id          INTEGER PRIMARY KEY,
-  name        TEXT NOT NULL,
-  description TEXT,
-  is_archived INTEGER NOT NULL DEFAULT 0,
-  created_at  TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS entry_issue (
-  entry_id INTEGER NOT NULL REFERENCES entry(id),
-  issue_id INTEGER NOT NULL REFERENCES issue(id),
-  PRIMARY KEY (entry_id, issue_id)
-);
