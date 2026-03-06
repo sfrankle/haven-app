@@ -17,6 +17,3 @@ UNION ALL
 SELECT 'Physical', id, 'How does your body feel?', 'body', 1, 1, 5 FROM measurement_type WHERE name = 'label_select_severity'
 UNION ALL
 SELECT 'Activity', id, 'What did you do?', 'activity', 1, 1, 6 FROM measurement_type WHERE name = 'label_select';
-
-
-
