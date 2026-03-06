@@ -2,7 +2,9 @@
  * Migration manifest — lists every .sql file in version order.
  * The runner in database.ts uses the array index + 1 as the user_version.
  *
- * To add a migration: create vN__description.sql and append it here.
+ * To add a migration: create vN__description.sql, append it here (both the
+ * require() call and the migrations array), and add the filename to
+ * MIGRATION_FILES in lib/db/test-helpers.ts in the same position.
  * sql-loader.js (registered in metro.config.js) makes Metro serve .sql files
  * as string modules.
  *
