@@ -36,8 +36,8 @@ INSERT OR IGNORE INTO tag (name, tag_group, seed_version) VALUES
 
 -- label: Activity
 WITH v(cat, name, sort_order) AS (VALUES
-  ('Move',       'Walk',                      10),
-  ('Move',       'Run outside',                 20),
+  ('Move',       'Walk',                       10),
+  ('Move',       'Run outside',                20),
   ('Move',       'Treadmill run',              21),
   ('Move',       'Bike',                       30),
   ('Move',       'Yoga',                       40),
@@ -46,8 +46,8 @@ WITH v(cat, name, sort_order) AS (VALUES
   ('Move',       'Padel',                      70),
   ('Move',       'Tennis',                     71),
   ('Move',       'Pickleball',                 72),
-  ('Move',       'Gym workout',                80),
-  ('Move',       'Fitness class',                90),
+  ('Move',       'Strength training',          80),
+  ('Move',       'Fitness class',              90),
   ('Move',       'Dance',                     100),
   ('Move',       'Sport',                     110),
   ('Move',       'Hike',                      120),
@@ -71,7 +71,6 @@ WITH v(cat, name, sort_order) AS (VALUES
   ('Create',     'Design',                     80),
   ('Create',     'Photography',               100),
   ('Create',     'DIY',                       110),
-  ('Create',     'Bake for fun',              120),
 
   ('Reflect',    'Journaling',                 10),
   ('Reflect',    'Gratitude practice',         20),
@@ -105,8 +104,8 @@ WITH v(cat, name, sort_order) AS (VALUES
   ('Restore',    'Read for pleasure',          70),
   ('Restore',    'Sit outside',                80),
   ('Restore',    'Time in nature',             90),
-  ('Restore',    'Nature walk',               95),
-  ('Restore',    'Gardening',                100),
+  ('Restore',    'Nature walk',                95),
+  ('Restore',    'Gardening',                 100),
 
   ('Nourish',    'Meal prep',                  10),
   ('Nourish',    'Mindful eating',             20),
@@ -115,7 +114,7 @@ WITH v(cat, name, sort_order) AS (VALUES
 
   ('Structure',  'Work block',                 10),
   ('Structure',  'Study',                      20),
-  ('Structure',  'Adulting',                      30),
+  ('Structure',  'Adulting',                   30),
   ('Structure',  'Errands',                    40),
   ('Structure',  'Tidying',                    50),
   ('Structure',  'Cleaning',                   60),
@@ -155,6 +154,7 @@ JOIN tag t ON t.name = 'cardio'
 WHERE et.name = 'Activity'
 AND l.name IN (
   'Walk',
+  'Nature walk',
   'Run outside',
   'Treadmill run',
   'Bike',
@@ -165,8 +165,7 @@ AND l.name IN (
   'Padel',
   'Tennis',
   'Pickleball',
-  'Fitness class',
-  'Gym workout'
+  'Fitness class'
 )
 
 UNION ALL
@@ -178,22 +177,8 @@ JOIN entry_type et ON l.entry_type_id = et.id
 JOIN tag t ON t.name = 'strength'
 WHERE et.name = 'Activity'
 AND l.name IN (
-  'Gym workout',
+  'Strength training',
   'Sport'
-)
-
-UNION ALL
-
--- mobility
-SELECT l.id, t.id, 2
-FROM label l
-JOIN entry_type et ON l.entry_type_id = et.id
-JOIN tag t ON t.name = 'mobility'
-WHERE et.name = 'Activity'
-AND l.name IN (
-  'Stretching',
-  'Yoga',
-  'Pilates'
 )
 
 UNION ALL
@@ -251,9 +236,7 @@ AND l.name IN (
   'Sewing',
   'Design',
   'Photography',
-  'DIY',
-  'Cooking',
-  'Bake for fun'
+  'DIY'
 )
 
 UNION ALL
