@@ -3,11 +3,16 @@
  * tables with the correct columns.
  *
  * Uses better-sqlite3 (Node-native, synchronous) so the test runs in Jest
- * without a device or expo-sqlite native module. The test validates SQL
- * correctness, not the Expo module itself.
+ * without a device or expo-sqlite native module.
  */
 import Database from 'better-sqlite3';
-import { MIGRATION_V1_SQL } from '../../lib/db/migrations';
+import { readFileSync } from 'fs';
+import path from 'path';
+
+const SCHEMA_SQL = readFileSync(
+  path.join(__dirname, '../../lib/db/migrations/v1__schema.sql'),
+  'utf8'
+);
 
 const EXPECTED_SCHEMA: Record<string, string[]> = {
   measurement_type: ['id', 'name', 'display_name'],
@@ -66,7 +71,7 @@ describe('schema integrity', () => {
 
   beforeAll(() => {
     db = new Database(':memory:');
-    db.exec(MIGRATION_V1_SQL);
+    db.exec(SCHEMA_SQL);
   });
 
   afterAll(() => {

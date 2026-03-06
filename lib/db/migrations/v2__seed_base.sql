@@ -1,27 +1,10 @@
-/**
- * Seed SQL strings for v1 vocabulary.
- *
- * Exported separately from seeds.ts so the seed-integrity test can execute
- * these strings directly with better-sqlite3 (Node-native) without requiring
- * the expo-sqlite native module — same pattern as MIGRATION_V1_SQL in migrations.ts.
- *
- * All inserts use INSERT OR IGNORE with name-based deduplication via UNIQUE
- * constraints on name columns. No explicit integer IDs are used; FK references
- * are resolved at insert time via subquery SELECTs by name.
- *
- * label inserts omit is_default, is_enabled, sort_order, and seed_version —
- * all covered by schema defaults (1, 1, 0, 1). Only entry_type_id, name, and
- * optionally parent_id or category_id are specified.
- */
-
-export const SEED_V1_MEASUREMENT_TYPES = `
+-- measurement_type
 INSERT OR IGNORE INTO measurement_type (name, display_name) VALUES
   ('numeric', 'Numeric'),
   ('label_select', 'Label Select'),
   ('label_select_severity', 'Label Select with Severity');
-`;
 
-export const SEED_V1_CATEGORIES = `
+-- category
 INSERT OR IGNORE INTO category (name) VALUES
   ('Move'),
   ('Create'),
@@ -30,10 +13,17 @@ INSERT OR IGNORE INTO category (name) VALUES
   ('Breathe'),
   ('Reflect'),
   ('Nourish'),
-  ('Structure');
-`;
+  ('Structure'),
+  ('Grains'),
+  ('Dairy'),
+  ('Protein'),
+  ('Vegetables'),
+  ('Fruit'),
+  ('Nuts & Seeds'),
+  ('Drinks'),
+  ('Snacks');
 
-export const SEED_V1_ENTRY_TYPES = `
+-- entry_type
 INSERT OR IGNORE INTO entry_type (name, measurement_type_id, prompt, icon, is_enabled, is_default, sort_order)
 SELECT 'Sleep', id, 'How many hours did you sleep?', 'moon', 1, 1, 1 FROM measurement_type WHERE name = 'numeric'
 UNION ALL
@@ -46,112 +36,149 @@ UNION ALL
 SELECT 'Physical', id, 'How does your body feel?', 'body', 1, 1, 5 FROM measurement_type WHERE name = 'label_select_severity'
 UNION ALL
 SELECT 'Activity', id, 'What did you do?', 'activity', 1, 1, 6 FROM measurement_type WHERE name = 'label_select';
-`;
 
-export const SEED_V1_TAGS = `
+-- tag
 INSERT OR IGNORE INTO tag (name, tag_group, seed_version) VALUES
-  ('dairy',          'food_sensitivity', 1),
-  ('gluten',         'food_sensitivity', 1),
-  ('fodmap',         'food_sensitivity', 1),
-  ('nightshade',     'food_sensitivity', 1),
-  ('caffeine',       'food_sensitivity', 1),
-  ('alcohol',        'food_sensitivity', 1),
-  ('high_sugar',     'food_sensitivity', 1),
-  ('high_fat',       'food_sensitivity', 1),
-  ('tree_nuts',      'allergy',          1),
-  ('peanuts',        'allergy',          1),
-  ('nervous_system', 'emotion_system',   1),
-  ('hormone',        'emotion_system',   1),
-  ('cardiovascular', 'activity_type',    1),
-  ('strength',       'activity_type',    1),
-  ('flexibility',    'activity_type',    1),
-  ('mindfulness',    'activity_type',    1),
-  ('social',         'activity_type',    1),
-  ('creative',       'activity_type',    1);
-`;
+  ('dairy',                'food_sensitivity', 1),
+  ('gluten',               'food_sensitivity', 1),
+  ('fodmap',               'food_sensitivity', 1),
+  ('nightshade',           'food_sensitivity', 1),
+  ('caffeine',             'food_sensitivity', 1),
+  ('alcohol',              'food_sensitivity', 1),
+  ('high_sugar',           'food_sensitivity', 1),
+  ('high_fat',             'food_sensitivity', 1),
+  ('processed',            'food_sensitivity', 1),
+  ('fermented',            'food_sensitivity', 1),
+  ('spicy',                'food_sensitivity', 1),
+  ('artificial_sweetener', 'food_sensitivity', 1),
+  ('high_sodium',          'food_sensitivity', 1),
+  ('lactose',              'food_sensitivity', 1),
+  ('shellfish',            'allergy',          1),
+  ('soy',                  'allergy',          1),
+  ('tree_nuts',            'allergy',          1),
+  ('peanuts',              'allergy',          1),
+  ('nervous_system',       'emotion_system',   1),
+  ('hormone',              'emotion_system',   1),
+  ('cardiovascular',       'activity_type',    1),
+  ('strength',             'activity_type',    1),
+  ('flexibility',          'activity_type',    1),
+  ('mindfulness',          'activity_type',    1),
+  ('social',               'activity_type',    1),
+  ('creative',             'activity_type',    1);
 
-/**
- * Food labels — flat, no parent, no category.
- */
-export const SEED_V1_LABELS_FOOD = `
-WITH v(name) AS (VALUES
-  ('Rice, White'),
-  ('Rice, Brown'),
-  ('Oats'),
-  ('Bread'),
-  ('Pasta'),
-  ('Corn tortilla'),
-  ('Cheese'),
-  ('Milk'),
-  ('Milk, Almond'),
-  ('Milk, Oat'),
-  ('Yogurt'),
-  ('Butter'),
-  ('Cream'),
-  ('Ice cream'),
-  ('Chicken'),
-  ('Beef'),
-  ('Pork'),
-  ('Fish'),
-  ('Eggs'),
-  ('Tofu'),
-  ('Beans'),
-  ('Lentils'),
-  ('Broccoli'),
-  ('Spinach'),
-  ('Kale'),
-  ('Onion'),
-  ('Garlic'),
-  ('Tomato'),
-  ('Pepper'),
-  ('Carrot'),
-  ('Cucumber'),
-  ('Zucchini'),
-  ('Potato'),
-  ('Sweet potato'),
-  ('Mushroom'),
-  ('Apple'),
-  ('Banana'),
-  ('Berries'),
-  ('Orange'),
-  ('Avocado'),
-  ('Grapes'),
-  ('Olive oil'),
-  ('Seeds'),
-  ('Almonds'),
-  ('Cashews'),
-  ('Hazelnuts'),
-  ('Macadamia'),
-  ('Peanuts'),
-  ('Pecans'),
-  ('Pistachios'),
-  ('Walnuts'),
-  ('Chocolate, Dark'),
-  ('Coffee'),
-  ('Tea'),
-  ('Alcohol'),
-  ('Chips, Potato'),
-  ('Chips, Corn'),
-  ('Crackers')
+-- label: Food
+WITH v(cat, name) AS (VALUES
+  ('Grains',      'Rice, White'),
+  ('Grains',      'Rice, Brown'),
+  ('Grains',      'Oats'),
+  ('Grains',      'Bread'),
+  ('Grains',      'Bread (GF)'),
+  ('Grains',      'Pasta'),
+  ('Grains',      'Pasta (GF)'),
+  ('Grains',      'Corn tortilla'),
+  ('Grains',      'Couscous'),
+  ('Grains',      'Quinoa'),
+  ('Grains',      'Polenta'),
+  ('Grains',      'Sourdough'),
+  ('Dairy',       'Cheese'),
+  ('Dairy',       'Milk'),
+  ('Dairy',       'Yogurt'),
+  ('Dairy',       'Butter'),
+  ('Dairy',       'Cream'),
+  ('Dairy',       'Ice cream'),
+  ('Dairy',       'Cheese, Goat'),
+  ('Protein',     'Chicken'),
+  ('Protein',     'Beef'),
+  ('Protein',     'Pork'),
+  ('Protein',     'Fish'),
+  ('Protein',     'Eggs'),
+  ('Protein',     'Tofu'),
+  ('Protein',     'Beans'),
+  ('Protein',     'Lentils'),
+  ('Protein',     'Turkey'),
+  ('Protein',     'Lamb'),
+  ('Protein',     'Duck'),
+  ('Protein',     'Shellfish'),
+  ('Protein',     'Deli meat'),
+  ('Vegetables',  'Broccoli'),
+  ('Vegetables',  'Spinach'),
+  ('Vegetables',  'Kale'),
+  ('Vegetables',  'Onion'),
+  ('Vegetables',  'Garlic'),
+  ('Vegetables',  'Tomato'),
+  ('Vegetables',  'Pepper'),
+  ('Vegetables',  'Carrot'),
+  ('Vegetables',  'Cucumber'),
+  ('Vegetables',  'Zucchini'),
+  ('Vegetables',  'Potato'),
+  ('Vegetables',  'Sweet potato'),
+  ('Vegetables',  'Mushroom'),
+  ('Vegetables',  'Cauliflower'),
+  ('Vegetables',  'Cabbage'),
+  ('Vegetables',  'Brussels sprouts'),
+  ('Vegetables',  'Eggplant'),
+  ('Vegetables',  'Bell pepper'),
+  ('Vegetables',  'Chili pepper'),
+  ('Vegetables',  'Celery'),
+  ('Vegetables',  'Asparagus'),
+  ('Vegetables',  'Artichoke'),
+  ('Vegetables',  'Leek'),
+  ('Vegetables',  'Kimchi'),
+  ('Vegetables',  'Sauerkraut'),
+  ('Fruit',       'Apple'),
+  ('Fruit',       'Banana'),
+  ('Fruit',       'Berries'),
+  ('Fruit',       'Orange'),
+  ('Fruit',       'Avocado'),
+  ('Fruit',       'Grapes'),
+  ('Fruit',       'Pear'),
+  ('Fruit',       'Plum'),
+  ('Fruit',       'Peach'),
+  ('Fruit',       'Mango'),
+  ('Fruit',       'Pineapple'),
+  ('Fruit',       'Lemon'),
+  ('Fruit',       'Lime'),
+  ('Nuts & Seeds','Seeds, Pumpkin'),
+  ('Nuts & Seeds','Seeds, Sesame'),
+  ('Nuts & Seeds','Almonds'),
+  ('Nuts & Seeds','Cashews'),
+  ('Nuts & Seeds','Hazelnuts'),
+  ('Nuts & Seeds','Macadamia'),
+  ('Nuts & Seeds','Peanuts'),
+  ('Nuts & Seeds','Pecans'),
+  ('Nuts & Seeds','Pistachios'),
+  ('Nuts & Seeds','Walnuts'),
+  ('Snacks',      'Mayonnaise'),
+  ('Snacks',      'Chocolate, Dark'),
+  ('Snacks',      'Chips, Potato'),
+  ('Snacks',      'Chips, Corn'),
+  ('Snacks',      'Crackers'),
+  ('Snacks',      'Candy'),
+  ('Snacks',      'Hummus'),
+  ('Snacks',      'Hot sauce'),
+  ('Drinks',      'Coffee'),
+  ('Drinks',      'Tea'),
+  ('Drinks',      'Alcohol'),
+  ('Drinks',      'Wine'),
+  ('Drinks',      'Beer'),
+  ('Drinks',      'Milk, Almond'),
+  ('Drinks',      'Milk, Oat'),
+  ('Drinks',      'Soda'),
+  ('Drinks',      'Fruit juice')
 )
-INSERT OR IGNORE INTO label (entry_type_id, name)
-SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Food';
-`;
+INSERT OR IGNORE INTO label (entry_type_id, name, category_id)
+SELECT et.id, v.name, c.id
+FROM entry_type et
+JOIN v ON 1=1
+JOIN category c ON c.name = v.cat
+WHERE et.name = 'Food';
 
-/**
- * Emotion Layer 1 — arousal/valence buckets (saveable on their own).
- */
-export const SEED_V1_LABELS_EMOTION_L1 = `
+-- label: Emotion L1
 WITH v(name) AS (VALUES ('Bright'), ('Warm'), ('Still'), ('Heavy'), ('Charged'))
 INSERT OR IGNORE INTO label (entry_type_id, name)
 SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Emotion';
-`;
 
-/**
- * Emotion Layer 2 — mid-level clusters, each parented to an L1 bucket.
- * Must be inserted after L1.
- */
-export const SEED_V1_LABELS_EMOTION_L2 = `
+-- label: Emotion L2
 WITH v(parent, child) AS (VALUES
   ('Bright',  'Joyful'),
   ('Bright',  'Excited'),
@@ -185,13 +212,8 @@ FROM entry_type et
 JOIN v ON 1=1
 JOIN label pl ON pl.entry_type_id = et.id AND pl.name = v.parent
 WHERE et.name = 'Emotion';
-`;
 
-/**
- * Emotion Layer 3 — specific emotions, each parented to an L2 cluster.
- * Must be inserted after L2.
- */
-export const SEED_V1_LABELS_EMOTION_L3 = `
+-- label: Emotion L3
 WITH v(parent, child) AS (VALUES
   ('Joyful',        'Happy'),
   ('Joyful',        'Delighted'),
@@ -305,27 +327,17 @@ FROM entry_type et
 JOIN v ON 1=1
 JOIN label pl ON pl.entry_type_id = et.id AND pl.name = v.parent
 WHERE et.name = 'Emotion';
-`;
 
-/**
- * Physical parent labels — must be inserted before children.
- * 'Body' is the universal symptom pool (not a selectable area in the UI).
- */
-export const SEED_V1_LABELS_PHYSICAL_PARENTS = `
+-- label: Physical parents
+-- 'Body' is the universal symptom pool (not a selectable area in the UI)
 WITH v(name) AS (VALUES
   ('Energy'), ('Head'), ('Arms'), ('Chest'), ('Gut'),
   ('Legs'), ('Whole body'), ('Body')
 )
 INSERT OR IGNORE INTO label (entry_type_id, name)
 SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Physical';
-`;
 
-/**
- * Physical 'Body' children — symptoms that apply to any body area.
- * Parented to 'Body' (the universal symptom pool, not a selectable area).
- * Must be inserted after SEED_V1_LABELS_PHYSICAL_PARENTS.
- */
-export const SEED_V1_LABELS_PHYSICAL_UNIVERSALS = `
+-- label: Physical universal symptoms (children of 'Body')
 WITH v(name) AS (VALUES
   ('Pain'), ('Stiff'), ('Numb'), ('Tingling'),
   ('Itchy'), ('Rash'), ('Swollen'), ('Warm'), ('Sore'),
@@ -337,14 +349,8 @@ FROM entry_type et
 JOIN v ON 1=1
 JOIN label pl ON pl.entry_type_id = et.id AND pl.name = 'Body'
 WHERE et.name = 'Physical';
-`;
 
-/**
- * Physical area-specific child labels — requires parents to exist first.
- * Universal symptoms are stored separately (parentless) and shown by the UI
- * for every body area.
- */
-export const SEED_V1_LABELS_PHYSICAL_CHILDREN = `
+-- label: Physical area-specific symptoms
 WITH v(parent, child) AS (VALUES
   -- Head
   ('Head',       'Headache'),
@@ -356,7 +362,7 @@ WITH v(parent, child) AS (VALUES
   ('Head',       'Sore throat'),
   ('Head',       'Clear-headed'),
   ('Head',       'Sharp focus'),
-  -- Arms: specific (Weak/Strong/Fine are parentless cross-area labels)
+  -- Arms: Weak/Strong/Fine are universal cross-area labels
   -- Chest
   ('Chest',      'Tight'),
   ('Chest',      'Palpitations'),
@@ -374,10 +380,10 @@ WITH v(parent, child) AS (VALUES
   ('Gut',        'Comfortable'),
   ('Gut',        'Full'),
   ('Gut',        'Empty'),
-  -- Legs: specific (Weak/Strong/Fine are parentless cross-area labels)
+  -- Legs: Weak/Strong/Fine are universal cross-area labels
   ('Legs',       'Heavy'),
   ('Legs',       'Restless'),
-  -- Whole body: specific (Strong/Weak are parentless cross-area labels)
+  -- Whole body
   ('Whole body', 'Achy'),
   ('Whole body', 'Tense'),
   ('Whole body', 'Relaxed'),
@@ -390,12 +396,8 @@ FROM entry_type et
 JOIN v ON 1=1
 JOIN label pl ON pl.entry_type_id = et.id AND pl.name = v.parent
 WHERE et.name = 'Physical';
-`;
 
-/**
- * Activity labels — flat, with category resolved by name.
- */
-export const SEED_V1_LABELS_ACTIVITY = `
+-- label: Activity
 WITH v(cat, name) AS (VALUES
   ('Move',      'Walk'),
   ('Move',      'Run'),
@@ -454,100 +456,72 @@ FROM entry_type et
 JOIN v ON 1=1
 JOIN category c ON c.name = v.cat
 WHERE et.name = 'Activity';
-`;
 
-/**
- * label_tag associations — all FK references resolved by name via joins.
- */
-export const SEED_V1_LABEL_TAGS = `
+-- label_tag: Food
 INSERT OR IGNORE INTO label_tag (label_id, tag_id, seed_version)
--- Food: dairy
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'dairy' WHERE et.name = 'Food' AND l.name = 'Cheese'
+-- dairy
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'dairy' WHERE et.name = 'Food' AND l.name IN ('Cheese', 'Milk', 'Yogurt', 'Butter', 'Cream', 'Ice cream', 'Cheese, Goat')
 UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'dairy' WHERE et.name = 'Food' AND l.name = 'Milk'
+-- lactose (high-lactose dairy — butter/aged cheese are naturally low)
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'lactose' WHERE et.name = 'Food' AND l.name IN ('Milk', 'Cream', 'Ice cream', 'Yogurt')
 UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'dairy' WHERE et.name = 'Food' AND l.name = 'Yogurt'
+-- gluten
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name IN ('Bread', 'Pasta', 'Couscous', 'Crackers', 'Beer', 'Sourdough')
 UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'dairy' WHERE et.name = 'Food' AND l.name = 'Butter'
+-- nightshade
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'nightshade' WHERE et.name = 'Food' AND l.name IN ('Tomato', 'Pepper', 'Potato', 'Eggplant', 'Bell pepper', 'Chili pepper')
 UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'dairy' WHERE et.name = 'Food' AND l.name = 'Cream'
+-- caffeine
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'caffeine' WHERE et.name = 'Food' AND l.name IN ('Coffee', 'Tea', 'Chocolate, Dark')
 UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'dairy' WHERE et.name = 'Food' AND l.name = 'Ice cream'
+-- alcohol
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'alcohol' WHERE et.name = 'Food' AND l.name IN ('Alcohol', 'Wine', 'Beer')
 UNION ALL
--- Ice cream: also high_fat, high_sugar
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_fat' WHERE et.name = 'Food' AND l.name = 'Ice cream'
+-- high_fat (rich/greasy foods — not cooking oils)
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_fat' WHERE et.name = 'Food' AND l.name IN ('Ice cream', 'Chips, Potato', 'Chips, Corn', 'Butter', 'Cream', 'Mayonnaise', 'Almonds', 'Cashews', 'Hazelnuts', 'Macadamia', 'Peanuts', 'Pecans', 'Pistachios', 'Walnuts', 'Seeds, Pumpkin', 'Seeds, Sesame')
 UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_sugar' WHERE et.name = 'Food' AND l.name = 'Ice cream'
-UNION ALL
--- Food: gluten
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name = 'Bread'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name = 'Pasta'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name = 'Crackers'
-UNION ALL
--- Food: fodmap
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fodmap' WHERE et.name = 'Food' AND l.name = 'Onion'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fodmap' WHERE et.name = 'Food' AND l.name = 'Garlic'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fodmap' WHERE et.name = 'Food' AND l.name = 'Beans'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fodmap' WHERE et.name = 'Food' AND l.name = 'Lentils'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fodmap' WHERE et.name = 'Food' AND l.name = 'Grapes'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fodmap' WHERE et.name = 'Food' AND l.name = 'Apple'
-UNION ALL
--- Grapes also high_sugar
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_sugar' WHERE et.name = 'Food' AND l.name = 'Grapes'
-UNION ALL
--- Food: nightshade
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'nightshade' WHERE et.name = 'Food' AND l.name = 'Tomato'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'nightshade' WHERE et.name = 'Food' AND l.name = 'Pepper'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'nightshade' WHERE et.name = 'Food' AND l.name = 'Potato'
-UNION ALL
--- Food: caffeine
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'caffeine' WHERE et.name = 'Food' AND l.name = 'Coffee'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'caffeine' WHERE et.name = 'Food' AND l.name = 'Tea'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'caffeine' WHERE et.name = 'Food' AND l.name = 'Chocolate, Dark'
-UNION ALL
--- Food: alcohol
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'alcohol' WHERE et.name = 'Food' AND l.name = 'Alcohol'
-UNION ALL
--- Food: high_fat chips
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_fat' WHERE et.name = 'Food' AND l.name = 'Chips, Potato'
-UNION ALL
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_fat' WHERE et.name = 'Food' AND l.name = 'Chips, Corn'
-UNION ALL
--- Food: tree_nuts (all except peanuts)
+-- tree_nuts (allergen)
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'tree_nuts' WHERE et.name = 'Food' AND l.name IN ('Almonds', 'Cashews', 'Hazelnuts', 'Macadamia', 'Pecans', 'Pistachios', 'Walnuts')
 UNION ALL
--- Food: peanuts (separate allergen)
+-- peanuts (separate allergen)
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'peanuts' WHERE et.name = 'Food' AND l.name = 'Peanuts'
 UNION ALL
--- Activity: cardiovascular
+-- soy (allergen)
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'soy' WHERE et.name = 'Food' AND l.name = 'Tofu'
+UNION ALL
+-- shellfish (allergen)
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'shellfish' WHERE et.name = 'Food' AND l.name = 'Shellfish'
+UNION ALL
+-- spicy
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'spicy' WHERE et.name = 'Food' AND l.name IN ('Chili pepper', 'Kimchi', 'Hot sauce')
+UNION ALL
+-- fermented
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fermented' WHERE et.name = 'Food' AND l.name IN ('Yogurt', 'Sourdough', 'Kimchi', 'Sauerkraut')
+UNION ALL
+-- high_sugar
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_sugar' WHERE et.name = 'Food' AND l.name IN ('Soda', 'Fruit juice', 'Candy', 'Chocolate, Dark', 'Banana', 'Mango', 'Pineapple', 'Grapes', 'Wine', 'Ice cream')
+UNION ALL
+-- high_sodium
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_sodium' WHERE et.name = 'Food' AND l.name IN ('Chips, Potato', 'Chips, Corn', 'Crackers', 'Deli meat', 'Hot sauce')
+UNION ALL
+-- processed (ultra-processed foods)
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'processed' WHERE et.name = 'Food' AND l.name IN ('Chips, Potato', 'Chips, Corn', 'Crackers', 'Candy', 'Soda', 'Deli meat', 'Ice cream', 'Mayonnaise', 'Fruit juice', 'Milk, Almond', 'Milk, Oat')
+UNION ALL
+-- label_tag: Activity
+-- cardiovascular
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'cardiovascular' WHERE et.name = 'Activity' AND l.name IN ('Walk','Run','Cycle','Swim','HIIT','Dancing','Hiking','Climbing')
 UNION ALL
--- Activity: strength
+-- strength
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'strength' WHERE et.name = 'Activity' AND l.name IN ('Weight training','HIIT','Climbing')
 UNION ALL
--- Activity: flexibility
+-- flexibility
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'flexibility' WHERE et.name = 'Activity' AND l.name IN ('Yoga','Stretching','Pilates')
 UNION ALL
--- Activity: mindfulness — Breathe category
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'mindfulness' JOIN category c ON l.category_id = c.id WHERE et.name = 'Activity' AND c.name = 'Breathe'
+-- mindfulness — Breathe + Reflect categories
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'mindfulness' JOIN category c ON l.category_id = c.id WHERE et.name = 'Activity' AND c.name IN ('Breathe', 'Reflect')
 UNION ALL
--- Activity: mindfulness — Reflect category
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'mindfulness' JOIN category c ON l.category_id = c.id WHERE et.name = 'Activity' AND c.name = 'Reflect'
-UNION ALL
--- Activity: social — Connect category
+-- social — Connect category
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'social' JOIN category c ON l.category_id = c.id WHERE et.name = 'Activity' AND c.name = 'Connect'
 UNION ALL
--- Activity: creative — Create category
+-- creative — Create category
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'creative' JOIN category c ON l.category_id = c.id WHERE et.name = 'Activity' AND c.name = 'Create';
-`;

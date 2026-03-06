@@ -3,42 +3,27 @@
  * vocabulary into the database with correct data and parent-child relationships.
  *
  * Uses better-sqlite3 (Node-native, synchronous) so the test runs in Jest
- * without a device or expo-sqlite native module — same pattern as schema-integrity.test.ts.
+ * without a device or expo-sqlite native module.
  *
  * No test asserts on specific integer IDs — all lookups use name-based queries.
  */
 import Database from 'better-sqlite3';
-import { MIGRATION_V1_SQL } from '../../lib/db/migrations';
-import {
-  SEED_V1_MEASUREMENT_TYPES,
-  SEED_V1_CATEGORIES,
-  SEED_V1_ENTRY_TYPES,
-  SEED_V1_TAGS,
-  SEED_V1_LABELS_FOOD,
-  SEED_V1_LABELS_EMOTION_L1,
-  SEED_V1_LABELS_EMOTION_L2,
-  SEED_V1_LABELS_EMOTION_L3,
-  SEED_V1_LABELS_PHYSICAL_PARENTS,
-  SEED_V1_LABELS_PHYSICAL_UNIVERSALS,
-  SEED_V1_LABELS_PHYSICAL_CHILDREN,
-  SEED_V1_LABELS_ACTIVITY,
-  SEED_V1_LABEL_TAGS,
-} from '../../lib/db/seed-sql';
+import { readdirSync, readFileSync } from 'fs';
+import path from 'path';
 
-function applySeeds(db: Database.Database): void {
-  db.exec(SEED_V1_MEASUREMENT_TYPES);
-  db.exec(SEED_V1_CATEGORIES);
-  db.exec(SEED_V1_ENTRY_TYPES);
-  db.exec(SEED_V1_TAGS);
-  db.exec(SEED_V1_LABELS_FOOD);
-  db.exec(SEED_V1_LABELS_EMOTION_L1);
-  db.exec(SEED_V1_LABELS_EMOTION_L2);
-  db.exec(SEED_V1_LABELS_EMOTION_L3);
-  db.exec(SEED_V1_LABELS_PHYSICAL_PARENTS);
-  db.exec(SEED_V1_LABELS_PHYSICAL_UNIVERSALS);
-  db.exec(SEED_V1_LABELS_PHYSICAL_CHILDREN);
-  db.exec(SEED_V1_LABELS_ACTIVITY);
-  db.exec(SEED_V1_LABEL_TAGS);
+const MIGRATIONS_DIR = path.join(__dirname, '../../lib/db/migrations');
+
+function readMigration(filename: string): string {
+  return readFileSync(path.join(MIGRATIONS_DIR, filename), 'utf8');
+}
+
+function applyAllMigrations(db: Database.Database): void {
+  const files = readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.endsWith('.sql'))
+    .sort();
+  for (const file of files) {
+    db.exec(readMigration(file));
+  }
 }
 
 describe('seed integrity', () => {
@@ -46,8 +31,7 @@ describe('seed integrity', () => {
 
   beforeAll(() => {
     db = new Database(':memory:');
-    db.exec(MIGRATION_V1_SQL);
-    applySeeds(db);
+    applyAllMigrations(db);
   });
 
   afterAll(() => {
@@ -121,45 +105,54 @@ describe('seed integrity', () => {
 
   // ---- category ----
 
-  test('category: count = 8', () => {
+  test('category: count = 16', () => {
     const { count } = db
       .prepare('SELECT COUNT(*) as count FROM category')
       .get() as { count: number };
-    expect(count).toBe(8);
+    expect(count).toBe(16);
   });
 
-  test('category: expected names present', () => {
-    const rows = db
-      .prepare('SELECT name FROM category ORDER BY name')
-      .all() as { name: string }[];
-    expect(rows.map((r) => r.name).sort()).toEqual([
-      'Breathe',
-      'Connect',
-      'Create',
-      'Ground',
-      'Move',
-      'Nourish',
-      'Reflect',
-      'Structure',
-    ]);
+  test('category: activity categories present', () => {
+    const names = ['Move', 'Create', 'Connect', 'Ground', 'Breathe', 'Reflect', 'Nourish', 'Structure'];
+    for (const name of names) {
+      const row = db.prepare('SELECT 1 FROM category WHERE name = ?').get(name);
+      expect(row).toBeDefined();
+    }
+  });
+
+  test('category: food categories present', () => {
+    const names = ['Grains', 'Dairy', 'Protein', 'Vegetables', 'Fruit', 'Nuts & Seeds', 'Drinks', 'Snacks'];
+    for (const name of names) {
+      const row = db.prepare('SELECT 1 FROM category WHERE name = ?').get(name);
+      expect(row).toBeDefined();
+    }
   });
 
   // ---- tag ----
 
-  test('tag: count = 18', () => {
+  test('tag: count = 26', () => {
     const { count } = db
       .prepare('SELECT COUNT(*) as count FROM tag')
       .get() as { count: number };
-    expect(count).toBe(18);
+    expect(count).toBe(26);
   });
 
-  test('tag: food_sensitivity group has 8 tags', () => {
+  test('tag: food_sensitivity group has 14 tags', () => {
     const { count } = db
       .prepare(
         "SELECT COUNT(*) as count FROM tag WHERE tag_group = 'food_sensitivity'"
       )
       .get() as { count: number };
-    expect(count).toBe(8);
+    expect(count).toBe(14);
+  });
+
+  test('tag: allergy group has 4 tags', () => {
+    const { count } = db
+      .prepare(
+        "SELECT COUNT(*) as count FROM tag WHERE tag_group = 'allergy'"
+      )
+      .get() as { count: number };
+    expect(count).toBe(4);
   });
 
   test('tag: emotion_system group has 2 tags', () => {
@@ -178,15 +171,6 @@ describe('seed integrity', () => {
       )
       .get() as { count: number };
     expect(count).toBe(6);
-  });
-
-  test('tag: allergy group has 2 tags', () => {
-    const { count } = db
-      .prepare(
-        "SELECT COUNT(*) as count FROM tag WHERE tag_group = 'allergy'"
-      )
-      .get() as { count: number };
-    expect(count).toBe(2);
   });
 
   // ---- label hierarchy: Emotion ----
@@ -281,7 +265,7 @@ describe('seed integrity', () => {
     expect(row!.parent_id).toBeNull();
   });
 
-  test('label: Food has 58 labels', () => {
+  test('label: Food has 97 labels', () => {
     const { count } = db
       .prepare(
         `SELECT COUNT(*) as count FROM label l
@@ -289,7 +273,7 @@ describe('seed integrity', () => {
          WHERE et.name = 'Food'`
       )
       .get() as { count: number };
-    expect(count).toBe(58);
+    expect(count).toBe(97);
   });
 
   test('label: individual nut labels exist', () => {
@@ -305,14 +289,16 @@ describe('seed integrity', () => {
     }
   });
 
-  test('label: Sourdough not present', () => {
+  test('label: Sourdough exists with category Grains', () => {
     const row = db
       .prepare(
-        `SELECT 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id
+        `SELECT c.name as cat FROM label l
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN category c ON l.category_id = c.id
          WHERE et.name = 'Food' AND l.name = 'Sourdough'`
       )
-      .get();
-    expect(row).toBeUndefined();
+      .get() as { cat: string } | undefined;
+    expect(row?.cat).toBe('Grains');
   });
 
   // ---- label: Physical ----
@@ -564,6 +550,32 @@ describe('seed integrity', () => {
     expect(count).toBe(7);
   });
 
+  test('label_tag: Onion → fodmap association exists', () => {
+    const assoc = db
+      .prepare(
+        `SELECT 1 FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Food' AND l.name = 'Onion' AND t.name = 'fodmap'`
+      )
+      .get();
+    expect(assoc).toBeDefined();
+  });
+
+  test('label_tag: Grapes not tagged fodmap', () => {
+    const assoc = db
+      .prepare(
+        `SELECT 1 FROM label_tag lt
+         JOIN label l ON lt.label_id = l.id
+         JOIN entry_type et ON l.entry_type_id = et.id
+         JOIN tag t ON lt.tag_id = t.id
+         WHERE et.name = 'Food' AND l.name = 'Grapes' AND t.name = 'fodmap'`
+      )
+      .get();
+    expect(assoc).toBeUndefined();
+  });
+
   test('label_tag: Walk → cardiovascular association exists', () => {
     const assoc = db
       .prepare(
@@ -593,43 +605,23 @@ describe('seed integrity', () => {
 
   // ---- idempotency ----
 
-  test('idempotency: running seeds twice produces no duplicates', () => {
+  test('idempotency: running all migrations twice produces no duplicates', () => {
     const countBefore = {
-      measurement_type: (
-        db.prepare('SELECT COUNT(*) as c FROM measurement_type').get() as { c: number }
-      ).c,
-      entry_type: (
-        db.prepare('SELECT COUNT(*) as c FROM entry_type').get() as { c: number }
-      ).c,
-      category: (
-        db.prepare('SELECT COUNT(*) as c FROM category').get() as { c: number }
-      ).c,
+      measurement_type: (db.prepare('SELECT COUNT(*) as c FROM measurement_type').get() as { c: number }).c,
+      entry_type: (db.prepare('SELECT COUNT(*) as c FROM entry_type').get() as { c: number }).c,
+      category: (db.prepare('SELECT COUNT(*) as c FROM category').get() as { c: number }).c,
       tag: (db.prepare('SELECT COUNT(*) as c FROM tag').get() as { c: number }).c,
       label: (db.prepare('SELECT COUNT(*) as c FROM label').get() as { c: number }).c,
-      label_tag: (
-        db.prepare('SELECT COUNT(*) as c FROM label_tag').get() as { c: number }
-      ).c,
+      label_tag: (db.prepare('SELECT COUNT(*) as c FROM label_tag').get() as { c: number }).c,
     };
 
-    applySeeds(db);
+    applyAllMigrations(db);
 
-    expect(
-      (db.prepare('SELECT COUNT(*) as c FROM measurement_type').get() as { c: number }).c
-    ).toBe(countBefore.measurement_type);
-    expect(
-      (db.prepare('SELECT COUNT(*) as c FROM entry_type').get() as { c: number }).c
-    ).toBe(countBefore.entry_type);
-    expect(
-      (db.prepare('SELECT COUNT(*) as c FROM category').get() as { c: number }).c
-    ).toBe(countBefore.category);
-    expect(
-      (db.prepare('SELECT COUNT(*) as c FROM tag').get() as { c: number }).c
-    ).toBe(countBefore.tag);
-    expect(
-      (db.prepare('SELECT COUNT(*) as c FROM label').get() as { c: number }).c
-    ).toBe(countBefore.label);
-    expect(
-      (db.prepare('SELECT COUNT(*) as c FROM label_tag').get() as { c: number }).c
-    ).toBe(countBefore.label_tag);
+    expect((db.prepare('SELECT COUNT(*) as c FROM measurement_type').get() as { c: number }).c).toBe(countBefore.measurement_type);
+    expect((db.prepare('SELECT COUNT(*) as c FROM entry_type').get() as { c: number }).c).toBe(countBefore.entry_type);
+    expect((db.prepare('SELECT COUNT(*) as c FROM category').get() as { c: number }).c).toBe(countBefore.category);
+    expect((db.prepare('SELECT COUNT(*) as c FROM tag').get() as { c: number }).c).toBe(countBefore.tag);
+    expect((db.prepare('SELECT COUNT(*) as c FROM label').get() as { c: number }).c).toBe(countBefore.label);
+    expect((db.prepare('SELECT COUNT(*) as c FROM label_tag').get() as { c: number }).c).toBe(countBefore.label_tag);
   });
 });

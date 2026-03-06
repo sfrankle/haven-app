@@ -1,15 +1,3 @@
-/**
- * SQLite migration SQL strings.
- *
- * MIGRATION_V1_SQL is the raw DDL for the initial schema. It is exported
- * separately so the schema-integrity test can execute it directly with
- * better-sqlite3 (Node-native) without requiring the expo-sqlite native module.
- *
- * The `migrations` array is consumed by the custom migration runner in database.ts.
- * Index 0 = version 1, index 1 = version 2, etc.
- */
-
-export const MIGRATION_V1_SQL = `
 CREATE TABLE IF NOT EXISTS measurement_type (
   id           INTEGER PRIMARY KEY,
   name         TEXT NOT NULL UNIQUE,
@@ -106,6 +94,3 @@ CREATE TABLE IF NOT EXISTS entry_issue (
   issue_id INTEGER NOT NULL REFERENCES issue(id),
   PRIMARY KEY (entry_id, issue_id)
 );
-`;
-
-export const migrations: string[] = [MIGRATION_V1_SQL];
