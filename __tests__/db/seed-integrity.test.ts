@@ -210,18 +210,6 @@ describe('seed integrity', () => {
     expect(row!.parent_id).toBeNull();
   });
 
-  test('label: Sourdough exists with category Grains', () => {
-    const row = db
-      .prepare(
-        `SELECT c.name as cat FROM label l
-         JOIN entry_type et ON l.entry_type_id = et.id
-         JOIN category c ON l.category_id = c.id
-         WHERE et.name = 'Food' AND l.name = 'Sourdough'`
-      )
-      .get() as { cat: string } | undefined;
-    expect(row?.cat).toBe('Grains');
-  });
-
   test('label: individual nut labels exist', () => {
     const nuts = ['Almonds', 'Cashews', 'Hazelnuts', 'Macadamia', 'Peanuts', 'Pecans', 'Pistachios', 'Walnuts'];
     for (const nut of nuts) {

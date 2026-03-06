@@ -43,7 +43,6 @@ WITH v(cat, name) AS (VALUES
   ('Grains',      'Couscous'),
   ('Grains',      'Quinoa'),
   ('Grains',      'Polenta'),
-  ('Grains',      'Sourdough'),
   ('Dairy',       'Cheese'),
   ('Dairy',       'Milk'),
   ('Dairy',       'Yogurt'),
@@ -146,7 +145,7 @@ UNION ALL
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'lactose' WHERE et.name = 'Food' AND l.name IN ('Milk', 'Cream', 'Ice cream', 'Yogurt')
 UNION ALL
 -- gluten
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name IN ('Bread', 'Pasta', 'Couscous', 'Crackers', 'Beer', 'Sourdough')
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'gluten' WHERE et.name = 'Food' AND l.name IN ('Bread', 'Pasta', 'Couscous', 'Crackers', 'Beer')
 UNION ALL
 -- caffeine
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'caffeine' WHERE et.name = 'Food' AND l.name IN ('Coffee', 'Tea', 'Chocolate, Dark')
@@ -173,7 +172,7 @@ UNION ALL
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'spicy' WHERE et.name = 'Food' AND l.name IN ('Chili pepper', 'Kimchi', 'Hot sauce')
 UNION ALL
 -- fermented
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fermented' WHERE et.name = 'Food' AND l.name IN ('Yogurt', 'Sourdough', 'Kimchi', 'Sauerkraut')
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fermented' WHERE et.name = 'Food' AND l.name IN ('Yogurt', 'Kimchi', 'Sauerkraut')
 UNION ALL
 -- high_sugar
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_sugar' WHERE et.name = 'Food' AND l.name IN ('Soda', 'Fruit juice', 'Candy', 'Wine', 'Ice cream')
