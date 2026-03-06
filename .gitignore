@@ -1,9 +1,8 @@
 # Implementation plans are local-only — never committed
 docs/plans/
 
-# Local SQLite preview for DB Browser / TablePlus
-scripts/*.db
-scripts/preview-seed.ts
+# Local
+local/
 
 .claude/local/
 
