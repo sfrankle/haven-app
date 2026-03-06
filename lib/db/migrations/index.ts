@@ -10,8 +10,16 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const v1Schema = require('./v1__schema.sql') as string;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const v2SeedBase = require('./v2__seed_base.sql') as string;
+const v2Seed = require('./v2__seed-base.sql') as string;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const v3SeedFodmap = require('./v3__seed_fodmap.sql') as string;
+const v3Seed = require('./v3__seed-food.sql') as string;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const v4Seed = require('./v4__seed-fodmap.sql') as string;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const v5Seed = require('./v5__seed-emotions.sql') as string;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const v6Seed = require('./v6__seed-activity.sql') as string;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const v7Seed = require('./v7__seed-physical.sql') as string;
 
-export const migrations: string[] = [v1Schema, v2SeedBase, v3SeedFodmap];
+export const migrations: string[] = [v1Schema, v2Seed, v3Seed, v4Seed, v5Seed, v6Seed, v7Seed];
