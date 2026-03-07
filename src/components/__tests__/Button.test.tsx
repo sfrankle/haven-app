@@ -1,0 +1,45 @@
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react-native';
+import { Button } from '../Button';
+import { colors } from '@/constants/theme';
+
+describe('Button', () => {
+  it('renders the label', () => {
+    const { getByText } = render(<Button label="Save" onPress={() => {}} />);
+    expect(getByText('Save')).toBeTruthy();
+  });
+
+  it('calls onPress when tapped', () => {
+    const onPress = jest.fn();
+    const { getByText } = render(<Button label="Save" onPress={onPress} />);
+    fireEvent.press(getByText('Save'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('primary variant has interactive background', () => {
+    const { getByTestId } = render(
+      <Button label="Save" onPress={() => {}} testID="btn" />
+    );
+    const style = getByTestId('btn').props.style;
+    const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
+    expect(flatStyle.backgroundColor).toBe(colors.interactive);
+  });
+
+  it('secondary variant has transparent background', () => {
+    const { getByTestId } = render(
+      <Button label="Cancel" variant="secondary" onPress={() => {}} testID="btn" />
+    );
+    const style = getByTestId('btn').props.style;
+    const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
+    expect(flatStyle.backgroundColor).toBe('transparent');
+  });
+
+  it('does not call onPress when disabled', () => {
+    const onPress = jest.fn();
+    const { getByText } = render(
+      <Button label="Save" onPress={onPress} disabled />
+    );
+    fireEvent.press(getByText('Save'));
+    expect(onPress).not.toHaveBeenCalled();
+  });
+});
