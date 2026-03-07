@@ -2,6 +2,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { Button } from '../Button';
 import { colors } from '@/constants/theme';
+import { getStyle } from './test-utils';
 
 describe('Button', () => {
   it('renders the label', () => {
@@ -20,8 +21,7 @@ describe('Button', () => {
     const { getByTestId } = render(
       <Button label="Save" onPress={() => {}} testID="btn" />
     );
-    const style = getByTestId('btn').props.style;
-    const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
+    const flatStyle = getStyle(getByTestId('btn'));
     expect(flatStyle.backgroundColor).toBe(colors.interactive);
   });
 
@@ -29,8 +29,7 @@ describe('Button', () => {
     const { getByTestId } = render(
       <Button label="Cancel" variant="secondary" onPress={() => {}} testID="btn" />
     );
-    const style = getByTestId('btn').props.style;
-    const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
+    const flatStyle = getStyle(getByTestId('btn'));
     expect(flatStyle.backgroundColor).toBe('transparent');
   });
 

@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Text,
 } from 'react-native';
-import { colors, fontFamilies, spacing, typeScale } from '@/constants/theme';
+import { colors, spacing, typeScale } from '@/constants/theme';
 
 interface ButtonProps extends Omit<PressableProps, 'style'> {
   label: string;
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   label: {
-    fontFamily: fontFamilies.lexendMedium,
+    fontFamily: typeScale.labelLarge.family,
     fontSize: typeScale.labelLarge.size,
     lineHeight: typeScale.labelLarge.size * typeScale.labelLarge.lineHeightMultiplier,
   },

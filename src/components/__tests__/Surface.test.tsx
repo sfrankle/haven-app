@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { Surface } from '../Surface';
 import { colors } from '@/constants/theme';
+import { getStyle } from './test-utils';
 
 describe('Surface', () => {
   it('renders children', () => {
@@ -20,8 +21,7 @@ describe('Surface', () => {
         <Text>Content</Text>
       </Surface>
     );
-    const style = getByTestId('surface').props.style;
-    const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
+    const flatStyle = getStyle(getByTestId('surface'));
     expect(flatStyle.backgroundColor).toBe(colors.surface);
   });
 
@@ -31,8 +31,7 @@ describe('Surface', () => {
         <Text>Content</Text>
       </Surface>
     );
-    const style = getByTestId('surface').props.style;
-    const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
+    const flatStyle = getStyle(getByTestId('surface'));
     expect(flatStyle.padding).toBeGreaterThan(0);
   });
 
@@ -42,8 +41,7 @@ describe('Surface', () => {
         <Text>Content</Text>
       </Surface>
     );
-    const style = getByTestId('surface').props.style;
-    const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
+    const flatStyle = getStyle(getByTestId('surface'));
     expect(flatStyle.padding ?? 0).toBe(0);
   });
 });
