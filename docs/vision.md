@@ -56,6 +56,10 @@ The logging has no value without the patterns. The patterns have no value withou
 
 **Low friction.** Tap-first over type-first. Surface recent and frequent options. No required setup before first use. Notifications (when they exist) are context-triggered, not repetitive, and use varied language to avoid habituation.
 
+**Haven learns you.** The app adapts to what you actually track. Your most-used states, foods, and activities surface first. The vocabulary grows with you — not the other way around.
+
+**Recognition, not diagnosis.** Haven's built-in vocabulary exists to help users name what they already feel — not to present a medical index to scroll through. Labels should prompt recognition ("yes, that") not self-diagnosis ("do I have that?"). A short, honest list beats a comprehensive one. Free text is always available as an escape hatch, and what users type becomes part of their personal vocabulary over time.
+
 ---
 
 ## Tabs
