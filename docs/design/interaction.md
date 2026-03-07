@@ -62,7 +62,7 @@ Three variants:
 Each label selection adds a chip. Chips accumulate independently. Tapping a chip removes it. No replacement logic.
 
 **Navigation + flat chips** (Physical)
-Tier-1 items (body areas: Head, Whole Body, etc.) are navigation only — they are never chips and cannot be submitted alone. Tier-2 items (symptoms/states: Headache, Achy, etc.) become chips. Chips accumulate freely across any Tier-1 area. No replacement logic — a user can hold Headache (from Head) and Achy (from Whole Body) simultaneously.
+Tier-1 items (body areas: Head, Whole Body, etc.) are navigation only — they are never chips and cannot be submitted alone. Tier-2 items (symptoms/states: Headache, Achy, etc.) become chips. Chips accumulate freely across any Tier-1 area. No replacement logic — a user can hold Headache (from Head) and Achy (from Whole Body) simultaneously. Physical also has an Energy slider (numeric, not a chip); submit is enabled when the Energy slider is set OR at least 1 chip is present.
 
 **Full hierarchical chips** (Emotions)
 Both tiers produce chips, with a replacement rule: selecting a child of an existing chip replaces that chip (more specific subsumes the parent). Selecting a sibling of an existing chip adds a new chip alongside it. A user can hold multiple chips from different branches simultaneously, but each branch path holds only its deepest selection.
