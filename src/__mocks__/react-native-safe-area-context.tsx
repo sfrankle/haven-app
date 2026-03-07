@@ -1,8 +1,8 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, ViewProps } from 'react-native';
 
-export const SafeAreaView = ({ children, style }: { children?: React.ReactNode; style?: object }) => (
-  <View style={style}>{children}</View>
+export const SafeAreaView = ({ children, style, ...props }: ViewProps) => (
+  <View style={style} {...props}>{children}</View>
 );
 
 export const SafeAreaProvider = ({ children }: { children?: React.ReactNode }) => <>{children}</>;
