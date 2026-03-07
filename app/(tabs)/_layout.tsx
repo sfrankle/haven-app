@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { TAB_BAR_SCREEN_OPTIONS } from '@/components/TabBar';
+import { TAB_BAR_SCREEN_OPTIONS } from '@/components';
 
 export default function TabLayout() {
   return (

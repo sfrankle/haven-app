@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Text,
 } from 'react-native';
-import { colors, fontFamilies, spacing } from '@/constants/theme';
+import { colors, fontFamilies, spacing, typeScale } from '@/constants/theme';
 
 interface ButtonProps extends Omit<PressableProps, 'style'> {
   label: string;
@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
   secondary: {
     backgroundColor: 'transparent',
     borderWidth: 1,
+    // 0x38 = 56/255 ≈ 22% opacity, matching visual-style.md secondary button spec
     borderColor: `${colors.ink}38`,
   },
   disabled: {
@@ -63,8 +64,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fontFamilies.lexendMedium,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: typeScale.labelLarge.size,
+    lineHeight: typeScale.labelLarge.size * typeScale.labelLarge.lineHeightMultiplier,
   },
   labelPrimary: {
     color: colors.background,
