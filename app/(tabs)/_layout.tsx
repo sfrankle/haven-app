@@ -1,16 +1,9 @@
 import { Tabs } from 'expo-router';
-import { colors } from '@/constants/theme';
+import { TAB_BAR_SCREEN_OPTIONS } from '@/components/TabBar';
 
 export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.interactive,
-        tabBarInactiveTintColor: colors.chrome,
-        tabBarStyle: { backgroundColor: colors.surface },
-      }}
-    >
+    <Tabs screenOptions={TAB_BAR_SCREEN_OPTIONS}>
       <Tabs.Screen name="index" options={{ title: 'Tend' }} />
       <Tabs.Screen name="trace" options={{ title: 'Trace' }} />
       <Tabs.Screen name="weave" options={{ title: 'Weave' }} />
