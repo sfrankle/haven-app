@@ -3,7 +3,7 @@ import { Text } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { Screen } from '../Screen';
 import { colors } from '@/constants/theme';
-import { getStyle } from './test-utils';
+import { getStyle } from '../test-utils';
 
 describe('Screen', () => {
   it('renders children', () => {

@@ -47,6 +47,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingVertical: spacing.elementGap,
     paddingHorizontal: spacing.sectionGap,
+    minHeight: 48, // Material minimum tap target (brand.md)
     alignItems: 'center',
     justifyContent: 'center',
   },

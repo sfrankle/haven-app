@@ -6,5 +6,5 @@ import { ReactTestInstance } from 'react-test-renderer';
  */
 export function getStyle(element: ReactTestInstance): Record<string, unknown> {
   const style = element.props.style;
-  return Array.isArray(style) ? Object.assign({}, ...style) : style ?? {};
+  return Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style ?? {};
 }
