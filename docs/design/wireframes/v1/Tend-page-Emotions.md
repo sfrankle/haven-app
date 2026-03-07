@@ -28,7 +28,8 @@ The Emotions logging flow has three screens. Each screen is a split-pane (or sin
 
 **Screen 3**
 - Tapping a Tier-2 item (left) — swaps the right column to show that emotion's Tier-3 refinements. Stays on Screen 3.
-- Tapping a Tier-3 item (right) — selects it; adds or replaces a chip in the bottom tray for this branch.
+- Tapping a Tier-3 item (right) — selects it; adds or replaces a chip depending on the relationship to existing chips (see Chip rules below).
+- Tapping a Tier-2 item (left) when another Tier-2 is already selected — swaps the right column to that emotion's Tier-3 children. Stays on Screen 3. The previous Tier-2's chip remains unless explicitly removed.
 
 ---
 
@@ -108,8 +109,15 @@ User taps **Submit**. Entry is saved.
 
 | Action | Result |
 |--------|--------|
-| Tapping a Tier-2 or Tier-3 item | Adds a chip for this branch, or replaces the existing chip if one exists for this branch |
-| Going deeper in a branch | Replaces this branch's chip with the more specific selection |
+| Tapping a Tier-2 item | Adds a chip for that emotion |
+| Tapping a Tier-3 item that is a child of an existing chip | Replaces that chip (more specific subsumes the parent) |
+| Tapping a Tier-3 item that is a sibling of an existing chip | Adds a new chip alongside it |
+| Tapping a Tier-3 item with no related chip | Adds a new chip |
 | Tapping a chip | Deselects it and removes it from the tray |
-| Selecting a new branch (different T2 or different T1 path) | Adds a new chip alongside existing ones |
 | Minimum to submit | 1 chip |
+
+**Example:**
+- Connected → Loved: chips = `Loved` *(Loved replaced Connected)*
+- Helpful → Encouraged: chips = `Loved`, `Encouraged` *(new branch)*
+- Left col: tap Connected → right col swaps to Connected's T3 children; chips unchanged
+- Tap Safe: chips = `Loved`, `Encouraged`, `Safe` *(Safe is a sibling of Loved — adds new chip)*
