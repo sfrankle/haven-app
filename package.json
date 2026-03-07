@@ -25,9 +25,11 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@testing-library/react-native": "^13.3.3",
     "@types/better-sqlite3": "^7.6.13",
     "@types/jest": "^29.0.0",
     "@types/react": "~19.2.2",
+    "@types/react-test-renderer": "^19.1.0",
     "babel-preset-expo": "^55.0.10",
     "better-sqlite3": "^12.6.2",
     "eslint": "^8.57.1",
@@ -37,7 +39,11 @@
     "typescript": "~5.9.2"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^react-native-safe-area-context$": "<rootDir>/src/__mocks__/react-native-safe-area-context.tsx"
+    }
   },
   "private": true
 }
