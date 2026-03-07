@@ -48,6 +48,27 @@ These are canonical values. Screen-level decisions may override with justificati
 | Minor element gap | 12dp |
 | Bottom content padding above nav | 16dp minimum |
 
+## Shared Patterns
+
+### Multi-select with chips
+
+Used in: Food, Physical, Emotions, Activity.
+
+Selected items appear as chips in a tray at the bottom of the screen. Tapping a chip deselects it and removes it from the tray. The submit button is only visible when at least one chip is present — it disappears entirely when the tray is empty (not disabled/greyed out).
+
+Two variants:
+
+**Flat chips** (Food, Activity)
+Each label selection adds a chip. Chips accumulate independently. Tapping a chip removes it. No replacement logic.
+
+**Hierarchical chips** (Emotions, Physical)
+Label selects operate within a parent-child hierarchy. The replacement rule:
+- Selecting a child of an existing chip replaces that chip (more specific subsumes the parent)
+- Selecting a sibling of an existing chip adds a new chip alongside it
+- Selecting any item with no related chip adds a new chip
+
+This means a user can hold multiple chips from different branches simultaneously, but each branch path holds only its deepest selection.
+
 ## Error Handling
 
 - Use neutral, actionable language.
