@@ -44,22 +44,20 @@ User taps **Cramps**.
 
 ---
 
-### Physical-5 — State chip added
-**Gut: cramps** chip appears in the tray alongside Energy: 4/5. Submit remains available.
+### Physical-5 — State chip added; severity surfaces
+**Gut: cramps** chip appears in the tray alongside Energy: 4/5. A compact severity row (1–5) appears just above the chip tray for ~2 seconds.
 
-Chip interactions:
-- **Tap** — removes the chip
-- **Hold** — opens inline severity slider
+- If the user sets severity in that window → chip updates to include it; severity row dismisses
+- If the user ignores it → severity row auto-dismisses; chip shows a small secondary icon (··· or ↕)
+- Tapping the icon at any time reopens the severity row for that chip
+- Tapping the chip itself removes it
 
----
-
-### Physical-6 — Severity: hold to set
-User holds the **Gut: cramps** chip. An inline severity slider (1–5) appears anchored to the chip. User drags to 4.
+> **Note:** wireframe frames 5–6 show a hold gesture for severity — this approach was revised. The two-stage affordance above is the current design. See `docs/design/interaction.md`.
 
 ---
 
-### Physical-7 — Severity confirmed
-Chip updates to **Gut: cramps (4/5)**. Cramps is removed from suggestions — already-selected states are excluded. Submit remains available.
+### Physical-6 — Severity confirmed
+Severity set to 4. Chip updates to **Gut: cramps (4/5)**. Cramps is removed from suggestions — already-selected states are excluded. Submit remains available.
 
 ---
 
