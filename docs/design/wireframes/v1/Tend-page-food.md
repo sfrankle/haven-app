@@ -18,7 +18,7 @@ User is on the Tend home screen. They tap the **Food** tile.
 ---
 
 ### Food-2 — Default suggestions
-Food logging screen opens. Search bar is present but empty. Below it, suggestions are time-of-day-aware — foods the user commonly logs at this time of day surface first (e.g. breakfast foods in the morning, lunch foods at midday). No chips yet. No submit button.
+Food logging screen opens. Search bar is present but empty. Below it, suggestions are time-of-day-aware — foods the user commonly logs in this time block surface first (e.g. morning, midday, afternoon, evening). Blocks are approximate; suggestions are ranked by proximity to the current time, not exact time match. No chips yet. No submit button.
 
 ---
 

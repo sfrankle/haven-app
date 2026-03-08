@@ -24,7 +24,7 @@ See `docs/design/interaction.md` — *Flat chips* pattern.
 
 ## Differences from Food
 
-**Time-of-day-aware recents.** Suggestions are ordered by what the user typically logs at this time of day — not just overall recency. A user who runs in the morning and does yoga in the afternoon sees those in the right order contextually.
+**Time-of-day-aware recents.** Suggestions are ordered by what the user typically logs in this time block (morning, midday, afternoon, evening) — not exact time matching and not just overall recency. A user who runs in the morning and does yoga in the afternoon sees those in the right order contextually. Blocks are approximate; suggestions are ranked by proximity to the current time.
 
 **Category color-coding.** Activity chips are color-coded by category (Move, Create, Connect, Ground, etc.) as visual metadata. Categories are never navigated or selected — they're purely cosmetic context on the chip.
 
