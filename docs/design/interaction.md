@@ -48,6 +48,36 @@ These are canonical values. Screen-level decisions may override with justificati
 | Minor element gap | 12dp |
 | Bottom content padding above nav | 16dp minimum |
 
+## Shared Patterns
+
+### Multi-select with chips
+
+Used in: Food, Physical, Emotions, Activity.
+
+Selected items appear as chips in a tray at the bottom of the screen. Tapping a chip deselects it and removes it from the tray. The submit button is only visible when at least one chip is present — it disappears entirely when the tray is empty (not disabled/greyed out).
+
+Three variants:
+
+**Flat chips** (Food, Activity)
+Each label selection adds a chip. Chips accumulate independently. Tapping a chip removes it. No replacement logic.
+
+**Flat chips + optional severity** (Physical)
+Same flat chip mechanic as Food, with two extensions:
+
+(1) The Energy slider is a separate input on the same screen — setting it creates an Energy chip in the tray.
+
+(2) State chips support optional severity via a two-stage affordance:
+- When a state is selected, a compact severity row (1–5) appears just above the chip tray for ~2 seconds
+- If the user sets severity during that window, the chip updates to include it (e.g. "Gut: cramps (4/5)") and the row dismisses
+- If the user ignores it, the row auto-dismisses and the chip shows a small secondary icon (··· or ↕) indicating severity is available
+- Tapping that icon reopens the severity row for that chip at any time
+- Tapping the chip itself still removes it
+
+Submit is enabled when Energy is set OR at least 1 state chip is present.
+
+**Full hierarchical chips** (Emotions)
+Both tiers produce chips, with a replacement rule: selecting a child of an existing chip replaces that chip (more specific subsumes the parent). Selecting a sibling of an existing chip adds a new chip alongside it. A user can hold multiple chips from different branches simultaneously, but each branch path holds only its deepest selection.
+
 ## Error Handling
 
 - Use neutral, actionable language.
