@@ -35,7 +35,8 @@ npm test -- --ci        # unit tests
 | What | Where |
 |------|-------|
 | Product vision, principles, tab map | `docs/vision.md` |
-| Brand, voice, microcopy, accessibility | `docs/design/brand.md` |
+| Voice, tone, copy rules, entry type titles & prompts | `docs/design/voice.md` |
+| Brand essence, privacy language, accessibility | `docs/design/brand.md` |
 | Color tokens, typography, components, motion | `docs/design/visual-style.md` |
 | Interaction principles, spacing rhythm | `docs/design/interaction.md` |
 | Screen archetypes (layout intent per tab) | `docs/design/screens.md` |
@@ -48,7 +49,7 @@ npm test -- --ci        # unit tests
 | Changelog | `docs/changelog.md` — one row per code-changing PR |
 
 ## Design work
-Read `docs/design/brand.md`, `docs/design/visual-style.md`, and `docs/design/interaction.md` before making any UI decisions. For screen layout intent, see `docs/design/screens.md`. For frontend implementation guidance specific to Claude, read `.claude/design-guidance.md`.
+Read `docs/design/voice.md`, `docs/design/brand.md`, `docs/design/visual-style.md`, and `docs/design/interaction.md` before making any UI decisions. For screen layout intent, see `docs/design/screens.md`. For frontend implementation guidance specific to Claude, read `.claude/design-guidance.md`.
 
 ## Development workflow
 Read `.claude/SDLC_Workflow.md` before starting any implementation work. It covers the full issue-driven workflow, PR conventions, testing philosophy, and definition of done.

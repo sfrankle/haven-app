@@ -1,6 +1,6 @@
 # Sleep Logging Flow — Wireframe Walkthrough
 
-> These wireframes show **interaction structure only**. Do not derive color, typography, spacing, or visual style from them. Follow `docs/design/brand.md` and `docs/design/visual-style.md` for all visual decisions.
+> These wireframes show **interaction structure only**. Do not derive colour, typography, spacing, or visual style from them. Follow `docs/design/brand.md` and `docs/design/visual-style.md` for all visual decisions.
 
 ---
 

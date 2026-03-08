@@ -1,9 +1,9 @@
 # Haven Visual Style
 
 Version: 1.1
-Scope: Color tokens, typography, component patterns, and motion.
+Scope: Colour tokens, typography, component patterns, and motion.
 
-## Color System
+## Colour System
 
 Palette derived directly from the app icon. The cool tones (indigo, teal, plum) are dominant; warm tones (peach, yellow) are accents. Cohesion comes from usage discipline — let the cool family carry the UI, warm tones appear rarely and intentionally.
 
@@ -20,9 +20,9 @@ Palette derived directly from the app icon. The cool tones (indigo, teal, plum) 
 | `glow` |<div style="width:40px;height:20px;background:#F6C7B9;border-radius:4px;"></div> #F6C7B9 | Glow Peach | Warm emotional accent: focus rings, insight highlights, “saved” warmth moments (sparingly) |
 | `candlelight` |<div style="width:40px;height:20px;background:#FEEFBA;border-radius:4px;"></div> #FEEFBA | Vanilla Custard | Ultra-sparing sparkle/candlelight: constellation dots, micro-badges, tiny highlights (never for buttons/text) |
 
-### Semantic Colors
+### Semantic Colours
 
-Always pair with an icon and label — never rely on color alone.
+Always pair with an icon and label — never rely on colour alone.
 
 | Token | Value | Use |
 |-------|-------|-----|
@@ -30,7 +30,7 @@ Always pair with an icon and label — never rely on color alone.
 | `warning` | #A6712A | Caution states |
 | `error` | #9B3A4A | Error states only |
 
-Use semantic colors at low opacity for backgrounds (tinted wash + ink text), not as solid fills.
+Use semantic colours at low opacity for backgrounds (tinted wash + ink text), not as solid fills.
 
 ### Dark Mode
 
@@ -51,7 +51,7 @@ For icon and hero use only: `#EFC5BB` → `#4F557D` → `#7393A1`
 - 60% neutral surfaces (`background`, `surface`)
 - 30% cool brand tones (`interactive`, `secondary`)
 - 10% warm accents (`glow`, `accent`) — keep meaningful and rare
-- Semantic colors appear only for their intended states, never decoratively
+- Semantic colours appear only for their intended states, never decoratively
 
 ## Typography
 
@@ -110,5 +110,5 @@ Do not introduce:
 - Gamified visuals (trophies, streak flames, confetti)
 - Character mascots
 - Dense dashboards on primary logging screens
-- Semantic colors used decoratively
+- Semantic colours used decoratively
 - Ultra-light font weights

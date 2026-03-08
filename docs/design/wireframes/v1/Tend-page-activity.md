@@ -26,7 +26,7 @@ See `docs/design/interaction.md` — *Flat chips* pattern.
 
 **Time-of-day-aware recents.** Suggestions are ordered by what the user typically logs in this time block (morning, midday, afternoon, evening) — not exact time matching and not just overall recency. A user who runs in the morning and does yoga in the afternoon sees those in the right order contextually. Blocks are approximate; suggestions are ranked by proximity to the current time.
 
-**Category color-coding.** Activity chips are color-coded by category (Move, Create, Connect, Ground, etc.) as visual metadata. Categories are never navigated or selected — they're purely cosmetic context on the chip.
+**Category colour-coding.** Activity chips are colour-coded by category (Move, Create, Connect, Ground, etc.) as visual metadata. Categories are never navigated or selected — they're purely cosmetic context on the chip.
 
 **Custom activities.** `+ Add [query]` creates a custom activity on the fly. Custom activities start with no category. Future seed updates may match them to defaults via the `seed_version` + name-matching pattern.
 
