@@ -10,7 +10,7 @@
 
 Physical logging is a single screen with two sections: an **Energy slider** and a **flat state search**. No body area navigation — the user searches directly for states. The area context (e.g. "Gut") is inferred from the label's parent in the DB and shown on the chip, but the user never explicitly selects a body area.
 
-Submit appears when Energy is set OR at least 1 state chip is present. See `docs/design/interaction.md` — *Flat chips* pattern, extended with hold-for-severity.
+Submit appears when Energy is set OR at least 1 state chip is present. See `docs/design/interaction.md` — *Flat chips + optional severity* pattern.
 
 ---
 
@@ -45,24 +45,22 @@ User taps **Cramps**.
 ---
 
 ### Physical-5 — State chip added; severity surfaces
-**Gut: cramps** chip appears in the tray alongside Energy: 4/5. A compact severity row (1–5) appears just above the chip tray for ~2 seconds.
+**Gut: cramps** chip appears in the tray alongside Energy: 4/5. A compact severity row (1–5) appears just above the chip tray. User sets severity to 4.
 
-- If the user sets severity in that window → chip updates to include it; severity row dismisses
+- If the user sets severity → chip updates to include it; severity row dismisses
 - If the user ignores it → severity row auto-dismisses; chip shows a small secondary icon (··· or ↕)
 - Tapping the icon at any time reopens the severity row for that chip
 - Tapping the chip itself removes it
 
-> **Note:** wireframe frames 5–6 show a hold gesture for severity — this approach was revised. The two-stage affordance above is the current design. See `docs/design/interaction.md`.
-
 ---
 
 ### Physical-6 — Severity confirmed
-Severity set to 4. Chip updates to **Gut: cramps (4/5)**. Cramps is removed from suggestions — already-selected states are excluded. Submit remains available.
+Chip updates to **Gut: cramps (4/5)**. Cramps removed from suggestions — already-selected states are excluded (now shows Bloated, Feeling good!, Constipation). Submit remains available.
 
 ---
 
-### Physical-8 — Continue logging
-User continues typing **"gut d"** — suggestions narrow to Diarrhea. Tray shows Energy: 4/5 + Gut: cramps (4/5). User can keep adding states or submit.
+### Physical-7 — Continue logging
+User types **"gut d"** — suggestions narrow to Diarrhea. Tray shows Energy: 4/5 + Gut: cramps (4/5). User can keep adding states or submit.
 
 ---
 
@@ -70,9 +68,9 @@ User continues typing **"gut d"** — suggestions narrow to Diarrhea. Tray shows
 
 | Interaction | Result |
 |-------------|--------|
-| Tap suggestion | Adds chip; suggestion removed from results |
+| Tap suggestion | Adds chip; suggestion removed from results; severity row surfaces briefly |
 | Tap chip | Removes chip; state returns to suggestions |
-| Hold chip | Opens inline severity slider (1–5) |
+| Tap ··· / ↕ icon on chip | Reopens severity row for that chip |
 | Set severity | Chip label updates, e.g. "Gut: cramps (4/5)" |
 | Submit enabled | When Energy is set OR ≥1 state chip present |
 | Submit disappears | When Energy is unset AND tray is empty |
@@ -95,4 +93,4 @@ User continues typing **"gut d"** — suggestions narrow to Diarrhea. Tray shows
 - Already-selected states are excluded from results
 - `+ Add [query]` offered when no results match — creates a custom state
 
-> **Open question:** exact search matching logic is TBD. The wireframes show area-contextual search but the full rules — whether area names are searchable keywords, how recency interacts with typed search — still need to be worked out.
+> **Open question:** exact search matching logic is TBD. The wireframes show area-contextual search but the full rules — whether area names are searchable keywords, how recency interacts with typed search, MVP scope — still need to be worked out.
