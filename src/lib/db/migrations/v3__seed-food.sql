@@ -72,16 +72,16 @@ WITH v(cat, name) AS (VALUES
   ('Vegetables',  'Pepper'),
   ('Vegetables',  'Carrot'),
   ('Vegetables',  'Cucumber'),
-  ('Vegetables',  'Zucchini'),
+  ('Vegetables',  'Courgette'),
   ('Vegetables',  'Potato'),
   ('Vegetables',  'Sweet potato'),
   ('Vegetables',  'Mushroom'),
   ('Vegetables',  'Cauliflower'),
   ('Vegetables',  'Cabbage'),
   ('Vegetables',  'Brussels sprouts'),
-  ('Vegetables',  'Eggplant'),
-  ('Vegetables',  'Bell pepper'),
-  ('Vegetables',  'Chili pepper'),
+  ('Vegetables',  'Aubergine'),
+  ('Vegetables',  'Pepper'),
+  ('Vegetables',  'Chilli pepper'),
   ('Vegetables',  'Celery'),
   ('Vegetables',  'Asparagus'),
   ('Vegetables',  'Artichoke'),
@@ -113,7 +113,7 @@ WITH v(cat, name) AS (VALUES
   ('Nuts & Seeds','Walnuts'),
   ('Snacks',      'Mayonnaise'),
   ('Snacks',      'Chocolate, Dark'),
-  ('Snacks',      'Chips, Potato'),
+  ('Snacks',      'Crisps'),
   ('Snacks',      'Chips, Corn'),
   ('Snacks',      'Crackers'),
   ('Snacks',      'Candy'),
@@ -154,7 +154,7 @@ UNION ALL
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'alcohol' WHERE et.name = 'Food' AND l.name IN ('Alcohol', 'Wine', 'Beer')
 UNION ALL
 -- high_fat (rich/greasy foods — not cooking oils)
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_fat' WHERE et.name = 'Food' AND l.name IN ('Ice cream', 'Chips, Potato', 'Chips, Corn', 'Butter', 'Cream', 'Mayonnaise', 'Almonds', 'Cashews', 'Hazelnuts', 'Macadamia', 'Peanuts', 'Pecans', 'Pistachios', 'Walnuts', 'Seeds, Pumpkin', 'Seeds, Sesame')
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_fat' WHERE et.name = 'Food' AND l.name IN ('Ice cream', 'Crisps', 'Chips, Corn', 'Butter', 'Cream', 'Mayonnaise', 'Almonds', 'Cashews', 'Hazelnuts', 'Macadamia', 'Peanuts', 'Pecans', 'Pistachios', 'Walnuts', 'Seeds, Pumpkin', 'Seeds, Sesame')
 UNION ALL
 -- tree_nuts (allergen)
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'tree_nuts' WHERE et.name = 'Food' AND l.name IN ('Almonds', 'Cashews', 'Hazelnuts', 'Macadamia', 'Pecans', 'Pistachios', 'Walnuts')
@@ -169,7 +169,7 @@ UNION ALL
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'shellfish' WHERE et.name = 'Food' AND l.name = 'Shellfish'
 UNION ALL
 -- spicy
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'spicy' WHERE et.name = 'Food' AND l.name IN ('Chili pepper', 'Kimchi', 'Hot sauce')
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'spicy' WHERE et.name = 'Food' AND l.name IN ('Chilli pepper', 'Kimchi', 'Hot sauce')
 UNION ALL
 -- fermented
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'fermented' WHERE et.name = 'Food' AND l.name IN ('Yogurt', 'Kimchi', 'Sauerkraut')
@@ -178,7 +178,7 @@ UNION ALL
 SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_sugar' WHERE et.name = 'Food' AND l.name IN ('Soda', 'Fruit juice', 'Candy', 'Wine', 'Ice cream')
 UNION ALL
 -- high_sodium
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_sodium' WHERE et.name = 'Food' AND l.name IN ('Chips, Potato', 'Chips, Corn', 'Crackers', 'Deli meat', 'Hot sauce')
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'high_sodium' WHERE et.name = 'Food' AND l.name IN ('Crisps', 'Chips, Corn', 'Crackers', 'Deli meat', 'Hot sauce')
 UNION ALL
 -- processed (ultra-processed foods)
-SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'processed' WHERE et.name = 'Food' AND l.name IN ('Chips, Potato', 'Chips, Corn', 'Crackers', 'Candy', 'Soda', 'Deli meat', 'Ice cream', 'Mayonnaise', 'Fruit juice', 'Milk, Almond', 'Milk, Oat')
+SELECT l.id, t.id, 1 FROM label l JOIN entry_type et ON l.entry_type_id = et.id JOIN tag t ON t.name = 'processed' WHERE et.name = 'Food' AND l.name IN ('Crisps', 'Chips, Corn', 'Crackers', 'Candy', 'Soda', 'Deli meat', 'Ice cream', 'Mayonnaise', 'Fruit juice', 'Milk, Almond', 'Milk, Oat')

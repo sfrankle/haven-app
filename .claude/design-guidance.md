@@ -4,9 +4,9 @@ Scope: Frontend design principles to follow when building Haven UI.
 
 ## Follow the Established Design System
 
-Haven has a defined visual identity. Always follow the palette, typography, and component patterns in `docs/design/visual-style.md` before making any visual decisions. Do not invent new colors or fonts.
+Haven has a defined visual identity. Read `docs/design/` before making any UI, copy, or interaction decisions — the `CLAUDE.md` there maps what each file owns. Do not invent new colours, fonts, or copy patterns.
 
-Haven's palette is derived from the app icon — cool indigo/teal/plum tones dominant, warm rose/yellow as rare accents. The primary color is `#4F557D` (dusty grape). The caution below about purple applies to generic, saturated purple-on-white — not Haven's palette.
+The caution below about purple applies to generic, saturated purple-on-white — not Haven's palette. Haven's muted mauve on soft fog surfaces is intentional and correct.
 
 ## Avoid Generic AI Aesthetics
 

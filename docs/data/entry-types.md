@@ -68,7 +68,7 @@ Entries can be linked to a tracked Issue (see below).
 
 ### Activity
 - Suggested chips (personalized: recently used + time-of-day context) + full search bar; multi-select
-- Categories (Move, Create, Connect, Ground, Breathe, Reflect, Nourish, Structure) are visual metadata only — shown as chip color-coding, not navigation steps
+- Categories (Move, Create, Connect, Ground, Breathe, Reflect, Nourish, Structure) are visual metadata only — shown as chip colour-coding, not navigation steps
 - Custom activities can be created on the fly ("+ Add [name]" from search with no results)
 - Labels carry tags (nervous system state, effort type, etc.)
 

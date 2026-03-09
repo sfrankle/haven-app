@@ -18,7 +18,7 @@ First launch goes straight to Tend with sensible defaults. No onboarding wizard,
 Users opt into insights in Weave. Do not inject analytics into the Tend logging flow.
 
 **No guilt mechanics.**
-No streak pressure. No negative empty-state language. No warning color usage unless a real error occurs.
+No streak pressure. No negative empty-state language. No warning colour usage unless a real error occurs.
 
 **Calm by default.**
 Stable layouts without abrupt movement. Minimal interruptions (dialogs, toasts, banners). Motion supports orientation, not attention-seeking.
@@ -87,5 +87,5 @@ Both tiers produce chips, with a replacement rule: selecting a child of an exist
 ## Accessibility
 
 - Touch targets meet Material minimum size guidance.
-- Color is never the only signal.
+- Colour is never the only signal.
 - Respect system font scaling and dynamic type.

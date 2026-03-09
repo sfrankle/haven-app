@@ -24,7 +24,7 @@ Every entry type is reachable in three taps or fewer. The app finds correlations
 | **Anchor** | Grounding activity suggestions *(coming later)* |
 | **Settings** | Preferences, entry types, data controls |
 
-**Entry types:** Sleep · Hydration · Food · Emotion · Physical State · Energy Level · Activity
+**Entry types:** Slumber · Replenish · Nourish · Unveil · Attune · Journey
 
 ---
 

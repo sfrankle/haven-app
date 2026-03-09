@@ -15,6 +15,7 @@ const EXPECTED_SCHEMA: Record<string, string[]> = {
   entry_type: [
     'id',
     'name',
+    'title',
     'measurement_type_id',
     'prompt',
     'icon',

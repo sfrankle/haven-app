@@ -118,7 +118,7 @@ WITH v(cat, name, sort_order) AS (VALUES
   ('Structure',  'Errands',                    40),
   ('Structure',  'Tidying',                    50),
   ('Structure',  'Cleaning',                   60),
-  ('Structure',  'Organizing',                 70),
+  ('Structure',  'Organising',                 70),
   ('Structure',  'Budgeting / finances',       80)
 )
 INSERT OR IGNORE INTO label (
@@ -332,7 +332,7 @@ AND l.name IN (
   'Errands',
   'Tidying',
   'Cleaning',
-  'Organizing',
+  'Organising',
   'Budgeting / finances',
   'Meal prep',
   'Planning',
