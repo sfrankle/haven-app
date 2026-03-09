@@ -1,6 +1,6 @@
 /**
  * Haven design tokens.
- * Values derived from docs/design/visual-style.md and docs/design/interaction.md.
+ * Values derived from docs/design/visual-style.md and docs/design/.
  * These are build-time constants — no React, no hooks.
  */
 

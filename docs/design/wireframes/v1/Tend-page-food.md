@@ -1,12 +1,12 @@
 # Food Logging Flow — Wireframe Walkthrough
 
-> These wireframes show **interaction structure only**. Do not derive colour, typography, spacing, or visual style from them. Follow `docs/design/brand.md` and `docs/design/visual-style.md` for all visual decisions.
+> These wireframes show **interaction structure only**. Do not derive colour, typography, spacing, or visual style from them. Follow `docs/design/` for all visual decisions.
 
 ---
 
 ## Overview
 
-Food logging is a search-and-select flow. The user builds up a set of food chips by searching and selecting labels. Submit appears once at least one chip is present. See `docs/design/interaction.md` — *Flat chips* pattern.
+Food logging is a search-and-select flow. The user builds up a set of food chips by searching and selecting labels. Submit appears once at least one chip is present. See `docs/design/` — *Flat chips* pattern.
 
 ---
 

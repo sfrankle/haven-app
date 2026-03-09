@@ -1,6 +1,6 @@
 # Physical Logging Flow — Wireframe Walkthrough
 
-> These wireframes show **interaction structure only**. Do not derive colour, typography, spacing, or visual style from them. Follow `docs/design/brand.md` and `docs/design/visual-style.md` for all visual decisions.
+> These wireframes show **interaction structure only**. Do not derive colour, typography, spacing, or visual style from them. Follow `docs/design/` for all visual decisions.
 >
 > Screen copy ("How's your body doing today?", "What's do you want to report on?", energy labels) is **placeholder** — do not implement verbatim.
 
