@@ -39,11 +39,11 @@ export function formatEntryTime(isoString: string): string {
  * Uses the stored date component directly — immune to timezone re-interpretation.
  *
  * @param isoString - Stored ISO 8601 offset string
- * @param _today - Optional override for "today" (injectable for tests)
+ * @param referenceDate - Optional override for "today" (injectable for tests)
  */
-export function formatEntryDate(isoString: string, _today?: dayjs.Dayjs): string {
+export function formatEntryDate(isoString: string, referenceDate?: dayjs.Dayjs): string {
   const stored = dayjs(isoString.slice(0, 10), 'YYYY-MM-DD');
-  const today = (_today ?? dayjs()).startOf('day');
+  const today = (referenceDate ?? dayjs()).startOf('day');
   const yesterday = today.subtract(1, 'day');
 
   if (stored.isSame(today, 'day')) return 'Today';
