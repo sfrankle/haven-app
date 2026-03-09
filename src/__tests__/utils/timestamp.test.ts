@@ -27,9 +27,11 @@ describe('nowLocalIso', () => {
     const [hours, minutes] = offsetStr.slice(1).split(':').map(Number);
     const offsetMinutes = sign * (hours * 60 + minutes);
 
-    // Use toEqual not toBe to avoid -0 vs 0 mismatch in UTC environments
+    // In UTC environments, -getTimezoneOffset() produces -0 and the parsed
+    // offset is +0. Both toBe and toEqual use Object.is which treats them as
+    // unequal. Adding 0 normalises both to +0 before comparison.
     const expectedOffsetMinutes = -new Date().getTimezoneOffset();
-    expect(offsetMinutes).toEqual(expectedOffsetMinutes);
+    expect(offsetMinutes + 0).toEqual(expectedOffsetMinutes + 0);
   });
 
   it('two calls in quick succession return strings with the same offset', () => {
