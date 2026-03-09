@@ -1,7 +1,6 @@
 # Haven Voice & Copy Guide
 
 Single source of truth for language, tone, and copy decisions.
-Brand essence, accessibility, and privacy language live in `brand.md`.
 
 ---
 
