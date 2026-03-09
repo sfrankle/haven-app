@@ -21,7 +21,11 @@ export function nowLocalIso(): string {
  * string — does not re-interpret via the current device timezone.
  */
 export function formatEntryTime(isoString: string): string {
-  // Parse HH:mm directly from the string — dayjs would convert to local time
+  // We can't use dayjs(isoString).format() here — dayjs converts the stored
+  // offset to the device's current timezone, which is the bug we're avoiding.
+  // e.g. "14:30:00+05:30" becomes "9:00 AM" on a UTC device instead of "2:30 PM".
+  // Slicing the wall-clock time directly from the string is the simplest way
+  // to display what the user actually experienced, regardless of current timezone.
   const [hh, mm] = isoString.slice(11, 16).split(':').map(Number);
   const period = hh < 12 ? 'AM' : 'PM';
   const displayHour = hh % 12 === 0 ? 12 : hh % 12;
