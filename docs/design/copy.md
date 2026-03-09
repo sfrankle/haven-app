@@ -1,6 +1,0 @@
-- Slumber: "How long did you rest?"
-- Replenish: "How much water did you take in?”
-- Nourish: "What nourished you?" 
-- Unveil: “What’s upon your heart?” / “How fares your heart?”
-- Attune: “How fares your body?” / “Is your body at ease?”
-- Activity: "What have you been about?"

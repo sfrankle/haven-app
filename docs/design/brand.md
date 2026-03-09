@@ -1,8 +1,8 @@
 # Haven Brand
 
 Version: 1.0
+
 Scope: Brand essence, privacy language, and accessibility guardrails.
-Voice, tone, copy rules, and microcopy patterns live in `voice.md`.
 
 ## Brand Essence
 

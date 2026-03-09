@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS category (
 CREATE TABLE IF NOT EXISTS entry_type (
   id                  INTEGER PRIMARY KEY,
   name                TEXT NOT NULL UNIQUE,
+  title               TEXT NOT NULL UNIQUE,
   measurement_type_id INTEGER REFERENCES measurement_type(id),
   prompt              TEXT,
   icon                TEXT,
