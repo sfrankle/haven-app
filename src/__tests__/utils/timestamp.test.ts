@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { nowLocalIso, formatEntryTime, formatEntryDate } from '../../lib/utils/timestamp';
 
 describe('nowLocalIso', () => {
@@ -11,8 +12,7 @@ describe('nowLocalIso', () => {
     const result = nowLocalIso();
     const after = new Date();
 
-    // Parse local date components from before and after to bracket the result
-    const resultDate = new Date(result); // JS will parse offset-aware ISO strings
+    const resultDate = new Date(result);
     expect(resultDate.getTime()).toBeGreaterThanOrEqual(before.getTime() - 1000);
     expect(resultDate.getTime()).toBeLessThanOrEqual(after.getTime() + 1000);
   });
@@ -27,8 +27,7 @@ describe('nowLocalIso', () => {
     const [hours, minutes] = offsetStr.slice(1).split(':').map(Number);
     const offsetMinutes = sign * (hours * 60 + minutes);
 
-    // getTimezoneOffset returns minutes-west (negated for ISO offset)
-    // Use == not toBe to avoid -0 vs 0 mismatch in UTC environments
+    // Use toEqual not toBe to avoid -0 vs 0 mismatch in UTC environments
     const expectedOffsetMinutes = -new Date().getTimezoneOffset();
     expect(offsetMinutes).toEqual(expectedOffsetMinutes);
   });
@@ -73,25 +72,25 @@ describe('formatEntryTime', () => {
 });
 
 describe('formatEntryDate', () => {
-  // All tests inject a fixed "today" date to avoid flakiness
+  // All tests inject a fixed "today" dayjs instance to avoid flakiness
 
   it('returns "Today" when stored date matches today', () => {
-    const today = new Date(2026, 2, 9); // March 9, 2026 (month is 0-indexed)
+    const today = dayjs('2026-03-09');
     expect(formatEntryDate('2026-03-09T10:00:00-08:00', today)).toBe('Today');
   });
 
   it('returns "Yesterday" when stored date is one day before today', () => {
-    const today = new Date(2026, 2, 9); // March 9, 2026
+    const today = dayjs('2026-03-09');
     expect(formatEntryDate('2026-03-08T10:00:00-08:00', today)).toBe('Yesterday');
   });
 
   it('returns formatted month and day for older dates', () => {
-    const today = new Date(2026, 2, 9); // March 9, 2026
+    const today = dayjs('2026-03-09');
     expect(formatEntryDate('2026-03-02T10:00:00-08:00', today)).toBe('March 2');
   });
 
   it('uses no leading zero on the day', () => {
-    const today = new Date(2026, 2, 9); // March 9, 2026
+    const today = dayjs('2026-03-09');
     const result = formatEntryDate('2026-02-05T10:00:00-08:00', today);
     expect(result).toBe('February 5');
   });
@@ -100,14 +99,13 @@ describe('formatEntryDate', () => {
     // Stored: 11:30 PM PST on March 4 (-08:00)
     // UTC equivalent: March 5 07:30 UTC
     // Device may think "local date" is March 5, but stored date component is March 4
-    const today = new Date(2026, 2, 5); // March 5, 2026 — simulates device in a later timezone
+    const today = dayjs('2026-03-05'); // simulates device in a later timezone
     const result = formatEntryDate('2026-03-04T23:30:00-08:00', today);
     // Stored date is March 4, today is March 5 → "Yesterday"
     expect(result).toBe('Yesterday');
   });
 
   it('defaults today to the current date when not provided', () => {
-    // Just verify it does not throw and returns a string
     const result = formatEntryDate('2026-01-01T10:00:00+00:00');
     expect(typeof result).toBe('string');
     expect(result.length).toBeGreaterThan(0);
