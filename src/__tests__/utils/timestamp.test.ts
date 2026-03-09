@@ -28,8 +28,9 @@ describe('nowLocalIso', () => {
     const offsetMinutes = sign * (hours * 60 + minutes);
 
     // getTimezoneOffset returns minutes-west (negated for ISO offset)
+    // Use == not toBe to avoid -0 vs 0 mismatch in UTC environments
     const expectedOffsetMinutes = -new Date().getTimezoneOffset();
-    expect(offsetMinutes).toBe(expectedOffsetMinutes);
+    expect(offsetMinutes).toEqual(expectedOffsetMinutes);
   });
 
   it('two calls in quick succession return strings with the same offset', () => {
