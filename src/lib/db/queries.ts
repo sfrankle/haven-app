@@ -292,7 +292,7 @@ export async function getDailyHydrationTotal(db: Db, localDateString: string): P
      FROM entry e
      JOIN entry_type et ON et.id = e.entry_type_id
      WHERE et.name = 'Hydration'
-       AND strftime('%Y-%m-%d', e.timestamp) = ?`,
+       AND substr(e.timestamp, 1, 10) = ?`,
     [localDateString]
   );
   return row?.total ?? 0;
