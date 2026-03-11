@@ -19,7 +19,11 @@ export default function SettingsScreen() {
           Privacy
         </Text>
         <Surface style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text accessibilityLabel="locked" style={{ fontSize: 16 }}>🔒</Text>
+          <Text
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{ fontSize: typeScale.bodyMedium.size }}
+          >🔒</Text>
           <Text
             testID="privacy-notice"
             style={{
