@@ -16,7 +16,7 @@ import type { EntryType, Label, EntryWithLabels, SaveEntryInput } from './query-
 // actually call. This is satisfied by both expo-sqlite at runtime and by
 // BetterSqliteAdapter in Jest tests.
 
-interface Db {
+export interface Db {
   getAllAsync<T>(sql: string, params?: unknown[]): Promise<T[]>;
   getFirstAsync<T>(sql: string, params?: unknown[]): Promise<T | null>;
   runAsync(sql: string, params?: unknown[]): Promise<{ lastInsertRowId: number; changes: number }>;
@@ -48,7 +48,7 @@ interface EntryTraceRaw {
   entry_type_id: number;
   source_type: 'log' | 'reflect';
   timestamp: string;
-  local_date: string;
+  // local_date is derived in JS, not SQL — see getEntriesForTrace
   numeric_value: number | null;
   notes: string | null;
   entry_type_name: string;
@@ -100,7 +100,7 @@ export async function getEntryTypes(db: Db): Promise<EntryType[]> {
     title: r.title,
     icon: r.icon,
     prompt: r.prompt,
-    measurementType: r.measurement_type,
+    measurementType: r.measurement_type as EntryType['measurementType'],
   }));
 }
 
@@ -203,10 +203,12 @@ export async function saveEntry(db: Db, input: SaveEntryInput): Promise<number> 
 
     newEntryId = result.lastInsertRowId;
 
-    for (const labelId of input.labelIds ?? []) {
+    if (input.labelIds?.length) {
+      const placeholders = input.labelIds.map(() => '(?, ?)').join(', ');
+      const params = input.labelIds.flatMap((labelId) => [newEntryId, labelId]);
       await db.runAsync(
-        `INSERT INTO entry_label (entry_id, label_id) VALUES (?, ?)`,
-        [newEntryId, labelId]
+        `INSERT INTO entry_label (entry_id, label_id) VALUES ${placeholders}`,
+        params
       );
     }
   });
@@ -230,7 +232,6 @@ export async function getEntriesForTrace(db: Db): Promise<EntryWithLabels[]> {
   const rows = await db.getAllAsync<EntryTraceRaw>(`
     SELECT
       e.id, e.entry_type_id, e.source_type, e.timestamp, e.numeric_value, e.notes,
-      strftime('%Y-%m-%d', e.timestamp) AS local_date,
       et.name AS entry_type_name, et.title AS entry_type_title, et.icon AS entry_type_icon,
       l.id AS label_id, l.name AS label_name, l.parent_id AS label_parent_id,
       l.category_id AS label_category_id, l.sort_order AS label_sort_order
@@ -256,7 +257,10 @@ export async function getEntriesForTrace(db: Db): Promise<EntryWithLabels[]> {
         entryTypeIcon: row.entry_type_icon,
         sourceType: row.source_type,
         timestamp: row.timestamp,
-        localDate: row.local_date,
+        // Slice the wall-clock date directly from the stored ISO string.
+        // strftime('%Y-%m-%d', timestamp) in SQLite normalises to UTC first,
+        // which gives the wrong date for users near midnight in non-UTC timezones.
+        localDate: row.timestamp.slice(0, 10),
         numericValue: row.numeric_value,
         notes: row.notes,
         labels: [],

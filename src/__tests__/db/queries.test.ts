@@ -118,8 +118,6 @@ describe('query layer', () => {
            VALUES (?, 'log', '2026-01-01T08:00:00+00:00', '2026-01-01T08:00:00+00:00')`
         )
         .run(foodTypeId);
-      const entryA = Number(raw.prepare('SELECT last_insert_rowid() AS id').get()! as { id: number }).valueOf();
-      // Workaround: use raw insert result
       const entryAId = (raw.prepare('SELECT last_insert_rowid() AS id').get() as { id: bigint | number }).id;
       raw.prepare('INSERT INTO entry_label (entry_id, label_id) VALUES (?, ?)').run(Number(entryAId), labelXId);
 
@@ -133,7 +131,6 @@ describe('query layer', () => {
       const entryBId = (raw.prepare('SELECT last_insert_rowid() AS id').get() as { id: bigint | number }).id;
       raw.prepare('INSERT INTO entry_label (entry_id, label_id) VALUES (?, ?)').run(Number(entryBId), labelYId);
 
-      void entryA; // suppress unused warning
     });
 
     test('label used in later entry surfaces before label used in earlier entry', async () => {
@@ -277,6 +274,9 @@ describe('query layer', () => {
     });
 
     test('transaction rollback on failure — non-existent labelId commits no entry row', async () => {
+      // Note: this test exercises the BetterSqliteAdapter's manual BEGIN/ROLLBACK path.
+      // It proves FK enforcement and atomicity are correct in Jest. The production
+      // path (expo-sqlite's withTransactionAsync) is covered by Maestro E2E tests.
       const NONEXISTENT_LABEL_ID = 999_999;
       const countBefore = (
         raw.prepare('SELECT COUNT(*) as c FROM entry').get() as { c: number }

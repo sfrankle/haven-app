@@ -10,17 +10,10 @@
  * methods throw to surface accidental usage early.
  */
 import type Database from 'better-sqlite3';
+import type { Db } from '../../lib/db/queries';
 
-/**
- * Minimal async interface subset that queries.ts depends on.
- * Mirrors the relevant parts of expo-sqlite's SQLiteDatabase.
- */
-export interface AdaptedDb {
-  getAllAsync<T>(sql: string, params?: unknown[]): Promise<T[]>;
-  getFirstAsync<T>(sql: string, params?: unknown[]): Promise<T | null>;
-  runAsync(sql: string, params?: unknown[]): Promise<{ lastInsertRowId: number; changes: number }>;
-  withTransactionAsync(fn: () => Promise<void>): Promise<void>;
-}
+/** AdaptedDb satisfies the Db interface from queries.ts. */
+export type AdaptedDb = Db;
 
 /**
  * Wraps a better-sqlite3 Database instance to look like an async

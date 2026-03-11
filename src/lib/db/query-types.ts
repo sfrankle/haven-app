@@ -12,7 +12,7 @@ export interface EntryType {
   title: string;
   icon: string | null;
   prompt: string | null;
-  measurementType: string; // 'numeric' | 'label_select' | 'label_select_severity'
+  measurementType: 'numeric' | 'label_select' | 'label_select_severity';
 }
 
 export interface Label {
@@ -32,7 +32,7 @@ export interface EntryWithLabels {
   entryTypeIcon: string | null;
   sourceType: 'log' | 'reflect';
   timestamp: string; // ISO-8601
-  localDate: string; // YYYY-MM-DD, derived from timestamp in SQLite via strftime
+  localDate: string; // YYYY-MM-DD, sliced from the stored timestamp wall-clock date component
   numericValue: number | null;
   notes: string | null;
   labels: Label[];
