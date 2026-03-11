@@ -47,7 +47,11 @@
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1",
       "^react-native-safe-area-context$": "<rootDir>/src/__mocks__/react-native-safe-area-context.tsx"
-    }
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/src/__tests__/db/adapter\\.ts$"
+    ]
   },
   "private": true
 }

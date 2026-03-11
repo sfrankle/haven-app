@@ -15,6 +15,7 @@ export interface CategoryRow {
 export interface EntryTypeRow {
   id: number;
   name: string;
+  title: string;
   measurement_type_id: number | null;
   prompt: string | null;
   icon: string | null;

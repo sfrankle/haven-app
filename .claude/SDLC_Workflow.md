@@ -51,6 +51,8 @@ Haven uses an issue-driven development workflow. All work flows through GitHub I
 3. Claude dispatches **`haven-implementer`** — implements the approved plan, opens a **draft PR** linking `Closes #N` (the technical task)
    - PRs that **only** update Claude instructions or docs do not need a related issue
 4. PRs reference user stories with "Contributes to #M" — never `Closes` on user stories
+   - To find the right user story: check the technical task's milestone, then run `gh issue list --milestone "<name>" --label user-story` to find candidates
+   - Only link a user story you can directly trace to — if the PR is pure infrastructure that enables many stories, omit `Contributes to` rather than guessing
    - PRs that **only** update Claude instructions or docs do not need a related issue
 5. Claude runs **`/simplify`** — reviews changed code for reuse, quality, and efficiency; fixes issues found
 6. Claude dispatches **`haven-reviewer`** when implementation is complete
