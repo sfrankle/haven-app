@@ -41,6 +41,8 @@ export function createAdapter(db: Database.Database): AdaptedDb {
       };
     },
 
+    // Note: concurrent calls will throw "cannot start a transaction within a
+    // transaction" from better-sqlite3. Tests are synchronous so this is safe.
     async withTransactionAsync(fn: () => Promise<void>): Promise<void> {
       db.prepare('BEGIN').run();
       try {

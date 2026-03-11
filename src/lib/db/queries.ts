@@ -107,7 +107,8 @@ export async function getEntryTypes(db: Db): Promise<EntryType[]> {
 /**
  * Returns labels for an entry type.
  *
- * - With `search`: prefix-match on name (case-insensitive for ASCII), ordered by sort_order.
+ * - With `search`: prefix-match on name (case-insensitive for ASCII only — SQLite LIKE is
+ *   case-sensitive for non-ASCII characters), ordered by sort_order.
  * - Without `search`: recents first (labels used most recently via entry_label → entry),
  *   then labels with no history ordered by sort_order, all capped by `limit`.
  *

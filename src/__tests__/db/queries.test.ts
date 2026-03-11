@@ -180,8 +180,18 @@ describe('query layer', () => {
       const labels = await getLabels(db, foodTypeId, { search: 'zzzzznoMatch' });
       expect(labels).toEqual([]);
     });
+  });
 
-    test('limit caps result set', async () => {
+  // ── getLabels — limit option ─────────────────────────────────────────────────
+
+  describe('getLabels — limit option', () => {
+    let foodTypeId: number;
+
+    beforeAll(() => {
+      foodTypeId = entryTypeId(raw, 'Food');
+    });
+
+    test('limit caps result set on recents path', async () => {
       const labels = await getLabels(db, foodTypeId, { limit: 3 });
       expect(labels.length).toBeLessThanOrEqual(3);
     });
