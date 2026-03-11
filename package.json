@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "dayjs": "^1.11.19",
     "expo": "~55.0.5",
     "expo-constants": "~55.0.7",
     "expo-font": "~55.0.4",
