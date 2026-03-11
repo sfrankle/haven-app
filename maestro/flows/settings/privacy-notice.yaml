@@ -1,0 +1,5 @@
+appId: com.haven.app
+---
+- launchApp
+- tapOn: "Settings"
+- assertVisible: "Your data is stored only on this device."
