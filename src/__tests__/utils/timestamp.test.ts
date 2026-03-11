@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import { nowLocalIso, formatEntryTime, formatEntryDate } from '../../lib/utils/timestamp';
 
 describe('nowLocalIso', () => {
@@ -77,34 +76,27 @@ describe('formatEntryDate', () => {
   // All tests inject a fixed "today" dayjs instance to avoid flakiness
 
   it('returns "Today" when stored date matches today', () => {
-    const today = dayjs('2026-03-09');
-    expect(formatEntryDate('2026-03-09T10:00:00-08:00', today)).toBe('Today');
+    expect(formatEntryDate('2026-03-09T10:00:00-08:00', '2026-03-09')).toBe('Today');
   });
 
   it('returns "Yesterday" when stored date is one day before today', () => {
-    const today = dayjs('2026-03-09');
-    expect(formatEntryDate('2026-03-08T10:00:00-08:00', today)).toBe('Yesterday');
+    expect(formatEntryDate('2026-03-08T10:00:00-08:00', '2026-03-09')).toBe('Yesterday');
   });
 
   it('returns formatted month and day for older dates', () => {
-    const today = dayjs('2026-03-09');
-    expect(formatEntryDate('2026-03-02T10:00:00-08:00', today)).toBe('March 2');
+    expect(formatEntryDate('2026-03-02T10:00:00-08:00', '2026-03-09')).toBe('March 2');
   });
 
   it('uses no leading zero on the day', () => {
-    const today = dayjs('2026-03-09');
-    const result = formatEntryDate('2026-02-05T10:00:00-08:00', today);
-    expect(result).toBe('February 5');
+    expect(formatEntryDate('2026-02-05T10:00:00-08:00', '2026-03-09')).toBe('February 5');
   });
 
   it('uses stored date component, not UTC-converted date (cross-timezone stability)', () => {
     // Stored: 11:30 PM PST on March 4 (-08:00)
     // UTC equivalent: March 5 07:30 UTC
     // Device may think "local date" is March 5, but stored date component is March 4
-    const today = dayjs('2026-03-05'); // simulates device in a later timezone
-    const result = formatEntryDate('2026-03-04T23:30:00-08:00', today);
     // Stored date is March 4, today is March 5 → "Yesterday"
-    expect(result).toBe('Yesterday');
+    expect(formatEntryDate('2026-03-04T23:30:00-08:00', '2026-03-05')).toBe('Yesterday');
   });
 
   it('defaults today to the current date when not provided', () => {

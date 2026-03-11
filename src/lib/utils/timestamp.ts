@@ -39,11 +39,14 @@ export function formatEntryTime(isoString: string): string {
  * Uses the stored date component directly — immune to timezone re-interpretation.
  *
  * @param isoString - Stored ISO 8601 offset string
- * @param referenceDate - Optional override for "today" (injectable for tests)
+ * @param _today - Optional 'YYYY-MM-DD' string override for "today" (injectable for tests).
+ *   Parsed with an explicit format so it resolves to local midnight, consistent with
+ *   how the stored date component is parsed. Avoids the UTC-midnight ambiguity of
+ *   passing a bare dayjs('YYYY-MM-DD') instance.
  */
-export function formatEntryDate(isoString: string, referenceDate?: dayjs.Dayjs): string {
+export function formatEntryDate(isoString: string, _today?: string): string {
   const stored = dayjs(isoString.slice(0, 10), 'YYYY-MM-DD');
-  const today = (referenceDate ?? dayjs()).startOf('day');
+  const today = (_today ? dayjs(_today, 'YYYY-MM-DD') : dayjs()).startOf('day');
   const yesterday = today.subtract(1, 'day');
 
   if (stored.isSame(today, 'day')) return 'Today';
