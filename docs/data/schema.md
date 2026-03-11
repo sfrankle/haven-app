@@ -18,6 +18,7 @@ erDiagram
     entry_type {
         INTEGER id PK
         TEXT name
+        TEXT title
         INTEGER measurement_type_id FK
         TEXT prompt
         TEXT icon
