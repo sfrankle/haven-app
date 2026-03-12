@@ -1,0 +1,10 @@
+appId: com.haven.app
+---
+- launchApp
+- assertVisible: "Today"
+- assertVisible: "Nourish"
+- assertVisible: "Replenish"
+- assertVisible: "Unveil"
+- assertVisible: "Attune"
+- assertVisible: "Slumber"
+- assertVisible: "Journey"
