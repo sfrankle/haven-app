@@ -1,11 +1,14 @@
 appId: com.haven.app
 ---
 - launchApp
+- assertVisible: "Slumber"
 - tapOn: "Slumber"
 - assertVisible: "How long did you rest?"
 - tapOn:
     id: "sleep-hours-input"
 - inputText: "7"
+- assertVisible:
+    id: "sleep-save-button"
 - tapOn:
     id: "sleep-save-button"
 - assertVisible: "Entry saved."

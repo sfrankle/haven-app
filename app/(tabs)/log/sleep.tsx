@@ -24,14 +24,17 @@ export default function LogSleepScreen() {
     const parsed = parseFloat(hours);
     const db = await getDb() as unknown as Db;
 
-    await saveEntry(db, {
-      entryTypeId: sleepEntryType.id,
-      timestamp: nowLocalIso(),
-      numericValue: isNaN(parsed) ? undefined : parsed,
-      notes: notes.trim() !== '' ? notes.trim() : undefined,
-    });
-
-    setShowConfirmation(true);
+    try {
+      await saveEntry(db, {
+        entryTypeId: sleepEntryType.id,
+        timestamp: nowLocalIso(),
+        numericValue: isNaN(parsed) ? undefined : parsed,
+        notes: notes.trim() !== '' ? notes.trim() : undefined,
+      });
+      setShowConfirmation(true);
+    } catch (err) {
+      console.error('[LogSleepScreen] failed to save entry:', err);
+    }
   }
 
   function handleDismiss() {
@@ -41,7 +44,7 @@ export default function LogSleepScreen() {
   return (
     <Screen>
       <View style={styles.container}>
-        <Text style={styles.prompt}>How long did you rest?</Text>
+        <Text style={styles.prompt}>{sleepEntryType?.prompt ?? 'How long did you rest?'}</Text>
 
         <NumericInput
           value={hours}

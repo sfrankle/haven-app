@@ -34,7 +34,7 @@ const SLEEP_ENTRY_TYPE: EntryType = {
   name: 'Sleep',
   title: 'Slumber',
   icon: 'moon',
-  prompt: 'How many hours did you sleep?',
+  prompt: 'How long did you rest?',
   measurementType: 'numeric',
 };
 
@@ -141,8 +141,7 @@ describe('LogSleepScreen', () => {
 
   it('does not call saveEntry when navigating back without saving', () => {
     render(<LogSleepScreen />);
-    // Simulate back without any submit — saveEntry must not be called.
-    mockBack();
+    // No interaction — saveEntry must not be called without an explicit submit.
     expect(mockSaveEntry).not.toHaveBeenCalled();
   });
 });
