@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { CHIP_COLORS } from '../constants/chipColors';
+import { CHIP_COLORS } from '@/constants/chipColors';
 
 interface UseChipColorsResult {
   getNextColor: () => string;

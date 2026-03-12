@@ -1,28 +1,20 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors, typeScale } from '@/constants/theme';
+import { colors, lineHeight, typeScale } from '@/constants/theme';
 
-interface ChipProps {
-  label: string;
-  onRemove: () => void;
-  color: string;
-  variant?: 'default' | 'severity';
-  severity?: number;
-  testID?: string;
-}
+type ChipProps =
+  | { label: string; onRemove: () => void; color: string; showSeverity?: false; severity?: never; testID?: string }
+  | { label: string; onRemove: () => void; color: string; showSeverity: true; severity: number; testID?: string };
 
 export function Chip({
   label,
   onRemove,
   color,
-  variant = 'default',
+  showSeverity,
   severity,
   testID,
 }: ChipProps) {
-  const displayLabel =
-    variant === 'severity' && severity != null
-      ? `${label} (${severity}/5)`
-      : label;
+  const displayLabel = showSeverity ? `${label} (${severity}/5)` : label;
 
   return (
     <Pressable
@@ -50,7 +42,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: typeScale.labelLarge.family,
     fontSize: typeScale.labelLarge.size,
-    lineHeight: typeScale.labelLarge.size * typeScale.labelLarge.lineHeightMultiplier,
+    lineHeight: lineHeight(typeScale.labelLarge),
     color: colors.ink,
   },
 });

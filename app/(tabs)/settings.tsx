@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import { Screen, Surface } from '@/components';
-import { colors, spacing, typeScale } from '@/constants/theme';
+import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 
 export default function SettingsScreen() {
   return (
@@ -11,7 +11,7 @@ export default function SettingsScreen() {
             fontFamily: typeScale.labelMedium.family,
             fontWeight: typeScale.labelMedium.weight,
             fontSize: typeScale.labelMedium.size,
-            lineHeight: typeScale.labelMedium.size * typeScale.labelMedium.lineHeightMultiplier,
+            lineHeight: lineHeight(typeScale.labelMedium),
             color: colors.chrome,
             marginBottom: spacing.elementGap,
           }}
@@ -31,7 +31,7 @@ export default function SettingsScreen() {
               fontFamily: typeScale.bodyMedium.family,
               fontWeight: typeScale.bodyMedium.weight,
               fontSize: typeScale.bodyMedium.size,
-              lineHeight: typeScale.bodyMedium.size * typeScale.bodyMedium.lineHeightMultiplier,
+              lineHeight: lineHeight(typeScale.bodyMedium),
               color: colors.ink,
             }}
           >

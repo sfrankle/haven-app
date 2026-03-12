@@ -5,5 +5,6 @@ export {
   fontFamilies,
   fontWeights,
   typeScale,
+  lineHeight,
   spacing,
 } from './tokens';

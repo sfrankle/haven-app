@@ -18,16 +18,16 @@ describe('Chip', () => {
     expect(getByText('Cheese')).toBeTruthy();
   });
 
-  it('renders severity suffix when variant="severity" and severity is provided', () => {
+  it('renders severity suffix when showSeverity is true', () => {
     const { getByText } = render(
-      <Chip {...baseProps} label="Cramps" variant="severity" severity={2} />
+      <Chip {...baseProps} label="Cramps" showSeverity severity={2} />
     );
     expect(getByText('Cramps (2/5)')).toBeTruthy();
   });
 
-  it('does not render severity suffix when variant="default"', () => {
+  it('does not render severity suffix by default', () => {
     const { getByText } = render(
-      <Chip {...baseProps} label="Cramps" variant="default" severity={2} />
+      <Chip {...baseProps} label="Cramps" />
     );
     expect(getByText('Cramps')).toBeTruthy();
     expect(() => getByText('Cramps (2/5)')).toThrow();

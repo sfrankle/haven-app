@@ -169,6 +169,17 @@ export const typeScale = {
 // All values in dp.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Typography helpers
+// ---------------------------------------------------------------------------
+
+/** Compute a React Native lineHeight from a typeScale entry. */
+export function lineHeight(scale: { size: number; lineHeightMultiplier: number }): number {
+  return scale.size * scale.lineHeightMultiplier;
+}
+
+// ---------------------------------------------------------------------------
+// Spacing
 export const spacing = {
   pagePadding:      16, // Horizontal page padding
   sectionGap:       24, // Major section gap

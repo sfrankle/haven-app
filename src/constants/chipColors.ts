@@ -1,4 +1,4 @@
-import { colors } from './theme/tokens';
+import { colors } from '@/constants/theme';
 
 export const CHIP_COLORS: string[] = [
   colors.chipRose,

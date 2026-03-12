@@ -1,12 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { colors, typeScale } from '@/constants/theme';
+import { colors, lineHeight, typeScale } from '@/constants/theme';
 
 interface NumericInputProps {
   value: string;
   onChangeText: (text: string) => void;
   unit: string;
-  defaultValue?: string;
   testID?: string;
 }
 
@@ -39,7 +38,7 @@ const styles = StyleSheet.create({
   input: {
     fontFamily: typeScale.bodyLarge.family,
     fontSize: typeScale.bodyLarge.size,
-    lineHeight: typeScale.bodyLarge.size * typeScale.bodyLarge.lineHeightMultiplier,
+    lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.ink,
     minWidth: 80,
     borderBottomWidth: 1,
@@ -49,7 +48,7 @@ const styles = StyleSheet.create({
   unit: {
     fontFamily: typeScale.bodyLarge.family,
     fontSize: typeScale.bodyLarge.size,
-    lineHeight: typeScale.bodyLarge.size * typeScale.bodyLarge.lineHeightMultiplier,
+    lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.chrome,
     marginLeft: 8,
   },

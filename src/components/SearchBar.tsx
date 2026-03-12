@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { colors, typeScale } from '@/constants/theme';
+import { colors, lineHeight, typeScale } from '@/constants/theme';
 
 interface SearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
+  autoFocus?: boolean;
   testID?: string;
 }
 
@@ -13,6 +14,7 @@ export function SearchBar({
   value,
   onChangeText,
   placeholder,
+  autoFocus = true,
   testID,
 }: SearchBarProps) {
   const [focused, setFocused] = useState(false);
@@ -30,7 +32,7 @@ export function SearchBar({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={colors.chrome}
-        autoFocus
+        autoFocus={autoFocus}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         testID={testID}
@@ -53,11 +55,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 8,
-    borderWidth: 1,
     paddingHorizontal: 12,
     minHeight: 48,
   },
   containerUnfocused: {
+    borderWidth: 1,
     borderColor: colors.chrome,
   },
   containerFocused: {
@@ -68,7 +70,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: typeScale.bodyLarge.family,
     fontSize: typeScale.bodyLarge.size,
-    lineHeight: typeScale.bodyLarge.size * typeScale.bodyLarge.lineHeightMultiplier,
+    lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.ink,
   },
   clearButton: {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
-import { colors, spacing, typeScale } from '@/constants/theme';
+import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 
 interface SaveConfirmationProps {
   visible: boolean;
@@ -19,6 +19,10 @@ export function SaveConfirmation({
 }: SaveConfirmationProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+  // Keep a ref so the animation callback always calls the latest onDismiss
+  // without needing to restart the animation when the prop identity changes.
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
 
   useEffect(() => {
     if (!visible) return;
@@ -45,15 +49,15 @@ export function SaveConfirmation({
 
     animationRef.current = sequence;
     sequence.start(({ finished }) => {
-      if (finished && onDismiss) {
-        onDismiss();
+      if (finished && onDismissRef.current) {
+        onDismissRef.current();
       }
     });
 
     return () => {
       sequence.stop();
     };
-  }, [visible, duration, onDismiss, opacity]);
+  }, [visible, duration, opacity]);
 
   if (!visible) {
     return null;
@@ -73,6 +77,7 @@ export function SaveConfirmation({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
+    // 56 = approximate height of the submit button that sits above the nav bar
     bottom: spacing.navBottomPadding + 56,
     alignSelf: 'center',
     backgroundColor: `rgba(47,111,98,0.12)`,
@@ -83,7 +88,7 @@ const styles = StyleSheet.create({
   message: {
     fontFamily: typeScale.bodyLarge.family,
     fontSize: typeScale.bodyLarge.size,
-    lineHeight: typeScale.bodyLarge.size * typeScale.bodyLarge.lineHeightMultiplier,
+    lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.ink,
   },
 });
