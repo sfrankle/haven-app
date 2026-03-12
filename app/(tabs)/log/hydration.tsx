@@ -19,32 +19,34 @@ export default function LogHydrationScreen() {
 
   const hydrationEntryType = entryTypes.find((t) => t.name === 'Hydration');
 
-  async function fetchDailyTotal() {
-    const localDate = nowLocalIso().slice(0, 10);
-    const db = await getDb() as unknown as Db;
-    const total = await getDailyHydrationTotal(db, localDate);
-    setDailyTotal(total);
-  }
-
   useEffect(() => {
-    fetchDailyTotal();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false;
+    (async () => {
+      const localDate = nowLocalIso().slice(0, 10);
+      const db = await getDb() as unknown as Db;
+      const total = await getDailyHydrationTotal(db, localDate);
+      if (!cancelled) setDailyTotal(total);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   async function handleSave() {
     if (!hydrationEntryType || oz.trim() === '') return;
 
     const parsed = parseFloat(oz);
+    const timestamp = nowLocalIso();
+    const localDate = timestamp.slice(0, 10);
     const db = await getDb() as unknown as Db;
 
     try {
       await saveEntry(db, {
         entryTypeId: hydrationEntryType.id,
-        timestamp: nowLocalIso(),
+        timestamp,
         numericValue: isNaN(parsed) ? undefined : parsed,
         notes: notes.trim() !== '' ? notes.trim() : undefined,
       });
-      await fetchDailyTotal();
+      const total = await getDailyHydrationTotal(db, localDate);
+      setDailyTotal(total);
       setShowConfirmation(true);
     } catch (err) {
       console.error('[LogHydrationScreen] failed to save entry:', err);
@@ -118,6 +120,7 @@ const styles = StyleSheet.create({
   },
   dailyTotal: {
     fontFamily: typeScale.bodyLarge.family,
+    fontWeight: typeScale.bodyLarge.weight,
     fontSize: typeScale.bodyLarge.size,
     lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.chrome,

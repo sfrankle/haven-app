@@ -13,5 +13,6 @@ appId: com.haven.app
     id: "hydration-save-button"
 - tapOn:
     id: "hydration-save-button"
+- assertVisible: "Today: 24 oz"
 - assertVisible: "Entry saved."
 - assertVisible: "Today"   # back on Tend screen
