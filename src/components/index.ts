@@ -1,4 +1,5 @@
 export { Button } from './Button';
+export { EntryTypeTile } from './EntryTypeTile';
 export { Chip } from './Chip';
 export { NumericInput } from './NumericInput';
 export { SaveConfirmation } from './SaveConfirmation';
