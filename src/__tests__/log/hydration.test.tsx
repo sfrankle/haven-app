@@ -42,7 +42,6 @@ const HYDRATION_ENTRY_TYPE: EntryType = {
 const FIXTURE_ENTRY_TYPES: EntryType[] = [HYDRATION_ENTRY_TYPE];
 
 const FIXED_ISO = '2026-03-12T09:00:00-08:00';
-const FIXED_DATE = '2026-03-12';
 
 // Import screen after mocks are set up.
 // eslint-disable-next-line import/first
@@ -136,12 +135,10 @@ describe('LogHydrationScreen', () => {
     mockGetDailyHydrationTotal
       .mockResolvedValueOnce(0)   // on mount
       .mockResolvedValueOnce(16); // after save
-    const { getByText } = render(<LogHydrationScreen />);
+    const { getByText, getByTestId } = render(<LogHydrationScreen />);
     // Wait for mount fetch
     await act(async () => {});
     expect(getByText('Today: 0 oz')).toBeTruthy();
-    const { getByTestId } = render(<LogHydrationScreen />);
-    await act(async () => {});
     await act(async () => {
       fireEvent.press(getByTestId('hydration-save-button'));
     });
