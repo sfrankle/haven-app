@@ -19,6 +19,16 @@ export const colors = {
   glow:           '#F6C7B9',              // Glow Peach — focus rings, insight highlights
   candlelight:    '#FEEFBA',              // Vanilla Custard — constellation dots, micro-badges
 
+  // Chip palette — assigned sequentially by useChipColors; see docs/design/visual-style.md
+  chipRose:       '#F3D5E6', // Rosewash — soft emotional warmth
+  chipPeach:      '#F9DCC4', // Apricot Mist — friendly, nourishing
+  chipButter:     '#FEEFBA', // Butterlight — brightest pastel
+  chipSage:       '#D9E7D2', // Sage Veil — grounded wellness
+  chipMint:       '#DDEFE3', // Mint Fog — fresh/clean
+  chipAqua:       '#D7F0F2', // Tidelight — water/clarity
+  chipPeriwinkle: '#DDE7F2', // Periwinkle Haze — quiet intelligence
+  chipLavender:   '#E8DFF5', // Lavender Cloud — reflective tone
+
   // Semantic colors (pair with icon + label; never decorative)
   success:        '#2F6F62',
   warning:        '#A6712A',

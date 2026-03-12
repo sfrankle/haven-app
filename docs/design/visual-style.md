@@ -53,6 +53,19 @@ For icon and hero use only: `#EFC5BB` → `#4F557D` → `#7393A1`
 - 10% warm accents (`glow`, `accent`) — keep meaningful and rare
 - Semantic colours appear only for their intended states, never decoratively
 
+## Chip Colours
+| Token            | Value     | Name            | Role                                     |
+| ---------------- | --------- | --------------- | ---------------------------------------- |
+| `chipRose`       | #F3D5E6 | Rosewash        | Soft emotional warmth, gentle emphasis   |
+| `chipPeach`      | #F9DCC4 | Apricot Mist    | Friendly, nourishing, food-adjacent      |
+| `chipButter`     | #FEEFBA | Butterlight     | Brightest pastel; “sparkle” without neon |
+| `chipSage`       | #D9E7D2 | Sage Veil       | Grounded wellness, calm regulation       |
+| `chipMint`       | #DDEFE3 | Mint Fog        | Fresh/clean, hydration-adjacent          |
+| `chipAqua`       | #D7F0F2 | Tidelight       | Water/clarity, cool and soothing         |
+| `chipPeriwinkle` | #DDE7F2 | Periwinkle Haze | Quiet intelligence, pattern-y            |
+| `chipLavender`   | #E8DFF5 | Lavender Cloud  | Night-sky magic, reflective tone         |
+
+
 ## Typography
 
 Two font families:
