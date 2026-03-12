@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Text,
 } from 'react-native';
-import { colors, spacing, typeScale } from '@/constants/theme';
+import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 
 interface ButtonProps extends Omit<PressableProps, 'style'> {
   label: string;
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: typeScale.labelLarge.family,
     fontSize: typeScale.labelLarge.size,
-    lineHeight: typeScale.labelLarge.size * typeScale.labelLarge.lineHeightMultiplier,
+    lineHeight: lineHeight(typeScale.labelLarge),
   },
   labelPrimary: {
     color: colors.background,
