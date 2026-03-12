@@ -20,25 +20,25 @@ describe('SearchBar', () => {
   });
 
   it('clear button is not visible when value is empty', () => {
-    const { queryByAccessibilityLabel } = render(
+    const { queryByLabelText } = render(
       <SearchBar value="" onChangeText={jest.fn()} />
     );
-    expect(queryByAccessibilityLabel('Clear search')).toBeNull();
+    expect(queryByLabelText('Clear search')).toBeNull();
   });
 
   it('clear button is visible when value is non-empty', () => {
-    const { getByAccessibilityLabel } = render(
+    const { getByLabelText } = render(
       <SearchBar value="oats" onChangeText={jest.fn()} />
     );
-    expect(getByAccessibilityLabel('Clear search')).toBeTruthy();
+    expect(getByLabelText('Clear search')).toBeTruthy();
   });
 
   it('pressing the clear button calls onChangeText with an empty string', () => {
     const onChangeText = jest.fn();
-    const { getByAccessibilityLabel } = render(
+    const { getByLabelText } = render(
       <SearchBar value="oats" onChangeText={onChangeText} />
     );
-    fireEvent.press(getByAccessibilityLabel('Clear search'));
+    fireEvent.press(getByLabelText('Clear search'));
     expect(onChangeText).toHaveBeenCalledWith('');
   });
 });

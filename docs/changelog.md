@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| #77 | feat: shared logging UI components — Chip (default + severity variants, useChipColors hook), SearchBar (controlled, autofocus, clear button), NumericInput (numeric keyboard, unit suffix), SaveConfirmation (animated toast, auto-dismiss, pointerEvents none) | 2026-03-12 |
 | #75 | feat: DB query layer — `queries.ts` with `getEntryTypes`, `getLabels` (recents + prefix search), `saveEntry` (transactional), `getEntriesForTrace`, `getDailyHydrationTotal`; `query-types.ts` for app-facing shapes; `BetterSqliteAdapter` for Jest; fix missing `title` on `EntryTypeRow` | 2026-03-11 |
 | #87 | feat: timestamp utility — `nowLocalIso()` captures wall-clock time with UTC offset; `formatEntryTime()` and `formatEntryDate()` display stored time without re-interpreting in current timezone | 2026-03-09 |
 | #86 | feat: add privacy notice to Settings screen — "Your data is stored only on this device." styled with bodyMedium/chrome tokens; Jest render tests; Maestro flow test | 2026-03-10 |
