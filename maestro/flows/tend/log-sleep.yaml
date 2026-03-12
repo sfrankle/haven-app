@@ -1,0 +1,12 @@
+appId: com.haven.app
+---
+- launchApp
+- tapOn: "Slumber"
+- assertVisible: "How long did you rest?"
+- tapOn:
+    id: "sleep-hours-input"
+- inputText: "7"
+- tapOn:
+    id: "sleep-save-button"
+- assertVisible: "Entry saved."
+- assertVisible: "Today"   # back on Tend screen
