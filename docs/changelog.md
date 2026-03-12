@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| #91 | feat: Tend home screen — entry type grid; `EntryTypeTile` component, `useEntryTypes` hook, 2-column FlatList with date header and navigation; seed `sort_order` and FA5 icon names updated; `@expo/vector-icons` added | 2026-03-12 |
 | #90 | feat: shared logging UI components — Chip (default + severity variants, useChipColors hook), SearchBar (controlled, autofocus, clear button), NumericInput (numeric keyboard, unit suffix), SaveConfirmation (animated toast, auto-dismiss, pointerEvents none) | 2026-03-12 |
 | #89 | feat: DB query layer — `queries.ts` with `getEntryTypes`, `getLabels` (recents + prefix search), `saveEntry` (transactional), `getEntriesForTrace`, `getDailyHydrationTotal`; `query-types.ts` for app-facing shapes; `BetterSqliteAdapter` for Jest; fix missing `title` on `EntryTypeRow` | 2026-03-11 |
 | #87 | feat: timestamp utility — `nowLocalIso()` captures wall-clock time with UTC offset; `formatEntryTime()` and `formatEntryDate()` display stored time without re-interpreting in current timezone | 2026-03-09 |
