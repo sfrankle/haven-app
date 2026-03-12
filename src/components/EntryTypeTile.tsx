@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { colors, typeScale, spacing } from '@/constants/theme';
+import { colors, typeScale, spacing, lineHeight } from '@/constants/theme';
 import type { EntryType } from '@/lib/db/query-types';
 
 export interface EntryTypeTileProps {
@@ -53,6 +53,7 @@ const styles = StyleSheet.create({
     fontFamily: typeScale.labelLarge.family,
     fontWeight: typeScale.labelLarge.weight,
     fontSize: typeScale.labelLarge.size,
+    lineHeight: lineHeight(typeScale.labelLarge),
     color: colors.ink,
     textAlign: 'center',
   },

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { FlatList, Text, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import dayjs from 'dayjs';
@@ -20,9 +20,17 @@ export default function TendScreen() {
   const router = useRouter();
   const { entryTypes, loading } = useEntryTypes();
 
-  function handlePress(item: EntryType) {
+  const handlePress = useCallback((item: EntryType) => {
     router.push(`/log/${item.name.toLowerCase()}`);
-  }
+  }, [router]);
+
+  const renderItem = useCallback(({ item }: { item: EntryType }) => (
+    <EntryTypeTile
+      entryType={item}
+      onPress={() => handlePress(item)}
+      testID={`tile-${item.name.toLowerCase()}`}
+    />
+  ), [handlePress]);
 
   return (
     <Screen>
@@ -30,16 +38,10 @@ export default function TendScreen() {
         data={loading ? [] : entryTypes}
         numColumns={2}
         keyExtractor={(item) => String(item.id)}
-        ListHeaderComponent={<DateHeader />}
+        ListHeaderComponent={DateHeader}
         contentContainerStyle={styles.listContent}
         columnWrapperStyle={styles.columnWrapper}
-        renderItem={({ item }) => (
-          <EntryTypeTile
-            entryType={item}
-            onPress={() => handlePress(item)}
-            testID={`tile-${item.name.toLowerCase()}`}
-          />
-        )}
+        renderItem={renderItem}
       />
     </Screen>
   );
