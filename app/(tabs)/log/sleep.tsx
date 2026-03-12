@@ -43,14 +43,12 @@ export default function LogSleepScreen() {
       <View style={styles.container}>
         <Text style={styles.prompt}>How long did you rest?</Text>
 
-        <View style={styles.inputSection}>
-          <NumericInput
-            value={hours}
-            onChangeText={setHours}
-            unit="hours"
-            testID="sleep-hours-input"
-          />
-        </View>
+        <NumericInput
+          value={hours}
+          onChangeText={setHours}
+          unit="hours"
+          testID="sleep-hours-input"
+        />
 
         <TextInput
           style={styles.notesInput}
@@ -97,9 +95,6 @@ const styles = StyleSheet.create({
     color: colors.ink,
     marginBottom: spacing.sectionGap,
   },
-  inputSection: {
-    marginBottom: spacing.sectionGap,
-  },
   notesInput: {
     fontFamily: typeScale.bodyLarge.family,
     fontSize: typeScale.bodyLarge.size,
@@ -108,6 +103,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.chrome,
     paddingVertical: spacing.elementGap,
+    marginTop: spacing.sectionGap,
     marginBottom: spacing.sectionGap,
     textAlignVertical: 'top',
   },
