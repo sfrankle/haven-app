@@ -32,6 +32,14 @@ Use React Native Reanimated or the built-in Animated API for transitions and mic
 
 Focus animation effort on high-impact moments — a well-orchestrated screen entry with staggered reveals creates more delight than scattered micro-interactions. Follow Haven's motion guidelines: subtle, low-frequency, no bounce or celebratory motion.
 
+## Logging Screen Navigation
+
+All logging screens (sleep, hydration, food, emotions, physical, activity) must be placed inside `app/(tabs)/log/` — **not** in a top-level `app/log/` directory. The `(tabs)` group name is invisible in URLs, so `router.push('/log/sleep')` resolves correctly either way, but only screens inside `(tabs)/` inherit the tab bar. The tab bar must remain visible on all logging screens.
+
+Required files for the log group:
+- `app/(tabs)/log/_layout.tsx` — minimal Stack wrapper (created once, shared by all log screens)
+- `app/(tabs)/log/<type>.tsx` — one file per entry type
+
 ## Backgrounds and Surfaces
 
 Use the Haven surface tokens to create depth and atmosphere. Avoid defaulting to flat white or stark black. Layer surfaces using `background` and `surfaceVariant` tokens with appropriate elevation.
