@@ -62,6 +62,8 @@ Flag only real issues. Do not nitpick style. Focus on:
 
 Be specific: cite the file, line, and the rule being violated. Suggest a fix where possible.
 
+run `requesting-code-review` (by superpowers) and then `/simplify`
+
 ## Output
 
 Post findings as an advisory comment directly on the PR. Determine the PR number from the current branch using `gh pr view --json number -q .number`, then post:

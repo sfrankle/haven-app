@@ -119,7 +119,7 @@ Defined in `app/CLAUDE.md`.
 ---
 
 ### Close PR Process
-User says "alright, let's wrap this up":
+User says "alright, let's wrap this up": run `/wrap-up-pr`
 
 ---
 
