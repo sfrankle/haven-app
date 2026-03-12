@@ -20,7 +20,7 @@ Before starting, confirm:
 4. **Implement** following the plan's sequenced steps
 5. **Verify** — run all checks before opening the PR (see Quality Checklist below)
 6. **Open a draft PR** with the correct references and description
-7. **Update changelog** — add 1 row to `docs/changelog.md`
+7. **Update changelog** — add 1 row to `docs/changelog.md` using the **PR number** (not the issue number) in the `PR` column. The PR number is returned by `gh pr create` or visible via `gh pr view`.
 
 ## Implementation Rules
 
