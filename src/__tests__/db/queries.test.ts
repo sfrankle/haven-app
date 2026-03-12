@@ -72,7 +72,7 @@ describe('query layer', () => {
     test('ordered by sort_order ASC', async () => {
       const types = await getEntryTypes(db);
       const names = types.map((t) => t.name);
-      expect(names).toEqual(['Sleep', 'Hydration', 'Food', 'Emotion', 'Physical', 'Activity']);
+      expect(names).toEqual(['Food', 'Hydration', 'Emotion', 'Physical', 'Sleep', 'Activity']);
     });
 
     test('result includes title field', async () => {

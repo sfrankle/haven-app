@@ -107,11 +107,11 @@ describe('seed integrity', () => {
       .prepare('SELECT name FROM entry_type ORDER BY sort_order')
       .all() as { name: string }[];
     expect(rows.map((r) => r.name)).toEqual([
-      'Sleep',
-      'Hydration',
       'Food',
+      'Hydration',
       'Emotion',
       'Physical',
+      'Sleep',
       'Activity',
     ]);
   });
