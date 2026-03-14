@@ -88,7 +88,7 @@ export default function LogActivityScreen() {
   }
 
   function handleDismiss() {
-    router.dismissAll();
+    router.replace("/");
   }
 
   const showAddCustom = search.trim().length > 0 && suggestions.length === 0;

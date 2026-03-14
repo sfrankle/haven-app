@@ -7,7 +7,7 @@ import * as timestamp from '@/lib/utils/timestamp';
 
 // Must be hoisted before module evaluation.
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: mockBack, dismissAll: mockBack, push: jest.fn() }),
+  useRouter: () => ({ back: jest.fn(), replace: mockBack, push: jest.fn() }),
 }));
 
 jest.mock('@/hooks', () => ({
@@ -248,7 +248,7 @@ describe('LogActivityScreen', () => {
     expect(getByTestId('activity-save-confirmation')).toBeTruthy();
   });
 
-  it('calls router.dismissAll() when confirmation dismisses', async () => {
+  it('calls router.replace on confirmation dismisses', async () => {
     const { getByTestId } = render(<LogActivityScreen />);
     act(() => { jest.advanceTimersByTime(200); });
     await waitFor(() => getByTestId('activity-suggestion-1'));

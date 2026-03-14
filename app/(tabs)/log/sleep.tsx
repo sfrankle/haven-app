@@ -38,7 +38,7 @@ export default function LogSleepScreen() {
   }
 
   function handleDismiss() {
-    router.dismissAll();
+    router.replace("/");
   }
 
   return (
