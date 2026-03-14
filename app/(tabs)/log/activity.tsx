@@ -3,10 +3,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -21,6 +19,8 @@ import { logScreenStyles } from '@/constants/sharedStyles';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
+const SUGGESTION_LIMIT = 5;
+
 interface ChipItem {
   labelId: number;
   name: string;
@@ -33,7 +33,6 @@ export default function LogActivityScreen() {
   const [search, setSearch] = useState('');
   const [suggestions, setSuggestions] = useState<Label[]>([]);
   const [chips, setChips] = useState<ChipItem[]>([]);
-  const [notes, setNotes] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const activityEntryType = entryTypes.find((t) => t.name === 'Activity');
@@ -42,7 +41,9 @@ export default function LogActivityScreen() {
     if (!activityEntryType) return;
     const db = (await getDb()) as unknown as Db;
     const currentIds = chips.map((c) => c.labelId);
-    const options = search.length > 0 ? { search } : {};
+    const options = search.length > 0
+      ? { search, limit: SUGGESTION_LIMIT }
+      : { limit: SUGGESTION_LIMIT };
     const labels = await getLabels(db, activityEntryType.id, options);
     setSuggestions(labels.filter((l) => !currentIds.includes(l.id)));
   }, [activityEntryType, search, chips]);
@@ -79,7 +80,6 @@ export default function LogActivityScreen() {
         entryTypeId: activityEntryType.id,
         timestamp: nowLocalIso(),
         labelIds: chips.map((c) => c.labelId),
-        notes: notes.trim() !== '' ? notes.trim() : undefined,
       });
       setShowConfirmation(true);
     } catch (err) {
@@ -99,11 +99,7 @@ export default function LogActivityScreen() {
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
+        <View style={styles.content}>
           <Text style={styles.prompt}>
             {activityEntryType?.prompt ?? 'What did you do today?'}
           </Text>
@@ -116,34 +112,38 @@ export default function LogActivityScreen() {
             testID="activity-search"
           />
 
-          {/* Suggestion list — fixed height so chip tray stays anchored below */}
-          <View style={styles.suggestionsContainer}>
-            {suggestions.map((label) => (
-              <Pressable
-                key={label.id}
-                style={styles.suggestionRow}
-                onPress={() => handleSelect(label)}
-                testID={`activity-suggestion-${label.id}`}
-              >
-                <Text style={styles.suggestionText}>{label.name}</Text>
-                {label.categoryName ? (
-                  <Text style={styles.categoryBadge}>{label.categoryName}</Text>
-                ) : null}
-              </Pressable>
-            ))}
+          {/* Suggestions — 3–5 tappable chips, not a full list */}
+          {(suggestions.length > 0 || showAddCustom) && (
+            <View style={styles.suggestionsContainer}>
+              {suggestions.map((label) => (
+                <Pressable
+                  key={label.id}
+                  onPress={() => handleSelect(label)}
+                  testID={`activity-suggestion-${label.id}`}
+                >
+                  <View style={styles.suggestionChip}>
+                    <Text style={styles.suggestionChipText}>{label.name}</Text>
+                    {label.categoryName ? (
+                      <Text style={styles.categoryBadge}>{label.categoryName}</Text>
+                    ) : null}
+                  </View>
+                </Pressable>
+              ))}
 
-            {showAddCustom && (
-              <Pressable
-                style={styles.suggestionRow}
-                onPress={() => { void handleAddCustom(); }}
-                testID="activity-add-custom"
-              >
-                <Text style={styles.addCustomText}>+ Add "{search.trim()}"</Text>
-              </Pressable>
-            )}
-          </View>
+              {showAddCustom && (
+                <Pressable
+                  onPress={() => { void handleAddCustom(); }}
+                  testID="activity-add-custom"
+                >
+                  <View style={styles.suggestionChip}>
+                    <Text style={styles.addCustomText}>+ Add "{search.trim()}"</Text>
+                  </View>
+                </Pressable>
+              )}
+            </View>
+          )}
 
-          {/* Chip tray */}
+          {/* Selected chip tray */}
           {chips.length > 0 && (
             <View style={styles.chipTray}>
               {chips.map((chip) => (
@@ -158,17 +158,6 @@ export default function LogActivityScreen() {
             </View>
           )}
 
-          <TextInput
-            style={logScreenStyles.notesInput}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Notes (optional)"
-            placeholderTextColor={colors.chrome}
-            multiline
-            numberOfLines={3}
-            testID="activity-notes"
-          />
-
           {chips.length > 0 && (
             <View style={logScreenStyles.saveButton}>
               <Button
@@ -178,7 +167,7 @@ export default function LogActivityScreen() {
               />
             </View>
           )}
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
 
       <SaveConfirmation
@@ -194,13 +183,10 @@ const styles = StyleSheet.create({
   keyboardAvoid: {
     flex: 1,
   },
-  scroll: {
+  content: {
     flex: 1,
-  },
-  scrollContent: {
     paddingHorizontal: spacing.pagePadding,
     paddingTop: spacing.sectionGap,
-    paddingBottom: spacing.sectionGap,
   },
   prompt: {
     fontFamily: typeScale.titleLarge.family,
@@ -211,31 +197,33 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sectionGap,
   },
   suggestionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.elementGap,
     marginTop: spacing.elementGap,
-    maxHeight: 240,
   },
-  suggestionRow: {
+  suggestionChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.chrome + '40',
-    minHeight: 48,
+    gap: 4,
+    paddingHorizontal: spacing.elementGap,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.chrome,
+    backgroundColor: colors.surface,
   },
-  suggestionText: {
+  suggestionChipText: {
     fontFamily: typeScale.bodyLarge.family,
     fontSize: typeScale.bodyLarge.size,
     lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.ink,
-    flex: 1,
   },
   categoryBadge: {
     fontFamily: typeScale.labelLarge.family,
     fontSize: typeScale.labelLarge.size,
     lineHeight: lineHeight(typeScale.labelLarge),
     color: colors.chrome,
-    marginLeft: spacing.elementGap,
   },
   addCustomText: {
     fontFamily: typeScale.bodyLarge.family,

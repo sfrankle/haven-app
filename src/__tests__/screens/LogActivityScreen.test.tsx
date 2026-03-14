@@ -108,21 +108,20 @@ describe('LogActivityScreen', () => {
     expect(input.props.autoFocus).toBe(true);
   });
 
-  it('calls getLabels with search term after typing', async () => {
+  it('calls getLabels with search term and limit after typing', async () => {
     const { getByTestId } = render(<LogActivityScreen />);
     fireEvent.changeText(getByTestId('activity-search'), 'wal');
-    // advance debounce timer
     act(() => { jest.advanceTimersByTime(200); });
     await waitFor(() =>
       expect(mockGetLabels).toHaveBeenCalledWith(
         expect.anything(),
         ACTIVITY_ENTRY_TYPE.id,
-        expect.objectContaining({ search: 'wal' })
+        expect.objectContaining({ search: 'wal', limit: 5 })
       )
     );
   });
 
-  it('calls getLabels without search when search is empty', async () => {
+  it('calls getLabels with limit but no search when search is empty', async () => {
     const { getByTestId } = render(<LogActivityScreen />);
     fireEvent.changeText(getByTestId('activity-search'), '');
     act(() => { jest.advanceTimersByTime(200); });
@@ -235,21 +234,6 @@ describe('LogActivityScreen', () => {
         entryTypeId: ACTIVITY_ENTRY_TYPE.id,
         labelIds: expect.arrayContaining([1, 2]),
       })
-    );
-  });
-
-  it('notes value is passed to saveEntry', async () => {
-    const { getByTestId } = render(<LogActivityScreen />);
-    act(() => { jest.advanceTimersByTime(200); });
-    await waitFor(() => getByTestId('activity-suggestion-1'));
-    fireEvent.press(getByTestId('activity-suggestion-1'));
-    fireEvent.changeText(getByTestId('activity-notes'), 'felt great');
-    await act(async () => {
-      fireEvent.press(getByTestId('activity-save-button'));
-    });
-    expect(mockSaveEntry).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ notes: 'felt great' })
     );
   });
 
