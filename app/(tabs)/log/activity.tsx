@@ -123,9 +123,6 @@ export default function LogActivityScreen() {
                 >
                   <View style={styles.suggestionChip}>
                     <Text style={styles.suggestionChipText}>{label.name}</Text>
-                    {label.categoryName ? (
-                      <Text style={styles.categoryBadge}>{label.categoryName}</Text>
-                    ) : null}
                   </View>
                 </Pressable>
               ))}
@@ -203,9 +200,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.elementGap,
   },
   suggestionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
     paddingHorizontal: spacing.elementGap,
     paddingVertical: 8,
     borderRadius: 20,
@@ -218,12 +212,6 @@ const styles = StyleSheet.create({
     fontSize: typeScale.bodyLarge.size,
     lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.ink,
-  },
-  categoryBadge: {
-    fontFamily: typeScale.labelLarge.family,
-    fontSize: typeScale.labelLarge.size,
-    lineHeight: lineHeight(typeScale.labelLarge),
-    color: colors.chrome,
   },
   addCustomText: {
     fontFamily: typeScale.bodyLarge.family,
