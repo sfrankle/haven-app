@@ -18,6 +18,7 @@ import {
   saveEntry,
   getEntriesForTrace,
   getDailyHydrationTotal,
+  createLabel,
 } from '../../lib/db/queries';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -406,6 +407,67 @@ describe('query layer', () => {
     test('returns 0 for a date with no entries', async () => {
       const total = await getDailyHydrationTotal(db, '2000-01-01');
       expect(total).toBe(0);
+    });
+  });
+
+  // ── getLabels — categoryName join ───────────────────────────────────────────
+
+  describe('getLabels — categoryName join', () => {
+    let activityTypeId: number;
+
+    beforeAll(() => {
+      activityTypeId = entryTypeId(raw, 'Activity');
+    });
+
+    test('activity labels include categoryName from joined category row', async () => {
+      const labels = await getLabels(db, activityTypeId, { search: 'Walk' });
+      expect(labels.length).toBeGreaterThan(0);
+      const walk = labels.find((l) => l.name === 'Walk');
+      expect(walk).toBeDefined();
+      expect(walk!.categoryName).toBe('Move');
+    });
+
+    test('labels with no category have categoryName: null', async () => {
+      // Insert a label with no category_id to verify null mapping.
+      raw
+        .prepare(
+          `INSERT INTO label (entry_type_id, name, category_id, is_default, is_enabled, sort_order)
+           VALUES (?, 'NoCategoryTestLabel', NULL, 0, 1, 999)`
+        )
+        .run(activityTypeId);
+
+      const labels = await getLabels(db, activityTypeId, { search: 'NoCategoryTestLabel' });
+      expect(labels.length).toBe(1);
+      expect(labels[0].categoryName).toBeNull();
+
+      // Clean up.
+      raw.prepare(`DELETE FROM label WHERE name = 'NoCategoryTestLabel'`).run();
+    });
+  });
+
+  // ── createLabel ─────────────────────────────────────────────────────────────
+
+  describe('createLabel', () => {
+    let activityTypeId: number;
+
+    beforeAll(() => {
+      activityTypeId = entryTypeId(raw, 'Activity');
+    });
+
+    test('inserts a new label and returns it with correct fields', async () => {
+      const label = await createLabel(db, activityTypeId, 'Custom Midnight Swim');
+      expect(label.id).toBeGreaterThan(0);
+      expect(label.name).toBe('Custom Midnight Swim');
+      expect(label.entryTypeId).toBe(activityTypeId);
+      expect(label.categoryId).toBeNull();
+      expect(label.categoryName).toBeNull();
+    });
+
+    test('created label appears in subsequent getLabels search', async () => {
+      await createLabel(db, activityTypeId, 'UniqueTestActivityZzz');
+      const labels = await getLabels(db, activityTypeId, { search: 'UniqueTestActivityZzz' });
+      expect(labels.length).toBe(1);
+      expect(labels[0].name).toBe('UniqueTestActivityZzz');
     });
   });
 });
