@@ -304,6 +304,7 @@ export async function createLabel(
   name: string
 ): Promise<Label> {
   const result = await db.runAsync(
+    // seed_version = 0 marks this as user-created; seed rows always use >= 1.
     `INSERT INTO label (entry_type_id, name, category_id, is_default, is_enabled, sort_order, seed_version)
      VALUES (?, ?, NULL, 0, 1, 0, 0)`,
     [entryTypeId, name]

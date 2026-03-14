@@ -461,6 +461,14 @@ describe('query layer', () => {
       expect(label.entryTypeId).toBe(activityTypeId);
       expect(label.categoryId).toBeNull();
       expect(label.categoryName).toBeNull();
+
+      // seed_version = 0 marks user-created labels; seed rows always use >= 1.
+      // This ensures user labels are never affected by seed update logic.
+      const row = await db.getFirstAsync<{ seed_version: number | null }>(
+        'SELECT seed_version FROM label WHERE id = ?',
+        [label.id]
+      );
+      expect(row?.seed_version).toBe(0);
     });
 
     test('created label appears in subsequent getLabels search', async () => {

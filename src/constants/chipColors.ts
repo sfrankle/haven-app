@@ -1,4 +1,5 @@
 import { colors } from '@/constants/theme';
+import type { Label } from '@/lib/db/query-types';
 
 export const CHIP_COLORS: string[] = [
   colors.chipRose,
@@ -30,3 +31,11 @@ export const CATEGORY_CHIP_COLORS: Record<string, string> = {
 };
 
 export const CATEGORY_CHIP_COLOR_FALLBACK = colors.chipPeriwinkle;
+
+/** Returns the chip background colour for an activity label based on its category. */
+export function colorForActivityLabel(label: Pick<Label, 'categoryName'>): string {
+  if (label.categoryName && label.categoryName in CATEGORY_CHIP_COLORS) {
+    return CATEGORY_CHIP_COLORS[label.categoryName];
+  }
+  return CATEGORY_CHIP_COLOR_FALLBACK;
+}

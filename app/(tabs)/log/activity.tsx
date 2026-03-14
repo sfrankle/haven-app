@@ -16,21 +16,15 @@ import { getLabels, saveEntry, createLabel } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
-import { CATEGORY_CHIP_COLORS, CATEGORY_CHIP_COLOR_FALLBACK } from '@/constants/chipColors';
+import { colorForActivityLabel } from '@/constants/chipColors';
+import { logScreenStyles } from '@/constants/sharedStyles';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
 interface ChipItem {
   labelId: number;
   name: string;
-  color: string;
-}
-
-function colorForLabel(label: Label): string {
-  if (label.categoryName && label.categoryName in CATEGORY_CHIP_COLORS) {
-    return CATEGORY_CHIP_COLORS[label.categoryName];
-  }
-  return CATEGORY_CHIP_COLOR_FALLBACK;
+  categoryName: string | null;
 }
 
 export default function LogActivityScreen() {
@@ -44,17 +38,14 @@ export default function LogActivityScreen() {
 
   const activityEntryType = entryTypes.find((t) => t.name === 'Activity');
 
-  // Fetch suggestions with debounce whenever search or chips change.
-  const selectedIds = chips.map((c) => c.labelId);
-
   const fetchSuggestions = useCallback(async () => {
     if (!activityEntryType) return;
     const db = (await getDb()) as unknown as Db;
+    const currentIds = chips.map((c) => c.labelId);
     const options = search.length > 0 ? { search } : {};
     const labels = await getLabels(db, activityEntryType.id, options);
-    const filtered = labels.filter((l) => !selectedIds.includes(l.id));
-    setSuggestions(filtered);
-  }, [activityEntryType, search, selectedIds.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
+    setSuggestions(labels.filter((l) => !currentIds.includes(l.id)));
+  }, [activityEntryType, search, chips]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -64,8 +55,7 @@ export default function LogActivityScreen() {
   }, [fetchSuggestions]);
 
   function handleSelect(label: Label) {
-    const color = colorForLabel(label);
-    setChips((prev) => [...prev, { labelId: label.id, name: label.name, color }]);
+    setChips((prev) => [...prev, { labelId: label.id, name: label.name, categoryName: label.categoryName }]);
     setSearch('');
   }
 
@@ -77,8 +67,7 @@ export default function LogActivityScreen() {
     if (!activityEntryType || search.trim() === '') return;
     const db = (await getDb()) as unknown as Db;
     const label = await createLabel(db, activityEntryType.id, search.trim());
-    const color = colorForLabel(label);
-    setChips((prev) => [...prev, { labelId: label.id, name: label.name, color }]);
+    setChips((prev) => [...prev, { labelId: label.id, name: label.name, categoryName: label.categoryName }]);
     setSearch('');
   }
 
@@ -161,7 +150,7 @@ export default function LogActivityScreen() {
                 <Chip
                   key={chip.labelId}
                   label={chip.name}
-                  color={chip.color}
+                  color={colorForActivityLabel(chip)}
                   onRemove={() => handleRemove(chip.labelId)}
                   testID={`activity-chip-${chip.labelId}`}
                 />
@@ -170,7 +159,7 @@ export default function LogActivityScreen() {
           )}
 
           <TextInput
-            style={styles.notesInput}
+            style={logScreenStyles.notesInput}
             value={notes}
             onChangeText={setNotes}
             placeholder="Notes (optional)"
@@ -181,7 +170,7 @@ export default function LogActivityScreen() {
           />
 
           {chips.length > 0 && (
-            <View style={styles.saveButton}>
+            <View style={logScreenStyles.saveButton}>
               <Button
                 label="Save"
                 onPress={() => { void handleSave(); }}
@@ -259,20 +248,5 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.elementGap,
     marginTop: spacing.sectionGap,
-  },
-  notesInput: {
-    fontFamily: typeScale.bodyLarge.family,
-    fontSize: typeScale.bodyLarge.size,
-    lineHeight: lineHeight(typeScale.bodyLarge),
-    color: colors.ink,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.chrome,
-    paddingVertical: spacing.elementGap,
-    marginTop: spacing.sectionGap,
-    marginBottom: spacing.sectionGap,
-    textAlignVertical: 'top',
-  },
-  saveButton: {
-    marginTop: spacing.elementGap,
   },
 });
