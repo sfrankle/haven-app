@@ -54,7 +54,7 @@ export default function LogHydrationScreen() {
   }
 
   function handleDismiss() {
-    router.back();
+    router.replace("/");
   }
 
   return (

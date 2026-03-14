@@ -1,0 +1,21 @@
+appId: com.haven.app
+---
+- launchApp
+- assertVisible: "Journey"          # tile on Tend
+- tapOn: "Journey"
+- assertVisible:
+    id: "activity-search"
+- tapOn:
+    id: "activity-search"
+- inputText: "Walk"
+- assertVisible:
+    id: "activity-suggestion-*"     # at least one result
+- tapOn: "Walk"
+- assertVisible:
+    id: "activity-chip-*"           # chip added
+- assertVisible:
+    id: "activity-save-button"
+- tapOn:
+    id: "activity-save-button"
+- assertVisible: "Entry saved."
+- assertVisible: "Today"            # back on Tend

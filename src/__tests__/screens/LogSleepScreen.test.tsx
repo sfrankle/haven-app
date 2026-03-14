@@ -7,7 +7,7 @@ import * as timestamp from '@/lib/utils/timestamp';
 
 // Must be hoisted before module evaluation.
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: mockBack, push: jest.fn() }),
+  useRouter: () => ({ back: jest.fn(), replace: mockBack, push: jest.fn() }),
 }));
 
 jest.mock('@/hooks', () => ({
@@ -127,7 +127,7 @@ describe('LogSleepScreen', () => {
     expect(getByTestId('sleep-save-confirmation')).toBeTruthy();
   });
 
-  it('calls router.back() when confirmation dismisses', async () => {
+  it('calls router.replace on confirmation dismisses', async () => {
     const { getByTestId } = render(<LogSleepScreen />);
     fireEvent.changeText(getByTestId('sleep-hours-input'), '7');
     await act(async () => {
