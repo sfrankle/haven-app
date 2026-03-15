@@ -1,0 +1,30 @@
+appId: com.haven.app
+---
+# Scenario: open a log screen, swipe back, switch tabs, swipe back again
+# Expected: never returns to a log screen after it has been dismissed
+- launchApp
+- assertVisible: "Replenish"        # on Tend home
+
+- tapOn: "Replenish"
+- assertVisible: "How much water have you had?"
+
+- back                              # swipe back to Tend
+- assertVisible: "Replenish"        # tile visible — on Tend home
+
+- tapOn: "Trace"
+- assertVisible: "Trace"
+
+- back                              # should stay on Tend, not return to log screen
+- assertVisible: "Replenish"        # tile visible — on Tend home, NOT on log screen
+
+---
+# Scenario: tap Tend tab while on a log screen returns to Tend home
+- launchApp
+- assertVisible: "Replenish"
+
+- tapOn: "Replenish"
+- assertVisible: "How much water have you had?"
+
+- tapOn: "Tend"
+- assertVisible: "Replenish"        # tile visible — on Tend home
+- assertNotVisible: "How much water have you had?"

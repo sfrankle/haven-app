@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import type { EntryType } from '@/lib/db/query-types';
 import { useEntryTypes } from '@/hooks';
-import TendScreen from '../../../app/(tabs)/index';
+import TendScreen from '../../../app/(tabs)/(tend)/index';
 
 // Mock expo-router — must be declared before module is evaluated.
 jest.mock('expo-router', () => ({

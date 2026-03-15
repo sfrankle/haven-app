@@ -45,7 +45,7 @@ const FIXED_ISO = '2026-03-12T09:00:00-08:00';
 
 // Import screen after mocks are set up.
 // eslint-disable-next-line import/first
-import LogHydrationScreen from '../../../app/(tabs)/log/hydration';
+import LogHydrationScreen from '../../../app/(tabs)/(tend)/log/hydration';
 
 describe('LogHydrationScreen', () => {
   const mockUseEntryTypes = jest.mocked(useEntryTypes);

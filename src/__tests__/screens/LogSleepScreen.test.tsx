@@ -44,7 +44,7 @@ const FIXED_ISO = '2026-03-12T09:00:00-08:00';
 
 // Import screen after mocks are set up.
 // eslint-disable-next-line import/first
-import LogSleepScreen from '../../../app/(tabs)/log/sleep';
+import LogSleepScreen from '../../../app/(tabs)/(tend)/log/sleep';
 
 describe('LogSleepScreen', () => {
   const mockUseEntryTypes = jest.mocked(useEntryTypes);

@@ -61,7 +61,7 @@ const RUN_LABEL = makeLabel(2, 'Run outside', 'Move');
 
 // Import screen after mocks are set up.
 // eslint-disable-next-line import/first
-import LogActivityScreen from '../../../app/(tabs)/log/activity';
+import LogActivityScreen from '../../../app/(tabs)/(tend)/log/activity';
 
 describe('LogActivityScreen', () => {
   const mockUseEntryTypes = jest.mocked(useEntryTypes);
