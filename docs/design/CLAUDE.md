@@ -7,7 +7,7 @@ Read these files before making any UI, copy, or interaction decisions.
 | `voice.md` | Voice, tone, copy rules, UK English spelling, entry type titles & prompts, microcopy patterns |
 | `brand.md` | Brand essence, privacy language, accessibility guardrails |
 | `visual-style.md` | Colour tokens, typography, components, motion |
-| `interaction.md` | Interaction principles, spacing rhythm, chip patterns |
+| `interaction.md` | Interaction principles, spacing rhythm, chip patterns (flat / flat+severity / hierarchical), navigation behaviour (file structure, back-button scenarios, tab-bar visibility on log screens) |
 | `screens.md` | Screen archetypes and layout intent per tab |
 | `wireframes/v1/` | Basic structural wireframes — interaction only, no visual design |
 
