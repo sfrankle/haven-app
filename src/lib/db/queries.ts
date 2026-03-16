@@ -40,6 +40,7 @@ interface LabelRaw {
   name: string;
   parent_id: number | null;
   category_id: number | null;
+  category_name: string | null;
   sort_order: number;
 }
 
@@ -74,6 +75,7 @@ function mapLabel(raw: LabelRaw): Label {
     name: raw.name,
     parentId: raw.parent_id,
     categoryId: raw.category_id,
+    categoryName: raw.category_name ?? null,
     sortOrder: raw.sort_order,
   };
 }
@@ -123,60 +125,42 @@ export async function getLabels(
 
   if (options?.search !== undefined) {
     const rows = await db.getAllAsync<LabelRaw>(
-      `SELECT id, entry_type_id, name, parent_id, category_id, sort_order
-       FROM label
-       WHERE entry_type_id = ?
-         AND is_enabled = 1
-         AND name LIKE ? || '%'
-       ORDER BY sort_order ASC
+      `SELECT l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
+              c.name AS category_name, l.sort_order
+       FROM label l
+       LEFT JOIN category c ON c.id = l.category_id
+       WHERE l.entry_type_id = ?
+         AND l.is_enabled = 1
+         AND l.name LIKE ? || '%'
+       ORDER BY l.sort_order ASC
        LIMIT ?`,
       [entryTypeId, options.search, limit]
     );
     return rows.map(mapLabel);
   }
 
-  // Recents: labels that have been used, ordered by most-recently used.
-  const recentRows = await db.getAllAsync<LabelRaw>(
+  // Recents first (labels with history, newest-used first), then unused labels
+  // by sort_order — all in one query via CASE on MAX(e.timestamp).
+  const rows = await db.getAllAsync<LabelRaw>(
     `SELECT
-       l.id, l.entry_type_id, l.name, l.parent_id, l.category_id, l.sort_order,
-       MAX(e.timestamp) AS last_used
+       l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
+       c.name AS category_name, l.sort_order
      FROM label l
-     JOIN entry_label el ON el.label_id = l.id
-     JOIN entry e ON e.id = el.entry_id
+     LEFT JOIN category c ON c.id = l.category_id
+     LEFT JOIN entry_label el ON el.label_id = l.id
+     LEFT JOIN entry e ON e.id = el.entry_id
      WHERE l.entry_type_id = ?
        AND l.is_enabled = 1
      GROUP BY l.id
-     ORDER BY last_used DESC
+     ORDER BY
+       CASE WHEN MAX(e.timestamp) IS NOT NULL THEN 0 ELSE 1 END ASC,
+       MAX(e.timestamp) DESC,
+       l.sort_order ASC
      LIMIT ?`,
     [entryTypeId, limit]
   );
 
-  const remaining = limit - recentRows.length;
-  const recentIds = recentRows.map((r) => r.id);
-
-  let fallbackRows: LabelRaw[] = [];
-  if (remaining > 0) {
-    // Fill with unused labels, ordered by sort_order.
-    // We can't use a parameterised IN clause with a variable-length list in
-    // most drivers, so we build it from the already-fetched IDs.
-    const exclusionClause =
-      recentIds.length > 0
-        ? `AND l.id NOT IN (${recentIds.map(() => '?').join(',')})`
-        : '';
-
-    fallbackRows = await db.getAllAsync<LabelRaw>(
-      `SELECT id, entry_type_id, name, parent_id, category_id, sort_order
-       FROM label l
-       WHERE l.entry_type_id = ?
-         AND l.is_enabled = 1
-         ${exclusionClause}
-       ORDER BY l.sort_order ASC
-       LIMIT ?`,
-      [entryTypeId, ...recentIds, remaining]
-    );
-  }
-
-  return [...recentRows, ...fallbackRows].map(mapLabel);
+  return rows.map(mapLabel);
 }
 
 /**
@@ -275,12 +259,44 @@ export async function getEntriesForTrace(db: Db): Promise<EntryWithLabels[]> {
         name: row.label_name!,
         parentId: row.label_parent_id,
         categoryId: row.label_category_id,
+        categoryName: null, // not joined in trace query; callers don't need it
         sortOrder: row.label_sort_order!,
       });
     }
   }
 
   return orderedIds.map((id) => entryMap.get(id)!);
+}
+
+/**
+ * Creates a new custom label for the given entry type.
+ *
+ * Custom labels are user-created on the fly: no category, not a default seed
+ * label, no seed_version. The inserted label is returned immediately.
+ */
+export async function createLabel(
+  db: Db,
+  entryTypeId: number,
+  name: string
+): Promise<Label> {
+  const result = await db.runAsync(
+    // seed_version = 0 marks this as user-created; seed rows always use >= 1.
+    `INSERT INTO label (entry_type_id, name, category_id, is_default, is_enabled, sort_order, seed_version)
+     VALUES (?, ?, NULL, 0, 1, 0, 0)`,
+    [entryTypeId, name]
+  );
+
+  const raw = await db.getFirstAsync<LabelRaw>(
+    `SELECT l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
+            c.name AS category_name, l.sort_order
+     FROM label l
+     LEFT JOIN category c ON c.id = l.category_id
+     WHERE l.id = ?`,
+    [result.lastInsertRowId]
+  );
+
+  if (!raw) throw new Error('createLabel: could not fetch newly inserted label');
+  return mapLabel(raw);
 }
 
 /**

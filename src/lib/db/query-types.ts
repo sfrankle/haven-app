@@ -21,6 +21,7 @@ export interface Label {
   name: string;
   parentId: number | null;
   categoryId: number | null;
+  categoryName: string | null;
   sortOrder: number;
 }
 

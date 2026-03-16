@@ -1,11 +1,11 @@
 -- Research-grounded activity taxonomy for Haven
 -- Based on domains consistently correlate with happiness:
-  -- Movement
-  -- Connection
-  -- Meaning / Purpose
-  -- Creativity / Flow
-  -- Reflection / Awareness
-  -- Regulation / Calm
+  -- Movement               -> Move
+  -- Connection             -> Connect
+  -- Meaning / Purpose      -> Contribute
+  -- Creativity / Flow      -> Create
+  -- Reflection / Awareness -> Reflect
+  -- Regulation / Calm      -> Breath
 -- Core domains: Move, Connect, Create, Reflect, Breathe, Contribute
 -- Supporting domains: Restore, Nourish, Structure
 

@@ -7,7 +7,7 @@ import * as timestamp from '@/lib/utils/timestamp';
 
 // Must be hoisted before module evaluation.
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: mockBack, push: jest.fn() }),
+  useRouter: () => ({ back: jest.fn(), replace: mockBack, push: jest.fn() }),
 }));
 
 jest.mock('@/hooks', () => ({
@@ -45,7 +45,7 @@ const FIXED_ISO = '2026-03-12T09:00:00-08:00';
 
 // Import screen after mocks are set up.
 // eslint-disable-next-line import/first
-import LogHydrationScreen from '../../../app/(tabs)/log/hydration';
+import LogHydrationScreen from '../../../app/(tabs)/(tend)/log/hydration';
 
 describe('LogHydrationScreen', () => {
   const mockUseEntryTypes = jest.mocked(useEntryTypes);
@@ -166,7 +166,7 @@ describe('LogHydrationScreen', () => {
     expect(getByTestId('hydration-save-confirmation')).toBeTruthy();
   });
 
-  it('calls router.back() when confirmation dismisses', async () => {
+  it('calls router.replace on confirmation dismisses', async () => {
     const { getByTestId } = render(<LogHydrationScreen />);
     await act(async () => {});
     await act(async () => {

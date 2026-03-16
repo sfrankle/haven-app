@@ -20,26 +20,18 @@ Specific failure modes:
 
 ## Typography
 
-Haven uses two fonts — both bundled locally:
-- **Philosopher** for display, headlines, and titles — the brand voice, reserved for moments that earn it
-- **Lexend** for body text, UI labels, and captions — optimised for readability
-
-Do not substitute either. Philosopher is magical but should not carry every text element — that's what Lexend is for.
+See `docs/design/visual-style.md` → Typography.
 
 ## Motion (React Native)
 
-Use React Native Reanimated or the built-in Animated API for transitions and micro-interactions. Motion/Framer Motion is web-only and does not apply here.
+Use React Native Reanimated or the built-in Animated API. Motion/Framer Motion is web-only and does not work in React Native.
 
-Focus animation effort on high-impact moments — a well-orchestrated screen entry with staggered reveals creates more delight than scattered micro-interactions. Follow Haven's motion guidelines: subtle, low-frequency, no bounce or celebratory motion.
+See `docs/design/visual-style.md` → Motion for Haven's motion principles.
 
-## Logging Screen Navigation
+## Navigation
 
-All logging screens (sleep, hydration, food, emotions, physical, activity) must be placed inside `app/(tabs)/log/` — **not** in a top-level `app/log/` directory. The `(tabs)` group name is invisible in URLs, so `router.push('/log/sleep')` resolves correctly either way, but only screens inside `(tabs)/` inherit the tab bar. The tab bar must remain visible on all logging screens.
-
-Required files for the log group:
-- `app/(tabs)/log/_layout.tsx` — minimal Stack wrapper (created once, shared by all log screens)
-- `app/(tabs)/log/<type>.tsx` — one file per entry type
+See `docs/design/interaction.md` → Navigation Behaviour for navigation decisions, file structure, and expected scenarios.
 
 ## Backgrounds and Surfaces
 
-Use the Haven surface tokens to create depth and atmosphere. Avoid defaulting to flat white or stark black. Layer surfaces using `background` and `surfaceVariant` tokens with appropriate elevation.
+See `docs/design/visual-style.md` → Colour System for surface tokens and usage guidance.

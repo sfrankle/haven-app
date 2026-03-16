@@ -4,7 +4,7 @@ import { TAB_BAR_SCREEN_OPTIONS } from '@/components';
 export default function TabLayout() {
   return (
     <Tabs screenOptions={TAB_BAR_SCREEN_OPTIONS}>
-      <Tabs.Screen name="index" options={{ title: 'Tend' }} />
+      <Tabs.Screen name="(tend)" options={{ title: 'Tend' }} />
       <Tabs.Screen name="trace" options={{ title: 'Trace' }} />
       <Tabs.Screen name="weave" options={{ title: 'Weave' }} />
       <Tabs.Screen name="anchor" options={{ title: 'Anchor' }} />

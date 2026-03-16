@@ -78,6 +78,47 @@ Submit is enabled when Energy is set OR at least 1 state chip is present.
 **Full hierarchical chips** (Emotions)
 Both tiers produce chips, with a replacement rule: selecting a child of an existing chip replaces that chip (more specific subsumes the parent). Selecting a sibling of an existing chip adds a new chip alongside it. A user can hold multiple chips from different branches simultaneously, but each branch path holds only its deepest selection.
 
+## Navigation Behaviour
+
+### File structure
+
+```
+app/(tabs)/
+  _layout.tsx          ← Tabs navigator
+  (tend)/
+    _layout.tsx        ← Stack for Tend + blur listener (resets stack when tab loses focus)
+    index.tsx          ← Tend home
+    log/
+      hydration.tsx    ← one file per entry type
+      sleep.tsx
+      activity.tsx
+  trace.tsx
+  weave.tsx
+  ...
+```
+
+The `(tend)` group is transparent (no URL change). Log screens are inside the Tend Stack, so the tab bar remains visible. The blur listener discards log state when the user switches to another tab.
+
+To add a new log screen: create `app/(tabs)/(tend)/log/<type>.tsx`. No other files need changing.
+
+### Entry type logging screens
+
+Entry type logging screens (Replenish, Sleep, Activity, etc.) are accessed only from Tend home by tapping an entry type tile. They cannot be reached directly from another logging screen.
+
+| Scenario | Result |
+|----------|----------------|
+| `Tend` → tap entry type A -> `log screen A` → swipe back | `Tend` |
+| `Tend` → tap entry type A -> `log screen A` → tap Tend tab | `Tend` |
+| `Tend` → tap entry type A -> `log screen A` → complete save | `Tend` |
+| `Tend` → tap entry type A -> `log screen A` → swipe back → `Tend` → tap entry type B → `log screen B` → swipe back | `Tend` |
+| `Tend` → tap entry type A → `log screen A` → enter data (don't save) → swipe back → `Tend` → tap entry type A again | `log screen A` — empty, no cached state |
+| Multi-screen log flow → back mid-flow | Previous step in the log flow |
+| Multi-screen log flow → back on first screen -> swipe back | `Tend` |
+| `Tend` → tap entry type A -> `log screen A` → tap bottom `Trace` tab  → swipe back | `Tend` |
+| `Tend` → tap entry type A -> `log screen A` → tap bottom `Trace` tab → `Trace` → tap `Tend` | `Tend` |
+
+> Tab bar remains visible on all log screens. Tapping any tab navigates normally. Tapping Tend tab while on a log screen always returns to Tend home.
+
 ## Error Handling
 
 - Use neutral, actionable language.
