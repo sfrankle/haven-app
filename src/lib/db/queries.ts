@@ -139,52 +139,28 @@ export async function getLabels(
     return rows.map(mapLabel);
   }
 
-  // Recents: labels that have been used, ordered by most-recently used.
-  const recentRows = await db.getAllAsync<LabelRaw>(
+  // Recents first (labels with history, newest-used first), then unused labels
+  // by sort_order — all in one query via CASE on MAX(e.timestamp).
+  const rows = await db.getAllAsync<LabelRaw>(
     `SELECT
        l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
-       c.name AS category_name, l.sort_order,
-       MAX(e.timestamp) AS last_used
+       c.name AS category_name, l.sort_order
      FROM label l
      LEFT JOIN category c ON c.id = l.category_id
-     JOIN entry_label el ON el.label_id = l.id
-     JOIN entry e ON e.id = el.entry_id
+     LEFT JOIN entry_label el ON el.label_id = l.id
+     LEFT JOIN entry e ON e.id = el.entry_id
      WHERE l.entry_type_id = ?
        AND l.is_enabled = 1
      GROUP BY l.id
-     ORDER BY last_used DESC
+     ORDER BY
+       CASE WHEN MAX(e.timestamp) IS NOT NULL THEN 0 ELSE 1 END ASC,
+       MAX(e.timestamp) DESC,
+       l.sort_order ASC
      LIMIT ?`,
     [entryTypeId, limit]
   );
 
-  const remaining = limit - recentRows.length;
-  const recentIds = recentRows.map((r) => r.id);
-
-  let fallbackRows: LabelRaw[] = [];
-  if (remaining > 0) {
-    // Fill with unused labels, ordered by sort_order.
-    // We can't use a parameterised IN clause with a variable-length list in
-    // most drivers, so we build it from the already-fetched IDs.
-    const exclusionClause =
-      recentIds.length > 0
-        ? `AND l.id NOT IN (${recentIds.map(() => '?').join(',')})`
-        : '';
-
-    fallbackRows = await db.getAllAsync<LabelRaw>(
-      `SELECT l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
-              c.name AS category_name, l.sort_order
-       FROM label l
-       LEFT JOIN category c ON c.id = l.category_id
-       WHERE l.entry_type_id = ?
-         AND l.is_enabled = 1
-         ${exclusionClause}
-       ORDER BY l.sort_order ASC
-       LIMIT ?`,
-      [entryTypeId, ...recentIds, remaining]
-    );
-  }
-
-  return [...recentRows, ...fallbackRows].map(mapLabel);
+  return rows.map(mapLabel);
 }
 
 /**

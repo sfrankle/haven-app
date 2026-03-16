@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, NumericInput, Button, SaveConfirmation } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { saveEntry } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
-import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
+import { colors } from '@/constants/theme';
+import { logScreenStyles } from '@/constants/sharedStyles';
 import type { Db } from '@/lib/db/queries';
 
 export default function LogSleepScreen() {
@@ -43,8 +44,8 @@ export default function LogSleepScreen() {
 
   return (
     <Screen>
-      <View style={styles.container}>
-        <Text style={styles.prompt}>{sleepEntryType?.prompt ?? 'How long did you rest?'}</Text>
+      <View style={logScreenStyles.screenContent}>
+        <Text style={logScreenStyles.prompt}>{sleepEntryType?.prompt ?? 'How long did you rest?'}</Text>
 
         <NumericInput
           value={hours}
@@ -54,7 +55,7 @@ export default function LogSleepScreen() {
         />
 
         <TextInput
-          style={styles.notesInput}
+          style={logScreenStyles.notesInput}
           value={notes}
           onChangeText={setNotes}
           placeholder="Notes (optional)"
@@ -65,7 +66,7 @@ export default function LogSleepScreen() {
         />
 
         {hours.trim() !== '' && (
-          <View style={styles.saveButton}>
+          <View style={logScreenStyles.saveButton}>
             <Button
               label="Save"
               onPress={handleSave}
@@ -84,33 +85,3 @@ export default function LogSleepScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: spacing.pagePadding,
-    paddingTop: spacing.sectionGap,
-  },
-  prompt: {
-    fontFamily: typeScale.titleLarge.family,
-    fontWeight: typeScale.titleLarge.weight,
-    fontSize: typeScale.titleLarge.size,
-    lineHeight: lineHeight(typeScale.titleLarge),
-    color: colors.ink,
-    marginBottom: spacing.sectionGap,
-  },
-  notesInput: {
-    fontFamily: typeScale.bodyLarge.family,
-    fontSize: typeScale.bodyLarge.size,
-    lineHeight: lineHeight(typeScale.bodyLarge),
-    color: colors.ink,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.chrome,
-    paddingVertical: spacing.elementGap,
-    marginTop: spacing.sectionGap,
-    marginBottom: spacing.sectionGap,
-    textAlignVertical: 'top',
-  },
-  saveButton: {
-    marginTop: spacing.elementGap,
-  },
-});

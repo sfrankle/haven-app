@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -21,18 +21,12 @@ import type { Label } from '@/lib/db/query-types';
 
 const SUGGESTION_LIMIT = 5;
 
-interface ChipItem {
-  labelId: number;
-  name: string;
-  categoryName: string | null;
-}
-
 export default function LogActivityScreen() {
   const router = useRouter();
   const { entryTypes } = useEntryTypes();
   const [search, setSearch] = useState('');
-  const [suggestions, setSuggestions] = useState<Label[]>([]);
-  const [chips, setChips] = useState<ChipItem[]>([]);
+  const [rawSuggestions, setRawSuggestions] = useState<Label[]>([]);
+  const [chips, setChips] = useState<Label[]>([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const activityEntryType = entryTypes.find((t) => t.name === 'Activity');
@@ -40,13 +34,12 @@ export default function LogActivityScreen() {
   const fetchSuggestions = useCallback(async () => {
     if (!activityEntryType) return;
     const db = (await getDb()) as unknown as Db;
-    const currentIds = chips.map((c) => c.labelId);
     const options = search.length > 0
       ? { search, limit: SUGGESTION_LIMIT }
       : { limit: SUGGESTION_LIMIT };
     const labels = await getLabels(db, activityEntryType.id, options);
-    setSuggestions(labels.filter((l) => !currentIds.includes(l.id)));
-  }, [activityEntryType, search, chips]);
+    setRawSuggestions(labels);
+  }, [activityEntryType, search]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -55,20 +48,25 @@ export default function LogActivityScreen() {
     return () => clearTimeout(timer);
   }, [fetchSuggestions]);
 
+  const suggestions = useMemo(() => {
+    const selectedIds = new Set(chips.map((c) => c.id));
+    return rawSuggestions.filter((l) => !selectedIds.has(l.id));
+  }, [rawSuggestions, chips]);
+
   function handleSelect(label: Label) {
-    setChips((prev) => [...prev, { labelId: label.id, name: label.name, categoryName: label.categoryName }]);
+    setChips((prev) => [...prev, label]);
     setSearch('');
   }
 
   function handleRemove(labelId: number) {
-    setChips((prev) => prev.filter((c) => c.labelId !== labelId));
+    setChips((prev) => prev.filter((c) => c.id !== labelId));
   }
 
   async function handleAddCustom() {
     if (!activityEntryType || search.trim() === '') return;
     const db = (await getDb()) as unknown as Db;
     const label = await createLabel(db, activityEntryType.id, search.trim());
-    setChips((prev) => [...prev, { labelId: label.id, name: label.name, categoryName: label.categoryName }]);
+    setChips((prev) => [...prev, label]);
     setSearch('');
   }
 
@@ -79,7 +77,7 @@ export default function LogActivityScreen() {
       await saveEntry(db, {
         entryTypeId: activityEntryType.id,
         timestamp: nowLocalIso(),
-        labelIds: chips.map((c) => c.labelId),
+        labelIds: chips.map((c) => c.id),
       });
       setShowConfirmation(true);
     } catch (err) {
@@ -99,8 +97,8 @@ export default function LogActivityScreen() {
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.content}>
-          <Text style={styles.prompt}>
+        <View style={logScreenStyles.screenContent}>
+          <Text style={logScreenStyles.prompt}>
             {activityEntryType?.prompt ?? 'What did you do today?'}
           </Text>
 
@@ -118,23 +116,21 @@ export default function LogActivityScreen() {
               {suggestions.map((label) => (
                 <Pressable
                   key={label.id}
+                  style={styles.suggestionChip}
                   onPress={() => handleSelect(label)}
                   testID={`activity-suggestion-${label.id}`}
                 >
-                  <View style={styles.suggestionChip}>
-                    <Text style={styles.suggestionChipText}>{label.name}</Text>
-                  </View>
+                  <Text style={styles.suggestionChipText}>{label.name}</Text>
                 </Pressable>
               ))}
 
               {showAddCustom && (
                 <Pressable
+                  style={styles.suggestionChip}
                   onPress={() => { void handleAddCustom(); }}
                   testID="activity-add-custom"
                 >
-                  <View style={styles.suggestionChip}>
-                    <Text style={styles.addCustomText}>+ Add "{search.trim()}"</Text>
-                  </View>
+                  <Text style={styles.addCustomText}>+ Add "{search.trim()}"</Text>
                 </Pressable>
               )}
             </View>
@@ -145,11 +141,11 @@ export default function LogActivityScreen() {
             <View style={styles.chipTray}>
               {chips.map((chip) => (
                 <Chip
-                  key={chip.labelId}
+                  key={chip.id}
                   label={chip.name}
                   color={colorForActivityLabel(chip)}
-                  onRemove={() => handleRemove(chip.labelId)}
-                  testID={`activity-chip-${chip.labelId}`}
+                  onRemove={() => handleRemove(chip.id)}
+                  testID={`activity-chip-${chip.id}`}
                 />
               ))}
             </View>
@@ -179,19 +175,6 @@ export default function LogActivityScreen() {
 const styles = StyleSheet.create({
   keyboardAvoid: {
     flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.pagePadding,
-    paddingTop: spacing.sectionGap,
-  },
-  prompt: {
-    fontFamily: typeScale.titleLarge.family,
-    fontWeight: typeScale.titleLarge.weight,
-    fontSize: typeScale.titleLarge.size,
-    lineHeight: lineHeight(typeScale.titleLarge),
-    color: colors.ink,
-    marginBottom: spacing.sectionGap,
   },
   suggestionsContainer: {
     flexDirection: 'row',
