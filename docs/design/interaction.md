@@ -114,6 +114,8 @@ Entry type logging screens (Replenish, Sleep, Activity, etc.) are accessed only 
 | `Tend` → tap entry type A → `log screen A` → enter data (don't save) → swipe back → `Tend` → tap entry type A again | `log screen A` — empty, no cached state |
 | Multi-screen log flow → back mid-flow | Previous step in the log flow |
 | Multi-screen log flow → back on first screen -> swipe back | `Tend` |
+| `Tend` → tap entry type A -> `log screen A` → tap bottom `Trace` tab  → swipe back | `Tend` |
+| `Tend` → tap entry type A -> `log screen A` → tap bottom `Trace` tab → `Trace` → tap `Tend` | `Tend` |
 
 > Tab bar remains visible on all log screens. Tapping any tab navigates normally. Tapping Tend tab while on a log screen always returns to Tend home.
 

@@ -28,3 +28,41 @@ appId: com.haven.app
 - tapOn: "Tend"
 - assertVisible: "Replenish"        # tile visible — on Tend home
 - assertNotVisible: "How much water have you had?"
+
+---
+# Scenario: sequential multi-type log — open A, back, open B, back; land on Tend each time
+- launchApp
+- assertVisible: "Replenish"
+
+- tapOn: "Replenish"
+- assertVisible: "How much water have you had?"
+
+- back
+- assertVisible: "Replenish"        # on Tend home after first back
+
+- tapOn: "Journey"
+- assertVisible: "What did you do today?"
+
+- back
+- assertVisible: "Journey"          # on Tend home after second back
+- assertNotVisible: "What did you do today?"
+
+---
+# Scenario: navigating back without saving resets form state on re-entry
+- launchApp
+- assertVisible: "Replenish"
+
+- tapOn: "Replenish"
+- assertVisible: "How much water have you had?"
+
+- tapOn:
+    id: "hydration-oz-input"
+- clearText
+- inputText: "32"
+
+- back
+- assertVisible: "Replenish"        # on Tend home
+
+- tapOn: "Replenish"
+- assertVisible: "How much water have you had?"
+- assertVisible: "16"               # input reset to default — no cached state from prior visit
