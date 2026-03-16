@@ -7,7 +7,7 @@ const mockEntryType: EntryType = {
   id: 1,
   name: 'Food',
   title: 'Nourish',
-  icon: 'apple-alt',
+  icon: 'pot-steam-outline',
   prompt: 'What did you eat?',
   measurementType: 'label_select',
 };
@@ -48,5 +48,20 @@ describe('EntryTypeTile', () => {
       <EntryTypeTile entryType={mockEntryType} onPress={() => {}} testID="tile-food" />
     );
     expect(getByTestId('tile-food')).toBeTruthy();
+  });
+
+  it('renders the icon with the correct name', () => {
+    const { getByTestId } = render(
+      <EntryTypeTile entryType={mockEntryType} onPress={() => {}} />
+    );
+    expect(getByTestId('icon-pot-steam-outline')).toBeTruthy();
+  });
+
+  it('renders nothing for the icon slot when entryType.icon is null', () => {
+    const entryTypeNoIcon: EntryType = { ...mockEntryType, icon: null };
+    const { queryByTestId } = render(
+      <EntryTypeTile entryType={entryTypeNoIcon} onPress={() => {}} />
+    );
+    expect(queryByTestId('icon-pot-steam-outline')).toBeNull();
   });
 });
