@@ -1,9 +1,6 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/theme';
 
-/**
- * Maps each tab screen name to its MaterialCommunityIcons icon name.
- * Used in _layout.tsx tabBarIcon render props and independently testable.
- */
 export const TAB_ICON_MAP = {
   '(tend)': 'spa-outline',
   trace: 'notebook-heart-outline',
@@ -11,6 +8,12 @@ export const TAB_ICON_MAP = {
   anchor: 'anchor',
   settings: 'tune',
 } as const;
+
+export function makeTabBarIcon(tab: keyof typeof TAB_ICON_MAP) {
+  return ({ color, size }: { color: string; size: number }) => (
+    <MaterialCommunityIcons name={TAB_ICON_MAP[tab]} size={size} color={color} />
+  );
+}
 
 /**
  * Shared screenOptions for the Expo Router <Tabs> component.
