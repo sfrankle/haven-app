@@ -51,6 +51,13 @@ In addition to code concerns, flag:
 - User flows that were changed or broken as a side effect (even if the issue didn't mention them)
 - Any data safety risk the user would experience, beyond schema correctness (e.g. data appears to vanish, timestamps shift, labels detach silently)
 
+## Use external reviewers
+
+Claude invokes **`superpowers:requesting-code-review`**
+Claude invokes **`simplify`**
+
+Combine 
+
 ## What to Report
 
 Flag only real issues. Do not nitpick style. Focus on:
@@ -61,8 +68,6 @@ Flag only real issues. Do not nitpick style. Focus on:
 - Missing workflow artifacts (changelog, issue references)
 
 Be specific: cite the file, line, and the rule being violated. Suggest a fix where possible.
-
-run `requesting-code-review` (by superpowers) and then `/simplify`
 
 ## Output
 

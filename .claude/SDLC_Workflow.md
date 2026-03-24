@@ -4,6 +4,7 @@ Natural language triggers for skills:
 - **"what's next?"** → Claude runs `next-task`
 - **"let's review milestone #N"** or **"is milestone #N ready?"** → Claude runs `review-milestone`
 - **"let's break down milestone #N"** → Claude runs `break-down-user-stories`
+- **"is this PR ready?"** or **"review PR #N"** → Claude runs `haven-pr-readiness`
 
 ---
 
@@ -57,10 +58,7 @@ Haven uses an issue-driven development workflow. All work flows through GitHub I
 5. Claude runs **`/simplify`** — reviews changed code for reuse, quality, and efficiency; fixes issues found
 6. Claude dispatches **`haven-reviewer`** when implementation is complete
 7. Human reviews; Claude uses **`superpowers:receiving-code-review`** to process feedback
-8. After applying review feedback, Claude:
-   - Checks the PR's CI pipeline (`gh pr checks <N>`) and confirms all checks pass
-   - Verifies all new or changed code has appropriate test coverage (new tests added or existing tests updated)
-   - Posts a comment on the PR summarising test status: which tests cover the changes, and confirmation that CI checks pass
+8. After applying review feedback, Claude runs **`/wrap-up-pr`** — invokes `haven-pr-readiness`, checks the CI box in the PR description, deletes the local plan file
 9. Human merges; Claude checks out main and pulls
 10. **User stories are closed manually** by the human after all contributing technical tasks are merged
 
@@ -119,7 +117,9 @@ Defined in `app/CLAUDE.md`.
 ---
 
 ### Close PR Process
-User says "alright, let's wrap this up": run `/wrap-up-pr`
+User says "alright, let's wrap this up" or "wrap up this PR": run `/wrap-up-pr`
+
+A fresh-instance review at any point (no workflow context needed): run `haven-pr-readiness`
 
 ---
 

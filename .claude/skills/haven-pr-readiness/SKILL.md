@@ -5,7 +5,7 @@ description: Use when reviewing a Haven PR for merge-readiness — checks commit
 
 # Haven PR Readiness Review
 
-A fresh-instance review of a Haven PR to answer: is this safe to merge?
+Answers: is this PR safe to merge? Used standalone (fresh-instance review) or invoked by `wrap-up-pr` at the end of the implementation workflow.
 
 ## Run this
 
