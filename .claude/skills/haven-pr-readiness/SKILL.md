@@ -34,7 +34,8 @@ Check the PR body and commits:
 |------|---------------|
 | `Closes #N` (technical task) | PR body |
 | `Contributes to #M` (user story) | PR body |
-| `docs/changelog.md` entry | PR body checklist or `git diff main..HEAD -- docs/changelog.md` |
+| `docs/changelog.md` entry accurate | Read the new row in `docs/changelog.md` and confirm it describes what was actually built — not a stale description from early in the task |
+| PR description accurate | Read the PR body and confirm it reflects the final implementation, not an outdated draft |
 | No schema change → no migration needed | PR body / file list |
 | Schema change → migration + data integrity test present | PR body checklist |
 | No judgmental language in UI strings | PR body checklist |
