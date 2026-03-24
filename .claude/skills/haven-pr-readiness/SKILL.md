@@ -9,20 +9,17 @@ Answers: is this PR safe to merge? Used standalone (fresh-instance review) or in
 
 ## Run this
 
-```bash
-gh pr view <NUMBER> --json title,state,isDraft,headRefName,baseRefName,commits,statusCheckRollup,reviews,body
-```
+Use the **PR readiness check** command from `.claude/gh-commands.md`.
 
 ## Five checks
 
 ### 1. All changes committed and pushed?
 
 ```bash
-git status --short
 git log --oneline origin/main..<branch>
 ```
 
-- Local `git status` should be clean (no uncommitted changes relevant to the PR)
+- Working tree should be clean (no uncommitted changes relevant to the PR)
 - All expected commits appear in the log
 
 ### 2. CI passing?
@@ -46,9 +43,7 @@ Check the PR body and commits:
 
 ### 4. Review comments addressed?
 
-```bash
-gh pr view <NUMBER> --json reviews --jq '.reviews[] | {author: .author.login, state: .state, body: .body}'
-```
+The `reviews` field from the readiness check command contains all review bodies. For each review:
 
 - Read each review body for flagged issues
 - Cross-reference against commits **after** the review timestamp
