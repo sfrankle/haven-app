@@ -272,10 +272,10 @@ describe('LogFoodScreen', () => {
     await waitFor(() => getByTestId('food-suggestion-1'));
     fireEvent.press(getByTestId('food-suggestion-1'));
     const chip = getByTestId('food-chip-1');
-    // Grains category → chipButter
+    // Grains category → chipButter (#FEEFBA)
     expect(chip.props.style).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ backgroundColor: expect.stringMatching(/#[0-9A-Fa-f]{6}/) }),
+        expect.objectContaining({ backgroundColor: '#FEEFBA' }),
       ])
     );
   });

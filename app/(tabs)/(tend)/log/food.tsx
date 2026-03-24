@@ -30,7 +30,7 @@ export default function LogFoodScreen() {
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const foodEntryType = entryTypes.find((t) => t.name === 'Food');
-  const mealContext = getMealContext(nowLocalIso());
+  const mealContext = useMemo(() => getMealContext(nowLocalIso()), []);
 
   const fetchSuggestions = useCallback(async () => {
     if (!foodEntryType) return;

@@ -110,6 +110,7 @@ describe('getMealContext', () => {
   // All tests pass an ISO string with the hour baked in — no Date mocking needed.
 
   it.each([
+    // Boundaries
     ['2026-01-01T05:00:00+00:00', 'Breakfast'],
     ['2026-01-01T10:00:00+00:00', 'Breakfast'],
     ['2026-01-01T11:00:00+00:00', 'Lunch'],
@@ -121,6 +122,12 @@ describe('getMealContext', () => {
     ['2026-01-01T22:00:00+00:00', 'Snack'],
     ['2026-01-01T00:00:00+00:00', 'Snack'],
     ['2026-01-01T04:00:00+00:00', 'Snack'],
+    // Mid-window (guards against off-by-one at block centres)
+    ['2026-01-01T07:30:00+00:00', 'Breakfast'],
+    ['2026-01-01T12:00:00+00:00', 'Lunch'],
+    ['2026-01-01T15:30:00+00:00', 'Snack'],
+    ['2026-01-01T19:30:00+00:00', 'Dinner'],
+    ['2026-01-01T02:00:00+00:00', 'Snack'],
   ])('returns %s for ISO string with hour %s', (isoString, expected) => {
     expect(getMealContext(isoString)).toBe(expected);
   });
