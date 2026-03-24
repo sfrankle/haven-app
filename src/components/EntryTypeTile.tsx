@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, View } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, typeScale, spacing, lineHeight } from '@/constants/theme';
 import type { EntryType } from '@/lib/db/query-types';
 
@@ -21,8 +21,8 @@ export function EntryTypeTile({ entryType, onPress, testID }: EntryTypeTileProps
     >
       <View style={styles.inner}>
         {entryType.icon ? (
-          <FontAwesome5
-            name={entryType.icon as React.ComponentProps<typeof FontAwesome5>['name']}
+          <MaterialCommunityIcons
+            name={entryType.icon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
             size={32}
             color={colors.interactive}
           />

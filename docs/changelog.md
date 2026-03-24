@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#97](https://github.com/sfrankle/haven-app/pull/97) | Tab bar icons and entry type tile icons replaced with MaterialCommunityIcons | 2026-03-16 |
 | [#95](https://github.com/sfrankle/haven-app/pull/95) | Activity (Journey) logging screen — search, category-coloured chips, custom activity creation, save to SQLite | 2026-03-14 |
 | [#94](https://github.com/sfrankle/haven-app/pull/94) | Hydration (Replenish) logging screen — oz input, running daily total, save to SQLite, confirmation dismiss | 2026-03-12 |
 | [#93](https://github.com/sfrankle/haven-app/pull/93) | Sleep (Slumber) logging screen — hours input, optional notes, save to SQLite, confirmation dismiss | 2026-03-12 |

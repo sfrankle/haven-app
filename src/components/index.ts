@@ -6,4 +6,4 @@ export { SaveConfirmation } from './SaveConfirmation';
 export { Screen } from './Screen';
 export { SearchBar } from './SearchBar';
 export { Surface } from './Surface';
-export { TAB_BAR_SCREEN_OPTIONS } from './TabBar';
+export { TAB_BAR_SCREEN_OPTIONS, TAB_ICON_MAP, makeTabBarIcon } from './TabBar';
