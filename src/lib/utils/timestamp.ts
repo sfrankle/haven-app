@@ -32,6 +32,32 @@ export function formatEntryTime(isoString: string): string {
   return `${displayHour}:${String(mm).padStart(2, '0')} ${period}`;
 }
 
+export type MealContext = 'Breakfast' | 'Lunch' | 'Snack' | 'Dinner';
+
+/**
+ * Returns the meal context label for a given time.
+ *
+ * Pass an ISO string to derive the hour from the wall-clock time baked into
+ * the string (immune to timezone re-interpretation). When no argument is
+ * provided, falls back to the device's current local hour.
+ *
+ * Time blocks:
+ *   05:00–10:59 → Breakfast
+ *   11:00–13:59 → Lunch
+ *   14:00–17:59 → Snack
+ *   18:00–21:59 → Dinner
+ *   22:00–04:59 → Snack
+ */
+export function getMealContext(isoString?: string): MealContext {
+  const hour = isoString
+    ? parseInt(isoString.slice(11, 13), 10)
+    : new Date().getHours();
+  if (hour >= 5 && hour < 11) return 'Breakfast';
+  if (hour >= 11 && hour < 14) return 'Lunch';
+  if (hour >= 18 && hour < 22) return 'Dinner';
+  return 'Snack';
+}
+
 /**
  * Formats the date portion of a stored ISO 8601 offset string for display.
  * Returns "Today", "Yesterday", or a formatted date like "March 2".
