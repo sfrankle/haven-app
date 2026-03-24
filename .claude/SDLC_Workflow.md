@@ -131,9 +131,10 @@ For urgent fixes to `main`:
 
 ---
 
-### Automation Notes (future hooks to configure)
-The following steps are candidates for Claude Code hooks (run automatically, no invocation needed):
-- `superpowers:verification-before-completion` — trigger before any commit/push
-- `superpowers:test-driven-development` — trigger at start of implementation
+### Automation Notes
 
-These are not yet configured as hooks. Until then, invoke the skills explicitly.
+**Active hook (`.claude/settings.json`):**
+- Pre-commit/push type-check — runs `npx tsc --noEmit` automatically before any `git commit` or `git push`; blocks if type errors are present
+
+**Not hookable (invoke skills explicitly):**
+- `superpowers:test-driven-development` — requires judgment about when implementation starts; a hook can't detect this reliably
