@@ -31,9 +31,7 @@ export function Chip({
         {onOpenSeverity !== undefined && (
           <Pressable
             style={styles.severityIcon}
-            onPress={() => {
-              onOpenSeverity();
-            }}
+            onPress={onOpenSeverity}
             accessibilityRole="button"
             accessibilityLabel="Set severity"
             testID={testID ? `${testID}-severity-icon` : 'chip-severity-icon'}

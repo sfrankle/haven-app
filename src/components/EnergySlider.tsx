@@ -23,10 +23,7 @@ export function EnergySlider({ value, onChange, testID }: EnergySliderProps) {
         {ENERGY_LEVELS.map((level) => (
           <Pressable
             key={level.value}
-            style={[
-              styles.position,
-              value === level.value && styles.positionSelected,
-            ]}
+            style={styles.position}
             onPress={() => onChange(level.value)}
             accessibilityRole="button"
             accessibilityLabel={`Energy level ${level.value}: ${level.label}`}
@@ -68,9 +65,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     minHeight: 48,
-  },
-  positionSelected: {
-    // visual state handled by dot/label styles
   },
   dot: {
     width: 20,

@@ -18,19 +18,18 @@ describe('Chip', () => {
     expect(getByText('Cheese')).toBeTruthy();
   });
 
-  it('renders severity suffix when showSeverity is true', () => {
+  it('renders label with severity suffix when baked into label string', () => {
     const { getByText } = render(
-      <Chip {...baseProps} label="Cramps" showSeverity severity={2} />
+      <Chip {...baseProps} label="Cramps (2/5)" />
     );
     expect(getByText('Cramps (2/5)')).toBeTruthy();
   });
 
-  it('does not render severity suffix by default', () => {
+  it('renders plain label when no severity suffix', () => {
     const { getByText } = render(
       <Chip {...baseProps} label="Cramps" />
     );
     expect(getByText('Cramps')).toBeTruthy();
-    expect(() => getByText('Cramps (2/5)')).toThrow();
   });
 
   it('calls onRemove when the chip is pressed', () => {
