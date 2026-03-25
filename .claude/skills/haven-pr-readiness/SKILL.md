@@ -12,7 +12,7 @@ Answers: is this PR safe to merge? Used standalone (fresh-instance review) or in
 
 ## Run this
 
-Use the **PR readiness check** command from `.claude/gh-commands.md`.
+Use the **PR readiness check** command from `.claude/skills/_shared/gh-conventions.md`.
 
 ## Five checks
 
