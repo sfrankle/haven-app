@@ -1,6 +1,6 @@
 ---
 name: wrap-up-pr
-description: after PR is reviewed, edits have been made, confirm do final items on the pr.
+description: Use after a PR has been reviewed and all edits are made — runs final pre-merge checks (CI status, checklist, changelog, review comment resolution).
 ---
 
 Make a todo list of the following items. When starting a step, mark it as in-progress. When step completed, mark complete.

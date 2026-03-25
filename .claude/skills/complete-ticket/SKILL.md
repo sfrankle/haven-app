@@ -1,6 +1,6 @@
 ---
 name: complete-ticket
-description: Autonomous ticket implementation orchestrator. Runs nearly fully autonomously from ticket selection through PR readiness. Make a todo list of each step and work through them.
+description: Use when implementing a GitHub issue end-to-end — runs autonomously from ticket selection through PR creation. One human checkpoint: plan approval.
 ---
 
 Read `.claude/skills/complete-ticket/escalation-policy.md` and `.claude/skills/complete-ticket/state-schema.md` before starting.
