@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, lineHeight, typeScale, spacing } from '@/constants/theme';
 
-const ENERGY_LEVELS: Array<{ value: number; label: string }> = [
+const ENERGY_LEVELS: { value: number; label: string }[] = [
   { value: 1, label: 'Exhausted' },
   { value: 2, label: 'Bit Tired' },
   { value: 3, label: 'Average' },

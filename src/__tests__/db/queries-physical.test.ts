@@ -126,7 +126,7 @@ describe('physical query functions', () => {
            WHERE et.name = 'Physical' AND l.parent_id IS NOT NULL AND l.is_enabled = 1
            LIMIT 2`
         )
-        .all() as Array<{ id: number }>;
+        .all() as { id: number }[];
 
       if (childRows.length < 2) return;
 
