@@ -2,6 +2,8 @@
 
 > These wireframes show **interaction structure only**. Do not derive colour, typography, spacing, or visual style from them. Follow `docs/design/` for all visual decisions.
 
+> **Outdated:** These wireframes show multiple chips from different branches. The current spec allows only **one emotion per submission** — the chip is replaced on each new selection. The wireframes have not been updated to reflect this.
+
 ---
 
 ## Overview

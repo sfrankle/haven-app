@@ -145,6 +145,15 @@ describe('LogEmotionScreen2', () => {
     );
   });
 
+  it('tapping a Tier-2 item sets the chip locally (so it persists if user navigates back)', async () => {
+    // Chip should appear on Screen 2 after tapping a Tier-2 row, even before navigating to Screen 3
+    const { getByTestId, queryByTestId } = render(<LogEmotionScreen2 />);
+    await waitFor(() => getByTestId('emotion-tier2-right-20'));
+    expect(queryByTestId('emotion-chip')).toBeNull(); // no chip before tap
+    fireEvent.press(getByTestId('emotion-tier2-right-20'));
+    expect(getByTestId('emotion-chip')).toBeTruthy();  // chip set locally
+  });
+
   it('chip is visible when chipLabelId param is set', async () => {
     mockParams = { tier1Id: '11', chipLabelId: '20', chipLabelName: 'Connected' };
     const { getByTestId } = render(<LogEmotionScreen2 />);

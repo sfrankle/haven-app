@@ -59,6 +59,8 @@ export default function LogEmotionScreen2() {
   }
 
   function handleTier2Press(label: Label) {
+    // Set chip locally so Screen 2 shows it if the user presses back from Screen 3
+    setChipLabel({ id: label.id, name: label.name });
     router.push({
       pathname: '/log/emotion/tier3',
       params: {

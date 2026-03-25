@@ -93,6 +93,16 @@ describe('LogEmotionScreen3', () => {
     expect(getByTestId('emotion-screen-3')).toBeTruthy();
   });
 
+  it('shows empty state when active Tier-2 has no Tier-3 children', async () => {
+    mockGetByParent.mockImplementation(async (_db, parentId) => {
+      if (parentId === 11) return WARM_TIER2;
+      return []; // no Tier-3 children
+    });
+    const { getByTestId } = render(<LogEmotionScreen3 />);
+    await waitFor(() => getByTestId('emotion-tier3-empty'));
+    expect(getByTestId('emotion-tier3-empty')).toBeTruthy();
+  });
+
   it('renders Tier-2 siblings in left column', async () => {
     const { getByTestId } = render(<LogEmotionScreen3 />);
     await waitFor(() => getByTestId('emotion-tier2-left-20'));

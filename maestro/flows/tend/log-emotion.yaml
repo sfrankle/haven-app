@@ -1,22 +1,22 @@
 appId: com.haven.app
 ---
-# Scenario 1: Happy path Tier-2 save
-# Tap Unveil tile → Warm → Connected → chip appears → submit → confirmation → Tend home
+# Scenario 1: Happy path Tier-3 save
+# Tap Unveil tile → Tier-1 → Tier-2 (advances to Screen 3) → submit from Screen 3
 - launchApp
 - assertVisible: "Unveil"             # tile on Tend
 - tapOn: "Unveil"
 - assertVisible:
     id: "emotion-screen-1"
 - tapOn:
-    id: "emotion-tier1-*"             # tap first Tier-1 row (Bright)
+    id: "emotion-tier1-*"             # tap first Tier-1 row
 - assertVisible:
     id: "emotion-screen-2"
 - tapOn:
-    id: "emotion-tier1-left-*"        # tap Warm in left column
+    id: "emotion-tier1-left-*"        # pivot left column to another Tier-1
 - assertVisible:
     id: "emotion-tier2-right-*"       # Tier-2 children load
 - tapOn:
-    id: "emotion-tier2-right-*"       # tap first Tier-2 (e.g. Connected)
+    id: "emotion-tier2-right-*"       # tap Tier-2 — pushes to Screen 3
 - assertVisible:
     id: "emotion-screen-3"
 - assertVisible:
@@ -27,6 +27,28 @@ appId: com.haven.app
     id: "emotion-save-button"
 - assertVisible: "Entry saved."
 - assertVisible: "Today"             # back on Tend home
+
+---
+# Scenario 1b: Happy path Tier-2 save
+# Reach Screen 3, press back to Screen 2, save with chip still set
+- launchApp
+- tapOn: "Unveil"
+- tapOn:
+    id: "emotion-tier1-*"
+- tapOn:
+    id: "emotion-tier2-right-*"       # advances to Screen 3 with chip set
+- assertVisible:
+    id: "emotion-screen-3"
+- pressKey: Back                      # return to Screen 2
+- assertVisible:
+    id: "emotion-screen-2"
+- assertVisible:
+    id: "emotion-chip"                # chip persists on Screen 2
+- assertVisible:
+    id: "emotion-save-button"
+- tapOn:
+    id: "emotion-save-button"
+- assertVisible: "Entry saved."
 
 ---
 # Scenario 2: Tier-3 replace

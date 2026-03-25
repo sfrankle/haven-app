@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Screen, SplitPane, SplitPaneRow, Chip, Button, SaveConfirmation } from '@/components';
 import { useEntryTypes } from '@/hooks';
@@ -7,7 +7,7 @@ import { getLabelsByParent, saveEntry } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colorForEmotionLabel } from '@/constants/chipColors';
-import { spacing } from '@/constants/theme';
+import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
@@ -61,7 +61,8 @@ export default function LogEmotionScreen3() {
   }
 
   function handleTier3Press(label: Label) {
-    // Replace chip with Tier-3 selection, stay on this screen
+    // setChipLabel avoids a flicker between the router.replace call and the
+    // resulting remount re-initialising chip state from the new params.
     setChipLabel({ id: label.id, name: label.name });
     router.replace({
       pathname: '/log/emotion/tier3',
@@ -116,15 +117,21 @@ export default function LogEmotionScreen3() {
           }
           right={
             <>
-              {tier3Labels.map((label) => (
-                <SplitPaneRow
-                  key={label.id}
-                  label={label.name}
-                  isActive={false}
-                  onPress={() => handleTier3Press(label)}
-                  testID={`emotion-tier3-right-${label.id}`}
-                />
-              ))}
+              {tier3Labels.length === 0 ? (
+                <Text style={styles.emptyRight} testID="emotion-tier3-empty">
+                  No further detail available.
+                </Text>
+              ) : (
+                tier3Labels.map((label) => (
+                  <SplitPaneRow
+                    key={label.id}
+                    label={label.name}
+                    isActive={false}
+                    onPress={() => handleTier3Press(label)}
+                    testID={`emotion-tier3-right-${label.id}`}
+                  />
+                ))
+              )}
             </>
           }
         />
@@ -173,6 +180,14 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     paddingHorizontal: spacing.pagePadding,
+    paddingTop: spacing.elementGap,
+  },
+  emptyRight: {
+    fontFamily: typeScale.bodyMedium.family,
+    fontSize: typeScale.bodyMedium.size,
+    lineHeight: lineHeight(typeScale.bodyMedium),
+    color: colors.chrome,
+    paddingHorizontal: spacing.elementGap,
     paddingTop: spacing.elementGap,
   },
 });
