@@ -74,3 +74,13 @@ export function colorForActivityLabel(label: Pick<Label, 'categoryName'>): strin
   }
   return CATEGORY_CHIP_COLOR_FALLBACK;
 }
+
+/**
+ * Returns the chip background colour for a physical state label.
+ *
+ * Physical labels (energy + body states) use a single consistent colour
+ * — chipMint — for a clean, body-neutral aesthetic. No category mapping needed.
+ */
+export function colorForPhysicalLabel(_label: Pick<Label, 'categoryName'>): string {
+  return colors.chipMint;
+}

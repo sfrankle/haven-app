@@ -9,3 +9,5 @@ export { Surface } from './Surface';
 export { TAB_BAR_SCREEN_OPTIONS, TAB_ICON_MAP, makeTabBarIcon } from './TabBar';
 export { SplitPane } from './SplitPane';
 export { SplitPaneRow } from './SplitPaneRow';
+export { EnergySlider } from './EnergySlider';
+export { SeverityRow } from './SeverityRow';
