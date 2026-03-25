@@ -39,6 +39,14 @@ export interface EntryWithLabels {
   labels: Label[];
 }
 
+/**
+ * A physical state label (child label) that includes the parent label's name
+ * for chip display formatting (e.g. "Gut: Cramping").
+ */
+export interface PhysicalStateLabel extends Label {
+  parentName: string | null;
+}
+
 export interface SaveEntryInput {
   entryTypeId: number;
   timestamp: string; // ISO-8601
