@@ -300,6 +300,44 @@ export async function createLabel(
 }
 
 /**
+ * Returns all enabled labels whose parent_id matches the given parentId,
+ * ordered by sort_order. Used by the emotion flow to fetch Tier-2 and
+ * Tier-3 labels.
+ */
+export async function getLabelsByParent(db: Db, parentId: number): Promise<Label[]> {
+  const rows = await db.getAllAsync<LabelRaw>(
+    `SELECT l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
+            c.name AS category_name, l.sort_order
+     FROM label l
+     LEFT JOIN category c ON c.id = l.category_id
+     WHERE l.parent_id = ?
+       AND l.is_enabled = 1
+     ORDER BY l.sort_order ASC`,
+    [parentId]
+  );
+  return rows.map(mapLabel);
+}
+
+/**
+ * Returns all enabled Tier-1 (root-level) labels for the given emotion entry
+ * type, ordered by sort_order. Tier-1 labels have parent_id IS NULL.
+ */
+export async function getTier1EmotionLabels(db: Db, entryTypeId: number): Promise<Label[]> {
+  const rows = await db.getAllAsync<LabelRaw>(
+    `SELECT l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
+            c.name AS category_name, l.sort_order
+     FROM label l
+     LEFT JOIN category c ON c.id = l.category_id
+     WHERE l.entry_type_id = ?
+       AND l.parent_id IS NULL
+       AND l.is_enabled = 1
+     ORDER BY l.sort_order ASC`,
+    [entryTypeId]
+  );
+  return rows.map(mapLabel);
+}
+
+/**
  * Returns the sum of all Hydration numeric_value entries for a given local
  * date string (YYYY-MM-DD). Returns 0 if there are no entries for that date.
  */

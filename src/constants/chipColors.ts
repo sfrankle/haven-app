@@ -57,6 +57,16 @@ export function colorForFoodLabel(label: Pick<Label, 'categoryName'>): string {
   return CATEGORY_CHIP_COLOR_FALLBACK;
 }
 
+/**
+ * Returns the chip background colour for an emotion label.
+ *
+ * Emotion labels have no category seed data, so lavender is used for all
+ * tiers — it is tonally appropriate for the reflective nature of this flow.
+ */
+export function colorForEmotionLabel(_label: Pick<Label, 'categoryName'>): string {
+  return colors.chipLavender;
+}
+
 /** Returns the chip background colour for an activity label based on its category. */
 export function colorForActivityLabel(label: Pick<Label, 'categoryName'>): string {
   if (label.categoryName && label.categoryName in CATEGORY_CHIP_COLORS) {
