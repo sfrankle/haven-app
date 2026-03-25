@@ -82,6 +82,7 @@ export default function LogPhysicalScreen() {
   const [chips, setChips] = useState<PhysicalChip[]>([]);
   const [activeSeverityChipId, setActiveSeverityChipId] = useState<number | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const severityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const energyLabelIdRef = useRef<number | null>(null);
 
@@ -229,6 +230,7 @@ export default function LogPhysicalScreen() {
       setShowConfirmation(true);
     } catch (err) {
       console.error('[LogPhysicalScreen] failed to save entry:', err);
+      setSaveError(true);
     }
   }
 
@@ -342,11 +344,17 @@ export default function LogPhysicalScreen() {
             </View>
           )}
 
+          {saveError && (
+            <Text style={styles.saveErrorText} testID="physical-save-error">
+              Something went wrong. Your entry was not saved.
+            </Text>
+          )}
+
           {canSubmit && (
             <View style={logScreenStyles.saveButton}>
               <Button
                 label="Save"
-                onPress={() => { void handleSave(); }}
+                onPress={() => { setSaveError(false); void handleSave(); }}
                 testID="physical-save-button"
               />
             </View>
@@ -401,5 +409,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.elementGap,
     marginTop: spacing.sectionGap,
+  },
+  saveErrorText: {
+    fontFamily: typeScale.bodyMedium.family,
+    fontSize: typeScale.bodyMedium.size,
+    lineHeight: lineHeight(typeScale.bodyMedium),
+    color: colors.chrome,
+    marginTop: spacing.elementGap,
   },
 });
