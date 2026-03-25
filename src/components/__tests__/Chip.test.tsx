@@ -18,19 +18,18 @@ describe('Chip', () => {
     expect(getByText('Cheese')).toBeTruthy();
   });
 
-  it('renders severity suffix when showSeverity is true', () => {
+  it('renders label with severity suffix when baked into label string', () => {
     const { getByText } = render(
-      <Chip {...baseProps} label="Cramps" showSeverity severity={2} />
+      <Chip {...baseProps} label="Cramps (2/5)" />
     );
     expect(getByText('Cramps (2/5)')).toBeTruthy();
   });
 
-  it('does not render severity suffix by default', () => {
+  it('renders plain label when no severity suffix', () => {
     const { getByText } = render(
       <Chip {...baseProps} label="Cramps" />
     );
     expect(getByText('Cramps')).toBeTruthy();
-    expect(() => getByText('Cramps (2/5)')).toThrow();
   });
 
   it('calls onRemove when the chip is pressed', () => {
@@ -43,5 +42,50 @@ describe('Chip', () => {
   it('has accessible role "button"', () => {
     const { getByRole } = render(<Chip {...baseProps} />);
     expect(getByRole('button')).toBeTruthy();
+  });
+
+  describe('onOpenSeverity prop', () => {
+    it('renders "···" icon when onOpenSeverity is provided', () => {
+      const { getByText } = render(
+        <Chip {...baseProps} onOpenSeverity={jest.fn()} />
+      );
+      expect(getByText('···')).toBeTruthy();
+    });
+
+    it('does not render "···" icon when onOpenSeverity is not provided', () => {
+      const { queryByText } = render(<Chip {...baseProps} />);
+      expect(queryByText('···')).toBeNull();
+    });
+
+    it('tapping "···" icon calls onOpenSeverity, not onRemove', () => {
+      const onRemove = jest.fn();
+      const onOpenSeverity = jest.fn();
+      const { getByTestId } = render(
+        <Chip
+          {...baseProps}
+          onRemove={onRemove}
+          onOpenSeverity={onOpenSeverity}
+          testID="chip-with-severity"
+        />
+      );
+      fireEvent.press(getByTestId('chip-with-severity-severity-icon'));
+      expect(onOpenSeverity).toHaveBeenCalledTimes(1);
+      expect(onRemove).not.toHaveBeenCalled();
+    });
+
+    it('tapping chip body still calls onRemove when onOpenSeverity is provided', () => {
+      const onRemove = jest.fn();
+      const onOpenSeverity = jest.fn();
+      const { getByTestId } = render(
+        <Chip
+          {...baseProps}
+          onRemove={onRemove}
+          onOpenSeverity={onOpenSeverity}
+          testID="chip-with-severity"
+        />
+      );
+      fireEvent.press(getByTestId('chip-with-severity'));
+      expect(onRemove).toHaveBeenCalledTimes(1);
+    });
   });
 });

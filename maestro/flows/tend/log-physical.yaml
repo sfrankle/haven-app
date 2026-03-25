@@ -1,0 +1,31 @@
+appId: com.haven.app
+---
+- launchApp
+- assertVisible: "Attune"          # tile on Tend
+- tapOn: "Attune"
+- assertVisible:
+    id: "energy-slider"
+- assertVisible:
+    id: "physical-search"
+# Set energy to level 3 (Average)
+- tapOn:
+    text: "Average"
+- assertVisible:
+    id: "physical-chip-energy"     # energy chip added
+- assertVisible:
+    id: "physical-save-button"
+# Search for a state
+- tapOn:
+    id: "physical-search"
+- inputText: "Cramp"
+- assertVisible:
+    id: "physical-suggestion-*"    # at least one result
+- tapOn:
+    id: "physical-suggestion-*"
+- assertVisible:
+    id: "physical-chip-*"          # state chip added with area prefix
+# Save
+- tapOn:
+    id: "physical-save-button"
+- assertVisible: "Entry saved."
+- assertVisible: "Today"           # back on Tend

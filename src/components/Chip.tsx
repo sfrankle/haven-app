@@ -1,30 +1,46 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, lineHeight, typeScale } from '@/constants/theme';
 
-type ChipProps =
-  | { label: string; onRemove: () => void; color: string; showSeverity?: false; severity?: never; testID?: string }
-  | { label: string; onRemove: () => void; color: string; showSeverity: true; severity: number; testID?: string };
+interface ChipProps {
+  label: string;
+  onRemove: () => void;
+  color: string;
+  onOpenSeverity?: () => void;
+  testID?: string;
+}
 
 export function Chip({
   label,
   onRemove,
   color,
-  showSeverity,
-  severity,
+  onOpenSeverity,
   testID,
 }: ChipProps) {
-  const displayLabel = showSeverity ? `${label} (${severity}/5)` : label;
 
   return (
     <Pressable
       style={[styles.chip, { backgroundColor: color }]}
       onPress={onRemove}
       accessibilityRole="button"
-      accessibilityLabel={displayLabel}
+      accessibilityLabel={label}
       testID={testID}
     >
-      <Text style={styles.label}>{displayLabel}</Text>
+      <View style={styles.inner}>
+        <Text style={styles.label}>{label}</Text>
+        {onOpenSeverity !== undefined && (
+          <Pressable
+            style={styles.severityIcon}
+            onPress={onOpenSeverity}
+            accessibilityRole="button"
+            accessibilityLabel="Set severity"
+            testID={testID ? `${testID}-severity-icon` : 'chip-severity-icon'}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+          >
+            <Text style={styles.severityIconText}>···</Text>
+          </Pressable>
+        )}
+      </View>
     </Pressable>
   );
 }
@@ -39,10 +55,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'flex-start',
   },
+  inner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   label: {
     fontFamily: typeScale.labelLarge.family,
     fontSize: typeScale.labelLarge.size,
     lineHeight: lineHeight(typeScale.labelLarge),
     color: colors.ink,
+  },
+  severityIcon: {
+    paddingLeft: 2,
+  },
+  severityIconText: {
+    fontFamily: typeScale.labelLarge.family,
+    fontSize: typeScale.labelLarge.size,
+    lineHeight: lineHeight(typeScale.labelLarge),
+    color: colors.chrome,
   },
 });

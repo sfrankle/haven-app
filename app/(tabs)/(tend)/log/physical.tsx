@@ -1,0 +1,420 @@
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import {
+  Screen,
+  SearchBar,
+  Chip,
+  Button,
+  SaveConfirmation,
+  EnergySlider,
+  SeverityRow,
+} from '@/components';
+import { useEntryTypes } from '@/hooks';
+import {
+  getPhysicalStateLabels,
+  getPhysicalParentLabels,
+  saveEntry,
+  createLabel,
+} from '@/lib/db/queries';
+import { getDb } from '@/lib/db/database';
+import { nowLocalIso } from '@/lib/utils/timestamp';
+import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
+import { colorForPhysicalLabel } from '@/constants/chipColors';
+import { logScreenStyles } from '@/constants/sharedStyles';
+import type { Db } from '@/lib/db/queries';
+import type { PhysicalStateLabel } from '@/lib/db/query-types';
+
+// ─── Types ─────────────────────────────────────────────────────────────────
+
+type EnergyChip = {
+  kind: 'energy';
+  id: 'energy';
+  value: number; // 1-5
+};
+
+type StateChip = {
+  kind: 'state';
+  id: number; // labelId
+  labelName: string;
+  parentName: string | null;
+  severity: number | null; // 1-5 or null
+};
+
+type PhysicalChip = EnergyChip | StateChip;
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+const WHOLE_BODY_NAMES = ['whole body', 'body'];
+
+function formatChipLabel(chip: PhysicalChip): string {
+  if (chip.kind === 'energy') {
+    return `Energy: ${chip.value}/5`;
+  }
+  const parentName = chip.parentName;
+  const showPrefix =
+    parentName !== null &&
+    !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
+  const base = showPrefix ? `${parentName}: ${chip.labelName}` : chip.labelName;
+  if (chip.severity !== null) {
+    return `${base} (${chip.severity}/5)`;
+  }
+  return base;
+}
+
+const SUGGESTION_LIMIT = 5;
+const SEVERITY_AUTO_DISMISS_MS = 2000;
+
+// ─── Screen ────────────────────────────────────────────────────────────────
+
+export default function LogPhysicalScreen() {
+  const router = useRouter();
+  const { entryTypes } = useEntryTypes();
+  const [search, setSearch] = useState('');
+  const [rawSuggestions, setRawSuggestions] = useState<PhysicalStateLabel[]>([]);
+  const [chips, setChips] = useState<PhysicalChip[]>([]);
+  const [activeSeverityChipId, setActiveSeverityChipId] = useState<number | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const severityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const energyLabelIdRef = useRef<number | null>(null);
+
+  const physicalEntryType = entryTypes.find((t) => t.name === 'Physical');
+
+  // ── Fetch suggestions + cache Energy label ID ──────────────────────────
+
+  const fetchSuggestions = useCallback(async () => {
+    if (!physicalEntryType) return;
+    const db = (await getDb()) as unknown as Db;
+
+    if (energyLabelIdRef.current === null) {
+      const parentLabels = await getPhysicalParentLabels(db, physicalEntryType.id);
+      const energyLabel = parentLabels.find((l) => l.name.toLowerCase() === 'energy');
+      energyLabelIdRef.current = energyLabel?.id ?? null;
+    }
+
+    const options =
+      search.length > 0
+        ? { search, limit: SUGGESTION_LIMIT }
+        : { limit: SUGGESTION_LIMIT };
+    const labels = await getPhysicalStateLabels(db, physicalEntryType.id, options);
+    setRawSuggestions(labels);
+  }, [physicalEntryType, search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchSuggestions();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [fetchSuggestions]);
+
+  // ── Derived ────────────────────────────────────────────────────────────
+
+  const selectedStateIds = useMemo(
+    () => new Set(chips.filter((c) => c.kind === 'state').map((c) => c.id as number)),
+    [chips]
+  );
+
+  const suggestions = useMemo(
+    () => rawSuggestions.filter((l) => !selectedStateIds.has(l.id)),
+    [rawSuggestions, selectedStateIds]
+  );
+
+  const hasEnergyChip = chips.some((c) => c.kind === 'energy');
+  const canSubmit = chips.length > 0;
+  const showAddCustom = search.trim().length > 0 && suggestions.length === 0;
+
+  // ── Handlers ───────────────────────────────────────────────────────────
+
+  function handleEnergyChange(value: number) {
+    setChips((prev) => {
+      const withoutEnergy = prev.filter((c) => c.kind !== 'energy');
+      const energyChip: EnergyChip = { kind: 'energy', id: 'energy', value };
+      return [energyChip, ...withoutEnergy];
+    });
+  }
+
+  function handleSelectState(label: PhysicalStateLabel) {
+    const chip: StateChip = {
+      kind: 'state',
+      id: label.id,
+      labelName: label.name,
+      parentName: label.parentName,
+      severity: null,
+    };
+    setChips((prev) => [...prev, chip]);
+    setSearch('');
+  }
+
+  function handleRemoveChip(chipId: 'energy' | number) {
+    if (chipId === 'energy') {
+      setChips((prev) => prev.filter((c) => c.kind !== 'energy'));
+    } else {
+      setChips((prev) => prev.filter((c) => !(c.kind === 'state' && c.id === chipId)));
+    }
+    if (activeSeverityChipId === chipId) {
+      setActiveSeverityChipId(null);
+    }
+  }
+
+  function openSeverityRow(chipId: number) {
+    if (severityTimerRef.current) clearTimeout(severityTimerRef.current);
+    setActiveSeverityChipId(chipId);
+    severityTimerRef.current = setTimeout(() => {
+      setActiveSeverityChipId(null);
+    }, SEVERITY_AUTO_DISMISS_MS);
+  }
+
+  function handleSeverityChange(severity: number) {
+    if (activeSeverityChipId === null) return;
+    const id = activeSeverityChipId;
+    setChips((prev) =>
+      prev.map((c) =>
+        c.kind === 'state' && c.id === id ? { ...c, severity } : c
+      )
+    );
+    if (severityTimerRef.current) clearTimeout(severityTimerRef.current);
+    setActiveSeverityChipId(null);
+  }
+
+  function handleSeverityDismiss() {
+    if (severityTimerRef.current) clearTimeout(severityTimerRef.current);
+    setActiveSeverityChipId(null);
+  }
+
+  async function handleAddCustom() {
+    if (!physicalEntryType || search.trim() === '') return;
+    const db = (await getDb()) as unknown as Db;
+    const label = await createLabel(db, physicalEntryType.id, search.trim());
+    const chip: StateChip = {
+      kind: 'state',
+      id: label.id,
+      labelName: label.name,
+      parentName: null,
+      severity: null,
+    };
+    setChips((prev) => [...prev, chip]);
+    setSearch('');
+  }
+
+  async function handleSave() {
+    if (!physicalEntryType || chips.length === 0) return;
+    const db = (await getDb()) as unknown as Db;
+    const ts = nowLocalIso();
+
+    try {
+      for (const chip of chips) {
+        if (chip.kind === 'energy') {
+          await saveEntry(db, {
+            entryTypeId: physicalEntryType.id,
+            timestamp: ts,
+            numericValue: chip.value,
+            labelIds: energyLabelIdRef.current !== null ? [energyLabelIdRef.current] : [],
+          });
+        } else {
+          await saveEntry(db, {
+            entryTypeId: physicalEntryType.id,
+            timestamp: ts,
+            numericValue: chip.severity ?? undefined,
+            labelIds: [chip.id],
+          });
+        }
+      }
+      setShowConfirmation(true);
+    } catch (err) {
+      console.error('[LogPhysicalScreen] failed to save entry:', err);
+      setSaveError(true);
+    }
+  }
+
+  function handleDismiss() {
+    router.replace('/');
+  }
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (severityTimerRef.current) clearTimeout(severityTimerRef.current);
+    };
+  }, []);
+
+  return (
+    <Screen>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={logScreenStyles.screenContent}>
+          <Text style={logScreenStyles.prompt}>
+            {physicalEntryType?.prompt ?? 'How does your body feel?'}
+          </Text>
+
+          {/* Energy slider */}
+          <View style={styles.energySection}>
+            <EnergySlider
+              value={hasEnergyChip
+                ? (chips.find((c) => c.kind === 'energy') as EnergyChip | undefined)?.value ?? null
+                : null}
+              onChange={handleEnergyChange}
+              testID="energy-slider"
+            />
+          </View>
+
+          {/* State search */}
+          <SearchBar
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search body states"
+            testID="physical-search"
+          />
+
+          {/* Suggestions */}
+          {(suggestions.length > 0 || showAddCustom) && (
+            <View style={styles.suggestionsContainer}>
+              {suggestions.map((label) => (
+                <Pressable
+                  key={label.id}
+                  style={styles.suggestionChip}
+                  onPress={() => handleSelectState(label)}
+                  testID={`physical-suggestion-${label.id}`}
+                >
+                  <Text style={styles.suggestionChipText}>{label.name}</Text>
+                </Pressable>
+              ))}
+
+              {showAddCustom && (
+                <Pressable
+                  style={styles.suggestionChip}
+                  onPress={() => { void handleAddCustom(); }}
+                  testID="physical-add-custom"
+                >
+                  <Text style={styles.addCustomText}>+ Add "{search.trim()}"</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+
+          {/* Severity row — appears when a chip's severity icon is tapped */}
+          {activeSeverityChipId !== null && (
+            <SeverityRow
+              value={
+                (chips.find(
+                  (c) => c.kind === 'state' && c.id === activeSeverityChipId
+                ) as StateChip | undefined)?.severity ?? null
+              }
+              onChange={handleSeverityChange}
+              onDismiss={handleSeverityDismiss}
+              testID="physical-severity-row"
+            />
+          )}
+
+          {/* Chip tray */}
+          {chips.length > 0 && (
+            <View style={styles.chipTray}>
+              {chips.map((chip) => {
+                if (chip.kind === 'energy') {
+                  return (
+                    <Chip
+                      key="energy"
+                      label={formatChipLabel(chip)}
+                      color={colorForPhysicalLabel()}
+                      onRemove={() => handleRemoveChip('energy')}
+                      testID="physical-chip-energy"
+                    />
+                  );
+                }
+                return (
+                  <Chip
+                    key={chip.id}
+                    label={formatChipLabel(chip)}
+                    color={colorForPhysicalLabel()}
+                    onRemove={() => handleRemoveChip(chip.id)}
+                    onOpenSeverity={() => openSeverityRow(chip.id)}
+                    testID={`physical-chip-${chip.id}`}
+                  />
+                );
+              })}
+            </View>
+          )}
+
+          {saveError && (
+            <Text style={styles.saveErrorText} testID="physical-save-error">
+              Something went wrong. Your entry was not saved.
+            </Text>
+          )}
+
+          {canSubmit && (
+            <View style={logScreenStyles.saveButton}>
+              <Button
+                label="Save"
+                onPress={() => { setSaveError(false); void handleSave(); }}
+                testID="physical-save-button"
+              />
+            </View>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+
+      <SaveConfirmation
+        visible={showConfirmation}
+        onDismiss={handleDismiss}
+        testID="physical-save-confirmation"
+      />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  keyboardAvoid: {
+    flex: 1,
+  },
+  energySection: {
+    marginBottom: spacing.elementGap,
+  },
+  suggestionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.elementGap,
+    marginTop: spacing.elementGap,
+  },
+  suggestionChip: {
+    paddingHorizontal: spacing.elementGap,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.chrome,
+    backgroundColor: colors.surface,
+  },
+  suggestionChipText: {
+    fontFamily: typeScale.bodyLarge.family,
+    fontSize: typeScale.bodyLarge.size,
+    lineHeight: lineHeight(typeScale.bodyLarge),
+    color: colors.ink,
+  },
+  addCustomText: {
+    fontFamily: typeScale.bodyLarge.family,
+    fontSize: typeScale.bodyLarge.size,
+    lineHeight: lineHeight(typeScale.bodyLarge),
+    color: colors.glow,
+  },
+  chipTray: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.elementGap,
+    marginTop: spacing.sectionGap,
+  },
+  saveErrorText: {
+    fontFamily: typeScale.bodyMedium.family,
+    fontSize: typeScale.bodyMedium.size,
+    lineHeight: lineHeight(typeScale.bodyMedium),
+    color: colors.chrome,
+    marginTop: spacing.elementGap,
+  },
+});

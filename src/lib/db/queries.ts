@@ -9,7 +9,7 @@
  * No screen should call db.getAllAsync / db.runAsync / db.getFirstAsync directly.
  */
 
-import type { EntryType, Label, EntryWithLabels, SaveEntryInput } from './query-types';
+import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel } from './query-types';
 
 // ─── minimal interface ────────────────────────────────────────────────────────
 // We type `db` against the subset of expo-sqlite's SQLiteDatabase that we
@@ -323,6 +323,101 @@ export async function getLabelsByParent(db: Db, parentId: number): Promise<Label
  * type, ordered by sort_order. Tier-1 labels have parent_id IS NULL.
  */
 export async function getTier1EmotionLabels(db: Db, entryTypeId: number): Promise<Label[]> {
+  const rows = await db.getAllAsync<LabelRaw>(
+    `SELECT l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
+            c.name AS category_name, l.sort_order
+     FROM label l
+     LEFT JOIN category c ON c.id = l.category_id
+     WHERE l.entry_type_id = ?
+       AND l.parent_id IS NULL
+       AND l.is_enabled = 1
+     ORDER BY l.sort_order ASC`,
+    [entryTypeId]
+  );
+  return rows.map(mapLabel);
+}
+
+/**
+ * Returns only child labels (parent_id IS NOT NULL) for the Physical entry type.
+ *
+ * Joins to the parent label to include parentName for chip display formatting
+ * (e.g. "Gut: Cramping"). The Energy parent label and all other root-level labels
+ * are excluded.
+ *
+ * - With `search`: prefix-match on child name, ordered by sort_order.
+ * - Without `search`: recents first, then unused by sort_order.
+ *
+ * Default limit: 50.
+ */
+export async function getPhysicalStateLabels(
+  db: Db,
+  entryTypeId: number,
+  options?: { search?: string; limit?: number }
+): Promise<PhysicalStateLabel[]> {
+  const limit = options?.limit ?? 50;
+
+  interface PhysicalStateRaw extends LabelRaw {
+    parent_name: string | null;
+  }
+
+  const mapPhysicalStateLabel = (raw: PhysicalStateRaw): PhysicalStateLabel => ({
+    ...mapLabel(raw),
+    parentName: raw.parent_name ?? null,
+  });
+
+  if (options?.search !== undefined) {
+    const rows = await db.getAllAsync<PhysicalStateRaw>(
+      `SELECT l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
+              c.name AS category_name, l.sort_order,
+              p.name AS parent_name
+       FROM label l
+       LEFT JOIN category c ON c.id = l.category_id
+       LEFT JOIN label p ON p.id = l.parent_id
+       WHERE l.entry_type_id = ?
+         AND l.parent_id IS NOT NULL
+         AND l.is_enabled = 1
+         AND l.name LIKE ? || '%'
+       ORDER BY l.sort_order ASC
+       LIMIT ?`,
+      [entryTypeId, options.search, limit]
+    );
+    return rows.map(mapPhysicalStateLabel);
+  }
+
+  const rows = await db.getAllAsync<PhysicalStateRaw>(
+    `SELECT
+       l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
+       c.name AS category_name, l.sort_order,
+       p.name AS parent_name
+     FROM label l
+     LEFT JOIN category c ON c.id = l.category_id
+     LEFT JOIN label p ON p.id = l.parent_id
+     LEFT JOIN entry_label el ON el.label_id = l.id
+     LEFT JOIN entry e ON e.id = el.entry_id
+     WHERE l.entry_type_id = ?
+       AND l.parent_id IS NOT NULL
+       AND l.is_enabled = 1
+     GROUP BY l.id
+     ORDER BY
+       CASE WHEN MAX(e.timestamp) IS NOT NULL THEN 0 ELSE 1 END ASC,
+       MAX(e.timestamp) DESC,
+       l.sort_order ASC
+     LIMIT ?`,
+    [entryTypeId, limit]
+  );
+
+  return rows.map(mapPhysicalStateLabel);
+}
+
+/**
+ * Returns parent-level labels (parent_id IS NULL) for the Physical entry type.
+ * Includes the Energy label and area labels (Head, Gut, etc.).
+ * Needed to resolve the Energy label ID for save operations.
+ */
+export async function getPhysicalParentLabels(
+  db: Db,
+  entryTypeId: number
+): Promise<Label[]> {
   const rows = await db.getAllAsync<LabelRaw>(
     `SELECT l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
             c.name AS category_name, l.sort_order
