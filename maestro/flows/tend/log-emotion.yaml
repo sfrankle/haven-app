@@ -1,0 +1,100 @@
+appId: com.haven.app
+---
+# Scenario 1: Happy path Tier-2 save
+# Tap Unveil tile → Warm → Connected → chip appears → submit → confirmation → Tend home
+- launchApp
+- assertVisible: "Unveil"             # tile on Tend
+- tapOn: "Unveil"
+- assertVisible:
+    id: "emotion-screen-1"
+- tapOn:
+    id: "emotion-tier1-*"             # tap first Tier-1 row (Bright)
+- assertVisible:
+    id: "emotion-screen-2"
+- tapOn:
+    id: "emotion-tier1-left-*"        # tap Warm in left column
+- assertVisible:
+    id: "emotion-tier2-right-*"       # Tier-2 children load
+- tapOn:
+    id: "emotion-tier2-right-*"       # tap first Tier-2 (e.g. Connected)
+- assertVisible:
+    id: "emotion-screen-3"
+- assertVisible:
+    id: "emotion-chip"                # chip shows the Tier-2 label
+- assertVisible:
+    id: "emotion-save-button"
+- tapOn:
+    id: "emotion-save-button"
+- assertVisible: "Entry saved."
+- assertVisible: "Today"             # back on Tend home
+
+---
+# Scenario 2: Tier-3 replace
+# Screen 3 → tap a Tier-3 item → chip updates → submit
+- launchApp
+- tapOn: "Unveil"
+- tapOn:
+    id: "emotion-tier1-*"
+- tapOn:
+    id: "emotion-tier2-right-*"       # arrives at Screen 3
+- assertVisible:
+    id: "emotion-tier3-right-*"
+- tapOn:
+    id: "emotion-tier3-right-*"       # replace chip with Tier-3 label
+- assertVisible:
+    id: "emotion-chip"
+- assertVisible:
+    id: "emotion-save-button"
+- tapOn:
+    id: "emotion-save-button"
+- assertVisible: "Entry saved."
+
+---
+# Scenario 3: Chip clear + reselect on Screen 3
+- launchApp
+- tapOn: "Unveil"
+- tapOn:
+    id: "emotion-tier1-*"
+- tapOn:
+    id: "emotion-tier2-right-*"
+- assertVisible:
+    id: "emotion-chip"
+- tapOn:
+    id: "emotion-chip"               # clear chip
+- assertNotVisible:
+    id: "emotion-save-button"        # submit disappears
+- tapOn:
+    id: "emotion-tier3-right-*"      # reselect a Tier-3 item
+- assertVisible:
+    id: "emotion-save-button"        # submit reappears
+
+---
+# Scenario 4: Left-column pivot does not change chip
+- launchApp
+- tapOn: "Unveil"
+- tapOn:
+    id: "emotion-tier1-*"
+- tapOn:
+    id: "emotion-tier2-right-*"       # arrives at Screen 3 with chip set
+- assertVisible:
+    id: "emotion-chip"
+- tapOn:
+    id: "emotion-tier2-left-*"        # tap a different Tier-2 in left column
+- assertVisible:
+    id: "emotion-chip"                # chip is unchanged
+
+---
+# Scenario 5: Back navigation
+- launchApp
+- tapOn: "Unveil"
+- tapOn:
+    id: "emotion-tier1-*"
+- tapOn:
+    id: "emotion-tier2-right-*"       # push to Screen 3
+- assertVisible:
+    id: "emotion-screen-3"
+- pressKey: Back
+- assertVisible:
+    id: "emotion-screen-2"            # back to Screen 2
+- pressKey: Back
+- assertVisible: "Today"             # back to Tend home
