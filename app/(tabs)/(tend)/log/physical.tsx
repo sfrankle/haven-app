@@ -83,14 +83,22 @@ export default function LogPhysicalScreen() {
   const [activeSeverityChipId, setActiveSeverityChipId] = useState<number | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const severityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const energyLabelIdRef = useRef<number | null>(null);
 
   const physicalEntryType = entryTypes.find((t) => t.name === 'Physical');
 
-  // ── Fetch suggestions ──────────────────────────────────────────────────
+  // ── Fetch suggestions + cache Energy label ID ──────────────────────────
 
   const fetchSuggestions = useCallback(async () => {
     if (!physicalEntryType) return;
     const db = (await getDb()) as unknown as Db;
+
+    if (energyLabelIdRef.current === null) {
+      const parentLabels = await getPhysicalParentLabels(db, physicalEntryType.id);
+      const energyLabel = parentLabels.find((l) => l.name.toLowerCase() === 'energy');
+      energyLabelIdRef.current = energyLabel?.id ?? null;
+    }
+
     const options =
       search.length > 0
         ? { search, limit: SUGGESTION_LIMIT }
@@ -200,12 +208,6 @@ export default function LogPhysicalScreen() {
     const db = (await getDb()) as unknown as Db;
     const ts = nowLocalIso();
 
-    // Fetch Energy label ID for energy chip saves
-    const parentLabels = await getPhysicalParentLabels(db, physicalEntryType.id);
-    const energyLabel = parentLabels.find(
-      (l) => l.name.toLowerCase() === 'energy'
-    );
-
     try {
       for (const chip of chips) {
         if (chip.kind === 'energy') {
@@ -213,7 +215,7 @@ export default function LogPhysicalScreen() {
             entryTypeId: physicalEntryType.id,
             timestamp: ts,
             numericValue: chip.value,
-            labelIds: energyLabel ? [energyLabel.id] : [],
+            labelIds: energyLabelIdRef.current !== null ? [energyLabelIdRef.current] : [],
           });
         } else {
           await saveEntry(db, {
@@ -320,7 +322,7 @@ export default function LogPhysicalScreen() {
                     <Chip
                       key="energy"
                       label={formatChipLabel(chip)}
-                      color={colorForPhysicalLabel({ categoryName: null })}
+                      color={colorForPhysicalLabel()}
                       onRemove={() => handleRemoveChip('energy')}
                       testID="physical-chip-energy"
                     />
@@ -330,7 +332,7 @@ export default function LogPhysicalScreen() {
                   <Chip
                     key={chip.id}
                     label={formatChipLabel(chip)}
-                    color={colorForPhysicalLabel({ categoryName: null })}
+                    color={colorForPhysicalLabel()}
                     onRemove={() => handleRemoveChip(chip.id)}
                     onOpenSeverity={() => openSeverityRow(chip.id)}
                     testID={`physical-chip-${chip.id}`}

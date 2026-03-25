@@ -6,8 +6,6 @@ interface ChipProps {
   label: string;
   onRemove: () => void;
   color: string;
-  showSeverity?: boolean;
-  severity?: number;
   onOpenSeverity?: () => void;
   testID?: string;
 }
@@ -16,23 +14,20 @@ export function Chip({
   label,
   onRemove,
   color,
-  showSeverity,
-  severity,
   onOpenSeverity,
   testID,
 }: ChipProps) {
-  const displayLabel = showSeverity && severity !== undefined ? `${label} (${severity}/5)` : label;
 
   return (
     <Pressable
       style={[styles.chip, { backgroundColor: color }]}
       onPress={onRemove}
       accessibilityRole="button"
-      accessibilityLabel={displayLabel}
+      accessibilityLabel={label}
       testID={testID}
     >
       <View style={styles.inner}>
-        <Text style={styles.label}>{displayLabel}</Text>
+        <Text style={styles.label}>{label}</Text>
         {onOpenSeverity !== undefined && (
           <Pressable
             style={styles.severityIcon}

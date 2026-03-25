@@ -81,6 +81,6 @@ export function colorForActivityLabel(label: Pick<Label, 'categoryName'>): strin
  * Physical labels (energy + body states) use a single consistent colour
  * — chipMint — for a clean, body-neutral aesthetic. No category mapping needed.
  */
-export function colorForPhysicalLabel(_label: Pick<Label, 'categoryName'>): string {
+export function colorForPhysicalLabel(): string {
   return colors.chipMint;
 }
