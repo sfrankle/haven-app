@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#98](https://github.com/sfrankle/haven-app/pull/98) | Food (Nourish) logging screen — flat chip selection, meal context label, food category chip colours, custom food creation, save to SQLite | 2026-03-24 |
 | [#97](https://github.com/sfrankle/haven-app/pull/97) | Tab bar icons and entry type tile icons replaced with MaterialCommunityIcons | 2026-03-16 |
 | [#95](https://github.com/sfrankle/haven-app/pull/95) | Activity (Journey) logging screen — search, category-coloured chips, custom activity creation, save to SQLite | 2026-03-14 |
 | [#94](https://github.com/sfrankle/haven-app/pull/94) | Hydration (Replenish) logging screen — oz input, running daily total, save to SQLite, confirmation dismiss | 2026-03-12 |

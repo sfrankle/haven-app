@@ -77,6 +77,9 @@ gh pr list --head <branch> --state all --json number,title,state
 # View a PR
 gh pr view <NUMBER> --json number,title,body,state,comments
 
+# PR readiness check (used by haven-pr-readiness skill)
+gh pr view <NUMBER> --json title,state,isDraft,headRefName,statusCheckRollup,reviews,body
+
 # Check PR status / CI
 gh pr checks <NUMBER>
 

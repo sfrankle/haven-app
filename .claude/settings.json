@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -qE 'git (commit|push)'; then if ! npx tsc --noEmit 2>&1; then printf '{\"continue\":false,\"stopReason\":\"Type-check failed — fix errors before committing.\"}'; fi; fi",
+            "timeout": 60,
+            "statusMessage": "Type-checking before commit..."
+          }
+        ]
+      }
+    ]
+  }
+}

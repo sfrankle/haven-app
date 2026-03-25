@@ -1,0 +1,21 @@
+appId: com.haven.app
+---
+- launchApp
+- assertVisible: "Nourish"
+- tapOn: "Nourish"
+- assertVisible:
+    id: "food-search"
+- tapOn:
+    id: "food-search"
+- inputText: "Oats"
+- assertVisible:
+    id: "food-suggestion-*"
+- tapOn: "Oats"
+- assertVisible:
+    id: "food-chip-*"
+- assertVisible:
+    id: "food-save-button"
+- tapOn:
+    id: "food-save-button"
+- assertVisible: "Entry saved."
+- assertVisible: "Today"
