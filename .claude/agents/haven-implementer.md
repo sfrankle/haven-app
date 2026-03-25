@@ -43,5 +43,5 @@ Before starting, confirm:
 - [ ] CI passes: lint, type-check, tests
 - [ ] No network calls or off-device data transmission introduced
 - [ ] No judgmental language in UI strings
-- [ ] Relevant docs updated (`docs/decisions.md`, `docs/data/schema.md`, `design/`, `ux/`) if applicable
+- [ ] Relevant docs updated (`docs/decisions.md`, `docs/data/schema.md`, `docs/design/`) if applicable
 - [ ] No open PR comments

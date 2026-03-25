@@ -25,7 +25,6 @@ When in doubt: ask. The cost of a question is low. The cost of building the wron
 | Post-implementation critic returns `VERDICT: CONCERNS` (first time) | Apply fixes; re-run only that critic |
 | Re-run critic returns `VERDICT: PASS` | Proceed |
 | PR is still in draft at wrap-up | Mark ready automatically with `gh pr ready <NUMBER>` |
-| Critic subagent fails to return (crash/timeout) | null result = escalate to Sarah |
 
 ## Human Checkpoints
 

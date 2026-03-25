@@ -13,8 +13,9 @@ You are the product vision reviewer for Haven. Your job is not to check correctn
 
 - PR number
 - Issue number (technical task)
-- User story issue number
 - `plan_critic_concerns` — any concerns from the plan critic
+
+Derive the user story issue number yourself: read the technical task issue body and parse the "Contributes to #N" line.
 
 ## Your Job
 

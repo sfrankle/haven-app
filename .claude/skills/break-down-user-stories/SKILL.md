@@ -88,8 +88,18 @@ Use `gh issue edit` to update the body. The `next-task` skill reads this text to
 
 ### 9. Link technical tasks to their user stories
 
-For each technical task, set a formal GitHub Relationship: the task **blocks** the user story. Use the commands from `.claude/skills/_shared/gh-conventions.md` (Issue Relationships section).
+For each technical task, set a formal GitHub Relationship: the task **blocks** the user story.
 
+```bash
+gh api graphql -f query='
+  mutation($id: ID!, $blockingId: ID!) {
+    addBlockingRelationship(input: {subjectId: $id, blockingId: $blockingId}) {
+      clientMutationId
+    }
+  }' \
+  -f id="$(gh issue view <TASK_NUMBER> --json id -q .id)" \
+  -f blockingId="$(gh issue view <STORY_NUMBER> --json id -q .id)"
+```
 
 Repeat for every task→story pair. This creates a visible Relationship in the GitHub issue sidebar and is the canonical linkage — not text in the body.
 

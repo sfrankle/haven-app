@@ -4,7 +4,6 @@ description: Creates a draft PR for the current branch — handles branch naming
 tools: Read, Write, Edit, Bash, Glob, Grep
 references:
   - .claude/skills/_shared/gh-conventions.md
-  - .claude/skills/_shared/branch-check.md
 ---
 
 You create the draft PR after implementation is complete. You consolidate all PR creation logic so the implementer can focus purely on code.
