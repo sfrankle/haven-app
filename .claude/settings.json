@@ -12,6 +12,16 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=.claude/local/ticket-in-progress.json; if [ -f \"$f\" ]; then issue=$(jq -r .issue \"$f\"); step=$(jq -r .step \"$f\"); echo \"Ticket in progress: issue #$issue, step: $step\"; fi"
+          }
+        ]
+      }
     ]
   }
 }

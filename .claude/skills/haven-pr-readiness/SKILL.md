@@ -1,6 +1,9 @@
 ---
 name: haven-pr-readiness
 description: Use when reviewing a Haven PR for merge-readiness — checks commits, CI, Haven conventions, review comment resolution, and overall completeness before the human merges
+tools: Bash, Read, Glob, Grep
+references:
+  - .claude/skills/_shared/gh-conventions.md
 ---
 
 # Haven PR Readiness Review
@@ -9,7 +12,7 @@ Answers: is this PR safe to merge? Used standalone (fresh-instance review) or in
 
 ## Run this
 
-Use the **PR readiness check** command from `.claude/gh-commands.md`.
+Use the **PR readiness check** command from `.claude/skills/_shared/gh-conventions.md`.
 
 ## Five checks
 

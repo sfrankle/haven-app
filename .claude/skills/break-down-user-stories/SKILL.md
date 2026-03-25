@@ -5,11 +5,11 @@ description: Analyze user stories in a GitHub milestone and create detailed tech
 
 ## Process
 
-> For all `gh` commands, use `.claude/gh-commands.md` as the canonical reference.
+> For all `gh` commands, use `.claude/skills/_shared/gh-conventions.md` as the canonical reference.
 
 ### 1. Read the milestone
 
-Fetch all user stories and existing technical tasks in the target milestone (see `gh-commands.md` Issues section):
+Fetch all user stories and existing technical tasks in the target milestone (see `gh-conventions.md` Issues section):
 ```bash
 gh issue list --milestone "<MILESTONE TITLE>" --label "user-story" --state open --limit 100 --json number,title,body
 gh issue list --milestone "<MILESTONE TITLE>" --label "technical-task" --state all --limit 100 --json number,title,body,state
@@ -84,12 +84,22 @@ For each dependency identified in step 5, note it in the blocked issue's Notes s
 Blocked by: #N
 ```
 
-Use `gh issue edit` to update the body. The `next-task` skill reads this text to determine what is unblocked. See `.claude/gh-commands.md` for the correct edit pattern.
+Use `gh issue edit` to update the body. The `next-task` skill reads this text to determine what is unblocked. See `.claude/skills/_shared/gh-conventions.md` for the correct edit pattern.
 
 ### 9. Link technical tasks to their user stories
 
-For each technical task, set a formal GitHub Relationship: the task **blocks** the user story. Use the commands from `.claude/gh-commands.md` (Issue Relationships section).
+For each technical task, set a formal GitHub Relationship: the task **blocks** the user story.
 
+```bash
+gh api graphql -f query='
+  mutation($id: ID!, $blockingId: ID!) {
+    addBlockingRelationship(input: {subjectId: $id, blockingId: $blockingId}) {
+      clientMutationId
+    }
+  }' \
+  -f id="$(gh issue view <TASK_NUMBER> --json id -q .id)" \
+  -f blockingId="$(gh issue view <STORY_NUMBER> --json id -q .id)"
+```
 
 Repeat for every task→story pair. This creates a visible Relationship in the GitHub issue sidebar and is the canonical linkage — not text in the body.
 

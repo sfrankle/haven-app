@@ -2,6 +2,7 @@
 
 Natural language triggers for skills:
 - **"what's next?"** → Claude runs `next-task`
+- **"complete ticket"** or **"work on #N"** → Claude runs `complete-ticket`
 - **"let's review milestone #N"** or **"is milestone #N ready?"** → Claude runs `review-milestone`
 - **"let's break down milestone #N"** → Claude runs `break-down-user-stories`
 - **"is this PR ready?"** or **"review PR #N"** → Claude runs `haven-pr-readiness`
@@ -38,7 +39,7 @@ Haven uses an issue-driven development workflow. All work flows through GitHub I
 ---
 
 ### Milestone Lifecycle
-1. Human and Claude define a milestone together (a coherent set of user stories for a release or sprint)
+1. Human and Claude define a milestone together
 2. Claude invokes **`review-milestone`** to check stories for completeness and coherence before breakdown
 3. Human approves the milestone
 4. Claude invokes **`break-down-user-stories`** to create technical task issues with detailed acceptance criteria
@@ -47,49 +48,64 @@ Haven uses an issue-driven development workflow. All work flows through GitHub I
 ---
 
 ### Technical Task Lifecycle
-1. Claude dispatches **`haven-technical-planner`** — explores codebase, writes a full implementation plan to `docs/plans/` (local-only, never committed), posts a summary comment on the issue
-2. Human approves the plan (via the issue comment — the local plan file is for Claude's use only)
-3. Claude dispatches **`haven-implementer`** — implements the approved plan, opens a **draft PR** linking `Closes #N` (the technical task)
-   - PRs that **only** update Claude instructions or docs do not need a related issue
-4. PRs reference user stories with "Contributes to #M" — never `Closes` on user stories
-   - To find the right user story: check the technical task's milestone, then run `gh issue list --milestone "<name>" --label user-story` to find candidates
-   - Only link a user story you can directly trace to — if the PR is pure infrastructure that enables many stories, omit `Contributes to` rather than guessing
-   - PRs that **only** update Claude instructions or docs do not need a related issue
-5. Claude runs **`/simplify`** — reviews changed code for reuse, quality, and efficiency; fixes issues found
-6. Claude dispatches **`haven-reviewer`** when implementation is complete
-7. Human reviews; Claude uses **`superpowers:receiving-code-review`** to process feedback
-8. After applying review feedback, Claude runs **`/wrap-up-pr`** — invokes `haven-pr-readiness`, checks the CI box in the PR description, deletes the local plan file
-9. Human merges; Claude checks out main and pulls
-10. **User stories are closed manually** by the human after all contributing technical tasks are merged
 
-### GitHub CLI
-- All agents and skills must use commands from `.claude/gh-commands.md` as the canonical reference
-- If a `gh` command fails, update `.claude/gh-commands.md` immediately — add the broken command and the correct replacement before continuing
-- Do not reuse `gh` commands from old skills or external sources without verifying against this file
+Run **`complete-ticket`** — the skill orchestrates all steps autonomously. See `.claude/skills/complete-ticket/SKILL.md` for the full flow.
+
+Summary of what complete-ticket does:
+1. Determines next task (`next-task`)
+2. Plans (`haven-technical-planner`)
+3. Critiques plan (`haven-plan-critic`)
+4. **Human approves plan** (only mandatory checkpoint)
+5. Implements (`haven-implementer`)
+6. Creates PR (`haven-create-pr`)
+7. Simplifies code (`/simplify`)
+8. Critiques implementation in parallel: `haven-code-quality-critic`, `haven-product-vision-critic`, `haven-safety-critic`
+9. Processes feedback autonomously; escalates blocks to human
+10. Wraps up (`/wrap-up-pr`)
+11. **Human merges**
+
+---
+
+### Agents
+
+| Agent | Role | Model |
+|---|---|---|
+| `haven-technical-planner` | Explores codebase, writes implementation plan, posts issue comment | opus |
+| `haven-implementer` | Executes plan with TDD, commits; stops before PR creation | sonnet |
+| `haven-create-pr` | Creates draft PR, fills template, writes changelog row | sonnet |
+| `haven-plan-critic` | Reviews plan before implementation; posts findings to issue | opus |
+| `haven-code-quality-critic` | Reviews code against RN/Expo/TS patterns and Haven conventions | sonnet |
+| `haven-product-vision-critic` | Reviews product vision fit, UX, and user story fulfillment | opus |
+| `haven-safety-critic` | Reviews privacy, data safety, tone, workflow artifacts | sonnet |
+| `haven-technical-health` | Scans for tech debt and architecture gaps; run between milestones | sonnet |
+
+---
+
+### GitHub Conventions
+- All `gh` commands and PR rules: see `.claude/skills/_shared/gh-conventions.md`
+- Repo: `sfrankle/haven-app`
 
 ### Ambiguity Handling
 - When a user story or requirement is unclear, Claude asks the human before writing the plan
 - Claude may check `docs/` and `.claude/local/` for existing context first, but defaults to asking rather than assuming
-- `.claude/local/` is gitignored — it holds private context docs the human wants available to Claude but not committed (design notes, research, personal context)
+- `.claude/local/` is gitignored — private context docs + ticket state file
 
 ---
 
 ### Definition of Done
-Defined in `haven-implementer.md` (Quality Checklist). That is the canonical source — do not duplicate it here.
+Defined in `haven-implementer.md` (Quality Checklist). That is the canonical source.
 
 ---
 
 ### Testing Philosophy
-
 Defined in `app/CLAUDE.md`.
-
 
 ---
 
 ### PR Conventions
 - Always start as **draft**
 - Each PR is associated with 1 table entry in `docs/changelog.md`
-- Each PR updates other docs if relevant (`docs/decisions.md`, schema snapshots, design/, ux/) **in the commits**
+- Each PR updates other docs if relevant (`docs/decisions.md`, schema snapshots, `design/`) **in the commits**
 - **NEVER commit directly to `main`.** All changes go through a feature branch and PR.
 - **Don't use git worktrees** unless explicitly asked.
 
@@ -101,7 +117,7 @@ Defined in `app/CLAUDE.md`.
 
 **Commit messages:** Follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`
-- Example: `feat: add daily check-in flow`
+- Single-line only. No heredoc.
 
 ---
 
@@ -119,7 +135,7 @@ Defined in `app/CLAUDE.md`.
 ### Close PR Process
 User says "alright, let's wrap this up" or "wrap up this PR": run `/wrap-up-pr`
 
-A fresh-instance review at any point (no workflow context needed): run `haven-pr-readiness`
+A fresh-instance review at any point: run `haven-pr-readiness`
 
 ---
 
@@ -133,8 +149,10 @@ For urgent fixes to `main`:
 
 ### Automation Notes
 
-**Active hook (`.claude/settings.json`):**
-- Pre-commit/push type-check — runs `npx tsc --noEmit` automatically before any `git commit` or `git push`; blocks if type errors are present
+**Active hooks (`.claude/settings.json`):**
+- Pre-commit/push type-check — runs `npx tsc --noEmit` before any `git commit` or `git push`; blocks if type errors are present
+- Stop — prints current ticket state (issue #, step) if `.claude/local/ticket-in-progress.json` exists
 
-**Not hookable (invoke skills explicitly):**
-- `superpowers:test-driven-development` — requires judgment about when implementation starts; a hook can't detect this reliably
+**Not hookable (complete-ticket handles these):**
+- `superpowers:test-driven-development` — requires judgment about when implementation starts
+- Critic dispatch — requires knowing PR number, SHAs, and plan context
