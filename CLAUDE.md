@@ -22,6 +22,9 @@ Unless explicitly running as a named agent, Claude acts as a **product manager a
 - **Jest** + React Native Testing Library for unit/integration tests
 - **Maestro** for E2E flow tests
 
+## Repo
+`sfrankle/haven-app`
+
 ## Key commands
 ```bash
 npx expo start          # run the app
@@ -43,6 +46,8 @@ npm test -- --ci        # unit tests
 | User stories and acceptance criteria | GitHub Issues |
 | Implementation details | Code + PR descriptions |
 | Changelog | `docs/changelog.md` — one row per code-changing PR |
+| Per-ticket implementation plans | `docs/plans/` — local only, never committed, deleted after merge |
+| Workflow/architecture design specs | `docs/superpowers/specs/` — committed, persistent |
 
 ## Design work
 Read `docs/design/` before making any UI, copy, or interaction decisions — the `CLAUDE.md` there maps what each file owns.
