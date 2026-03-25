@@ -12,6 +12,16 @@ git add app/(tabs)/(tend)/log/emotion/tier2.tsx
 git add "app/(tabs)/(tend)/log/emotion/tier2.tsx"
 ```
 
+## Branching — ALWAYS do this first
+
+**NEVER commit to `main` directly.** Before any work:
+
+```bash
+git checkout -b feat/your-branch-name   # or fix/, chore/, refactor/
+```
+
+All changes go through a feature branch and PR — no exceptions, not even docs or config.
+
 ## Commit messages
 
 Always use single-line commit messages:
