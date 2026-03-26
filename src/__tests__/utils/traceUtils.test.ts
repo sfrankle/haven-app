@@ -82,15 +82,16 @@ describe('summariseEntry', () => {
     expect(summariseEntry(entry)).toBe('Felt');
   });
 
-  it('Physical with numericValue: shows energy reading', () => {
+  it('Physical energy: parent label (parentId null) → shows energy reading', () => {
     const entry = makeEntry({
       entryTypeName: 'Physical',
       numericValue: 3,
+      labels: [makeLabel(1, 'Energy', null)],
     });
     expect(summariseEntry(entry)).toBe('Felt Energy (3/5)');
   });
 
-  it('Physical with no numericValue: shows first label name', () => {
+  it('Physical state without severity: child label → shows label name only', () => {
     const entry = makeEntry({
       entryTypeName: 'Physical',
       numericValue: null,
@@ -99,7 +100,16 @@ describe('summariseEntry', () => {
     expect(summariseEntry(entry)).toBe('Felt Cramping');
   });
 
-  it('Physical with no numericValue and no labels: shows "Felt"', () => {
+  it('Physical state with severity: child label + numericValue → shows label + fraction', () => {
+    const entry = makeEntry({
+      entryTypeName: 'Physical',
+      numericValue: 2,
+      labels: [makeLabel(1, 'Cramping', 5)],
+    });
+    expect(summariseEntry(entry)).toBe('Felt Cramping (2/5)');
+  });
+
+  it('Physical with no labels: shows "Felt"', () => {
     const entry = makeEntry({
       entryTypeName: 'Physical',
       numericValue: null,

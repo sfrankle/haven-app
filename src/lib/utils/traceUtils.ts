@@ -15,8 +15,9 @@ function feltSummary(labels: EntryWithLabels['labels']): string {
 /**
  * Returns a one-line summary string for an entry suitable for the Trace row.
  *
- * Physical discrimination: numericValue != null → energy entry (see save logic
- * in physical.tsx); null → state entry.
+ * Physical discrimination: energy entries have a parent label (parentId === null);
+ * state entries have child labels (parentId !== null). Both may have numericValue
+ * set (energy level vs. severity) so numericValue alone is not a reliable signal.
  */
 export function summariseEntry(entry: EntryWithLabels): string {
   const { entryTypeName, entryTypeTitle, numericValue, labels } = entry;
@@ -38,9 +39,13 @@ export function summariseEntry(entry: EntryWithLabels): string {
     case 'Emotion':
       return feltSummary(labels);
 
-    case 'Physical':
-      if (numericValue != null) return `Felt Energy (${numericValue}/5)`;
-      return feltSummary(labels);
+    case 'Physical': {
+      const isEnergy = labels.some((l) => l.parentId === null);
+      if (isEnergy) return `Felt Energy (${numericValue}/5)`;
+      const stateName = labels[0]?.name;
+      if (!stateName) return 'Felt';
+      return numericValue != null ? `Felt ${stateName} (${numericValue}/5)` : `Felt ${stateName}`;
+    }
 
     default:
       return entryTypeTitle;

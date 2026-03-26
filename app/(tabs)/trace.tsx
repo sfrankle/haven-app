@@ -31,6 +31,7 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
       >
         {entry.entryTypeIcon ? (
           <MaterialCommunityIcons
+            // icon names come from seeded DB values; safe to assert
             name={entry.entryTypeIcon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
             size={20}
             color={colors.chrome}
@@ -54,13 +55,11 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
                   key={label.id}
                   label={label.name}
                   color={colors.surfaceVariant}
-                  onRemove={() => undefined}
                   testID={`trace-chip-${label.id}`}
                 />
               ))}
             </View>
           )}
-          <View style={styles.actionPlaceholder} />
         </View>
       )}
     </View>
@@ -172,15 +171,12 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 8,
     paddingHorizontal: spacing.pagePadding,
     paddingTop: spacing.elementGap,
+    paddingBottom: 32,
   },
   chipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.elementGap,
-  },
-  actionPlaceholder: {
-    // Reserved space for future edit/delete actions
-    minHeight: 32,
   },
   emptyContainer: {
     flex: 1,
