@@ -1,10 +1,3 @@
-/**
- * Trace screen utilities — pure functions with no DB access.
- *
- * summariseEntry: produces a one-line display string per entry type.
- * groupEntriesByDate: groups EntryWithLabels[] into SectionList sections.
- */
-
 import { formatEntryDate } from './timestamp';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 
@@ -14,15 +7,16 @@ export interface TraceSection {
   data: EntryWithLabels[];
 }
 
+/** Returns "Felt {label}" or "Felt" when no labels are present. */
+function feltSummary(labels: EntryWithLabels['labels']): string {
+  return labels[0] ? `Felt ${labels[0].name}` : 'Felt';
+}
+
 /**
  * Returns a one-line summary string for an entry suitable for the Trace row.
  *
- * Physical entry type discrimination:
- *   numericValue != null → energy entry (convention established in log screen save logic)
- *   numericValue == null → state entry — first label name, or "Felt" if none
- *
- * // TODO #85: severity not yet surfaced in EntryWithLabels.labels — Physical
- * // state rows omit severity for MVP. Add when EntryWithLabels exposes it.
+ * Physical discrimination: numericValue != null → energy entry (see save logic
+ * in physical.tsx); null → state entry.
  */
 export function summariseEntry(entry: EntryWithLabels): string {
   const { entryTypeName, entryTypeTitle, numericValue, labels } = entry;
@@ -42,14 +36,11 @@ export function summariseEntry(entry: EntryWithLabels): string {
       return `Ate ${labels.map((l) => l.name).join(', ')}`;
 
     case 'Emotion':
-      return labels[0] ? `Felt ${labels[0].name}` : 'Felt';
+      return feltSummary(labels);
 
     case 'Physical':
-      // numericValue != null indicates an energy entry (see save logic in physical.tsx)
-      if (numericValue != null) {
-        return `Felt Energy (${numericValue}/5)`;
-      }
-      return labels[0] ? `Felt ${labels[0].name}` : 'Felt';
+      if (numericValue != null) return `Felt Energy (${numericValue}/5)`;
+      return feltSummary(labels);
 
     default:
       return entryTypeTitle;
@@ -61,22 +52,18 @@ export function summariseEntry(entry: EntryWithLabels): string {
  * sections, preserving order.
  *
  * @param entries - Entries ordered newest-first.
- * @param _today - Optional 'YYYY-MM-DD' override for "today" (injectable for tests).
+ * @param today - Optional 'YYYY-MM-DD' override for "today" (injectable for tests).
  */
-export function groupEntriesByDate(entries: EntryWithLabels[], _today?: string): TraceSection[] {
+export function groupEntriesByDate(entries: EntryWithLabels[], today?: string): TraceSection[] {
   const sectionMap = new Map<string, TraceSection>();
-  const orderedKeys: string[] = [];
 
   for (const entry of entries) {
     const key = entry.localDate;
     if (!sectionMap.has(key)) {
-      orderedKeys.push(key);
-      // Format the date header using the entry's own timestamp wall-clock date
-      const title = formatEntryDate(entry.timestamp, _today);
-      sectionMap.set(key, { title, data: [] });
+      sectionMap.set(key, { title: formatEntryDate(entry.timestamp, today), data: [] });
     }
     sectionMap.get(key)!.data.push(entry);
   }
 
-  return orderedKeys.map((key) => sectionMap.get(key)!);
+  return Array.from(sectionMap.values());
 }

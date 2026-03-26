@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { useTraceEntries } from '@/hooks/useTraceEntries';
 import type { EntryWithLabels } from '@/lib/db/query-types';
-import type { TraceSection } from '@/hooks/useTraceEntries';
+import type { TraceSection } from '@/lib/utils/traceUtils';
 
 jest.mock('@/hooks/useTraceEntries');
 jest.mock('@/lib/db/database', () => ({

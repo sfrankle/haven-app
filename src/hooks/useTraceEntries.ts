@@ -9,8 +9,6 @@ import { getEntriesForTrace, type Db } from '@/lib/db/queries';
 import { groupEntriesByDate } from '@/lib/utils/traceUtils';
 import type { TraceSection } from '@/lib/utils/traceUtils';
 
-export type { TraceSection };
-
 export interface UseTraceEntriesResult {
   sections: TraceSection[];
   loading: boolean;

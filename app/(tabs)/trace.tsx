@@ -29,7 +29,6 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
         accessibilityRole="button"
         accessibilityLabel={`${summary}, ${time}`}
       >
-        {/* type icon · summary · time — per acceptance criteria */}
         {entry.entryTypeIcon ? (
           <MaterialCommunityIcons
             name={entry.entryTypeIcon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
@@ -38,7 +37,6 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
             testID={`trace-row-icon-${entry.id}`}
           />
         ) : (
-          // Render a placeholder view so testID is always present
           <View testID={`trace-row-icon-${entry.id}`} style={styles.iconPlaceholder} />
         )}
         <Text style={styles.summary} numberOfLines={1}>
@@ -52,8 +50,6 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
           {entry.labels.length > 0 && (
             <View style={styles.chipsRow}>
               {entry.labels.map((label) => (
-                // Read-only chip: onRemove is a no-op since Trace is read-only.
-                // A dedicated ReadOnlyChip can be introduced later if the design diverges.
                 <Chip
                   key={label.id}
                   label={label.name}
@@ -64,7 +60,6 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
               ))}
             </View>
           )}
-          {/* Placeholder space reserved for future edit/delete actions */}
           <View style={styles.actionPlaceholder} />
         </View>
       )}
