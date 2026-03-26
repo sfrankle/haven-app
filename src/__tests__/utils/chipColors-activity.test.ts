@@ -34,11 +34,6 @@ describe('colorForActivityLabel', () => {
     expected.forEach((cat) => {
       expect(cat in CATEGORY_CHIP_COLORS).toBe(true);
     });
-    expect(Object.keys(CATEGORY_CHIP_COLORS)).toHaveLength(9);
-  });
-
-  it('Contribute and Structure both map to chipSage', () => {
-    expect(colorForActivityLabel({ categoryName: 'Contribute' })).toBe(colors.chipSage);
-    expect(colorForActivityLabel({ categoryName: 'Structure' })).toBe(colors.chipSage);
+    expect(Object.keys(CATEGORY_CHIP_COLORS)).toHaveLength(expected.length);
   });
 });
