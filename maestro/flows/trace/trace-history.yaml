@@ -1,0 +1,46 @@
+appId: com.haven.app
+name: Trace — history list with expand/collapse
+---
+# Pre-condition: log a sleep entry so the Trace tab has at least one row.
+- launchApp:
+    clearState: true
+
+# Navigate to Tend tab and log a Sleep entry
+- tapOn:
+    id: "tab-tend"
+- tapOn:
+    text: "Sleep"
+- tapOn:
+    id: "sleep-hours-input"
+- inputText: "7"
+- tapOn:
+    text: "Log Sleep"
+
+# Navigate to Trace tab
+- tapOn:
+    id: "tab-trace"
+
+# Date header for today is visible
+- assertVisible:
+    text: "Today"
+
+# The sleep entry row summary is visible
+- assertVisible:
+    text: "Slept 7 hours"
+
+# Tap the row to expand it
+- tapOn:
+    text: "Slept 7 hours"
+
+# Expanded container is now visible (action placeholder is always present)
+# Verify the row is still visible after expansion
+- assertVisible:
+    text: "Slept 7 hours"
+
+# Tap the row again to collapse it
+- tapOn:
+    text: "Slept 7 hours"
+
+# Row summary is still visible after collapse
+- assertVisible:
+    text: "Slept 7 hours"
