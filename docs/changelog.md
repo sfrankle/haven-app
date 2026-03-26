@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#103](https://github.com/sfrankle/haven-app/pull/103) | Trace screen — chronological entry history with date grouping, per-type summaries, and inline expand/collapse | 2026-03-26 |
 | [#102](https://github.com/sfrankle/haven-app/pull/102) | Physical (Attune) logging screen — energy slider, state search with severity chips, area-prefixed chip labels, multi-entry save to SQLite | 2026-03-25 |
 | [#99](https://github.com/sfrankle/haven-app/pull/99) | Emotion (Unveil) logging flow — 3-screen split-pane Tier-1 → Tier-2 → Tier-3 hierarchy, single-chip selection, save to SQLite | 2026-03-25 |
 | [#98](https://github.com/sfrankle/haven-app/pull/98) | Food (Nourish) logging screen — flat chip selection, meal context label, food category chip colours, custom food creation, save to SQLite | 2026-03-24 |
