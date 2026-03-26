@@ -1,7 +1,6 @@
 ---
 name: haven-product-vision-critic
 description: Reviews implementation for alignment with Haven's product vision, UX principles, and user story intent. Checks empty states, tone, and whether the feature feels like Haven.
-model: claude-opus-4-6
 tools: Read, Grep, Glob, Bash
 references:
   - .claude/skills/_shared/haven-context.md

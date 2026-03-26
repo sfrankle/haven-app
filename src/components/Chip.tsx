@@ -4,7 +4,7 @@ import { colors, lineHeight, typeScale } from '@/constants/theme';
 
 interface ChipProps {
   label: string;
-  onRemove: () => void;
+  onRemove?: () => void;
   color: string;
   onOpenSeverity?: () => void;
   testID?: string;
@@ -17,6 +17,35 @@ export function Chip({
   onOpenSeverity,
   testID,
 }: ChipProps) {
+  const inner = (
+    <View style={styles.inner}>
+      <Text style={styles.label}>{label}</Text>
+      {onOpenSeverity !== undefined && (
+        <Pressable
+          style={styles.severityIcon}
+          onPress={onOpenSeverity}
+          accessibilityRole="button"
+          accessibilityLabel="Set severity"
+          testID={testID ? `${testID}-severity-icon` : 'chip-severity-icon'}
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+        >
+          <Text style={styles.severityIconText}>···</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+
+  if (onRemove === undefined) {
+    return (
+      <View
+        style={[styles.chip, { backgroundColor: color }]}
+        accessibilityLabel={label}
+        testID={testID}
+      >
+        {inner}
+      </View>
+    );
+  }
 
   return (
     <Pressable
@@ -26,21 +55,7 @@ export function Chip({
       accessibilityLabel={label}
       testID={testID}
     >
-      <View style={styles.inner}>
-        <Text style={styles.label}>{label}</Text>
-        {onOpenSeverity !== undefined && (
-          <Pressable
-            style={styles.severityIcon}
-            onPress={onOpenSeverity}
-            accessibilityRole="button"
-            accessibilityLabel="Set severity"
-            testID={testID ? `${testID}-severity-icon` : 'chip-severity-icon'}
-            hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
-          >
-            <Text style={styles.severityIconText}>···</Text>
-          </Pressable>
-        )}
-      </View>
+      {inner}
     </Pressable>
   );
 }

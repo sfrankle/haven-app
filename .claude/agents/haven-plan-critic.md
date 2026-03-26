@@ -1,7 +1,6 @@
 ---
 name: haven-plan-critic
 description: Reviews implementation plans against acceptance criteria, scope, established patterns, and Haven principles before implementation begins. Posts findings to the GitHub issue.
-model: claude-opus-4-6
 tools: Read, Grep, Glob, Bash
 references:
   - .claude/skills/_shared/haven-context.md
