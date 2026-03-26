@@ -151,7 +151,7 @@ For urgent fixes to `main`:
 
 **Active hooks (`.claude/settings.json`):**
 - Pre-commit/push type-check — runs `npx tsc --noEmit` before any `git commit` or `git push`; blocks if type errors are present
-- Stop — prints current ticket state (issue #, step) if `.claude/local/ticket-in-progress.json` exists
+- Stop — prints current ticket state (issue #, step) if `docs/plans/ticket-in-progress.json` exists
 
 **Not hookable (complete-ticket handles these):**
 - `superpowers:test-driven-development` — requires judgment about when implementation starts

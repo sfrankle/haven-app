@@ -7,12 +7,12 @@ Read `.claude/skills/complete-ticket/escalation-policy.md` and `.claude/skills/c
 
 ## State File
 
-Check `.claude/local/ticket-in-progress.json`:
+Check `docs/plans/ticket-in-progress.json`:
 - **Missing:** start fresh
 - **Present — valid** (branch exists via `git branch --list <branch>`, issue matches): resume from the `step` field
 - **Present — stale** (branch gone or issue mismatch): delete it, start fresh
 
-Write state to `.claude/local/ticket-in-progress.json` after every step. Write the JSON directly (no subagent). Use the schema in `state-schema.md`.
+Write state to `docs/plans/ticket-in-progress.json` after every step. Write the JSON directly (no subagent). Use the schema in `state-schema.md`.
 
 ## Steps
 
@@ -90,7 +90,7 @@ Apply `escalation-policy.md`:
 
 ### 12. Wrap up
 - Invoke `/wrap-up-pr`
-- It runs `haven-pr-readiness`, checks the CI box, and deletes `.claude/local/ticket-in-progress.json`
+- It runs `haven-pr-readiness`, checks the CI box, and deletes `docs/plans/ticket-in-progress.json`
 - Write state: `step: "wrap-up-complete"` (then the file is deleted)
 
 ### 13. Stop
