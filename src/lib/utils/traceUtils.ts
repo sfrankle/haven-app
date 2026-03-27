@@ -70,5 +70,9 @@ export function groupEntriesByDate(entries: EntryWithLabels[], today?: string): 
     sectionMap.get(key)!.data.push(entry);
   }
 
-  return Array.from(sectionMap.values());
+  const sections = Array.from(sectionMap.values());
+  for (const section of sections) {
+    section.data.reverse();
+  }
+  return sections;
 }
