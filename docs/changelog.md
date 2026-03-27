@@ -4,7 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
-| [#105](https://github.com/sfrankle/haven-app/pull/105) | GitHub Actions workflow to build a sideloadable Android APK and attach it to a GitHub Release on `v*` tag push | 2026-03-27 |
+| [#106](https://github.com/sfrankle/haven-app/pull/106) | GitHub Actions workflow to build a sideloadable Android APK and attach it to a GitHub Release on `v*` tag push | 2026-03-27 |
 | [#104](https://github.com/sfrankle/haven-app/pull/104) | Unit tests for `colorForActivityLabel` — covers category color and fallback paths | 2026-03-26 |
 | [#103](https://github.com/sfrankle/haven-app/pull/103) | Trace screen — chronological entry history with date grouping, per-type summaries, and inline expand/collapse | 2026-03-26 |
 | [#102](https://github.com/sfrankle/haven-app/pull/102) | Physical (Attune) logging screen — energy slider, state search with severity chips, area-prefixed chip labels, multi-entry save to SQLite | 2026-03-25 |
