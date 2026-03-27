@@ -67,6 +67,21 @@ The full development workflow — issue-driven, milestone-based, PR conventions 
 
 ---
 
+## Cutting a release
+
+Push a version tag to trigger the Android APK build:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The GitHub Actions workflow builds a sideloadable `.apk` and attaches it to a GitHub Release automatically. Download it from the [Releases page](../../releases) and install via ADB or direct file transfer.
+
+Tag format: `v<major>.<minor>.<patch>` (e.g. `v0.1.0`, `v1.0.0`).
+
+---
+
 ## Status
 
 Early development. Pre-MVP. The roadmap lives in [GitHub Milestones](../../milestones).
