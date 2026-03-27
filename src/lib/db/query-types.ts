@@ -20,6 +20,7 @@ export interface Label {
   entryTypeId: number;
   name: string;
   parentId: number | null;
+  /** Populated only when the query JOINs the parent label row (e.g. physical state queries). Absent on most label queries. */
   parentName?: string | null;
   categoryId: number | null;
   categoryName: string | null;
