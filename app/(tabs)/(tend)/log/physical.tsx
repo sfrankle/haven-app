@@ -177,9 +177,11 @@ export default function LogPhysicalScreen() {
     if (activeSeverityChipId === null) return;
     const id = activeSeverityChipId;
     setChips((prev) =>
-      prev.map((c) =>
-        c.kind === 'state' && c.id === id ? { ...c, severity } : c
-      )
+      prev.map((c) => {
+        if (c.kind !== 'state' || c.id !== id) return c;
+        // tapping the already-selected value clears severity
+        return { ...c, severity: c.severity === severity ? null : severity };
+      })
     );
     if (severityTimerRef.current) clearTimeout(severityTimerRef.current);
     setActiveSeverityChipId(null);
