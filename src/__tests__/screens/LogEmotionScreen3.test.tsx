@@ -115,16 +115,13 @@ describe('LogEmotionScreen3', () => {
     expect(getByTestId('emotion-tier3-right-101')).toBeTruthy();
   });
 
-  it('tapping a Tier-3 item replaces the chip', async () => {
+  it('tapping a Tier-3 item updates the chip in place without navigating', async () => {
     const { getByTestId } = render(<LogEmotionScreen3 />);
     await waitFor(() => getByTestId('emotion-tier3-right-100'));
     fireEvent.press(getByTestId('emotion-tier3-right-100'));
-    // After tap, router.replace should be called with updated chip params
-    expect(mockReplace).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: expect.objectContaining({ chipLabelId: 100, chipLabelName: 'Loved' }),
-      })
-    );
+    // Chip stays visible; no router.replace call (no full-screen reload)
+    expect(getByTestId('emotion-chip')).toBeTruthy();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it('tapping a Tier-2 item in left column swaps right column without changing chip', async () => {
