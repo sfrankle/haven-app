@@ -378,7 +378,7 @@ export async function getPhysicalStateLabels(
        LEFT JOIN category c ON c.id = l.category_id
        LEFT JOIN label p ON p.id = l.parent_id
        WHERE l.entry_type_id = ?
-         AND l.parent_id IS NOT NULL
+         AND (l.parent_id IS NOT NULL OR l.seed_version = 0)
          AND l.is_enabled = 1
          AND l.name LIKE ? || '%'
        ORDER BY l.sort_order ASC
@@ -399,7 +399,7 @@ export async function getPhysicalStateLabels(
      LEFT JOIN entry_label el ON el.label_id = l.id
      LEFT JOIN entry e ON e.id = el.entry_id
      WHERE l.entry_type_id = ?
-       AND l.parent_id IS NOT NULL
+       AND (l.parent_id IS NOT NULL OR l.seed_version = 0)
        AND l.is_enabled = 1
      GROUP BY l.id
      ORDER BY
