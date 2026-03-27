@@ -5,10 +5,10 @@ import { colors, lineHeight, typeScale, spacing } from '@/constants/theme';
 
 const ENERGY_LEVELS: { value: number; label: string }[] = [
   { value: 1, label: 'Exhausted' },
-  { value: 2, label: 'Bit Tired' },
-  { value: 3, label: 'Average' },
-  { value: 4, label: 'Well Rested' },
-  { value: 5, label: 'Pumped' },
+  { value: 2, label: 'Weary' },
+  { value: 3, label: 'Steady' },
+  { value: 4, label: 'Rested' },
+  { value: 5, label: 'Energised' },
 ];
 
 interface EnergySliderProps {
