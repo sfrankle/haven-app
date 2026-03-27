@@ -261,7 +261,7 @@ export default function LogPhysicalScreen() {
 
           {/* Energy section */}
           <View style={styles.energySection}>
-            <Text style={styles.sectionHeader}>Energy</Text>
+            <Text style={styles.sectionHeader}>Reserves</Text>
             <EnergySlider
               value={hasEnergyChip
                 ? (chips.find((c) => c.kind === 'energy') as EnergyChip | undefined)?.value ?? null
@@ -271,12 +271,12 @@ export default function LogPhysicalScreen() {
             />
           </View>
 
-          {/* Body State section */}
-          <Text style={styles.sectionHeader}>Body State</Text>
+          {/* Sensations section */}
+          <Text style={styles.sectionHeader}>Sensations</Text>
           <SearchBar
             value={search}
             onChangeText={setSearch}
-            placeholder="Search body states"
+            placeholder="Search sensations"
             testID="physical-search"
           />
 
