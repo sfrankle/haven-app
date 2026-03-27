@@ -58,7 +58,7 @@ export default function LogEmotionScreen3() {
 
   function handleTier2Press(label: Label) {
     setActiveTier2Id(label.id);
-    // Do NOT change chip when switching Tier-2 left column
+    setChipLabel({ id: label.id, name: label.name });
   }
 
   function handleTier3Press(label: Label) {

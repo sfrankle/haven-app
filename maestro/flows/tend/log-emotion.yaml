@@ -91,19 +91,23 @@ appId: com.haven.app
     id: "emotion-save-button"        # submit reappears
 
 ---
-# Scenario 4: Left-column pivot does not change chip
+# Scenario 4: Tapping Tier-2 in left column replaces chip
 - launchApp
 - tapOn: "Unveil"
 - tapOn:
     id: "emotion-tier1-*"
 - tapOn:
-    id: "emotion-tier2-right-*"       # arrives at Screen 3 with chip set
+    id: "emotion-tier2-right-*"       # arrives at Screen 3 with chip set (Tier-2 label)
+- tapOn:
+    id: "emotion-tier3-right-*"       # select Tier-3, chip now shows Tier-3 label
 - assertVisible:
     id: "emotion-chip"
 - tapOn:
-    id: "emotion-tier2-left-*"        # tap a different Tier-2 in left column
+    id: "emotion-tier2-left-*"        # tap Tier-2 in left column — chip should update to Tier-2
 - assertVisible:
-    id: "emotion-chip"                # chip is unchanged
+    id: "emotion-chip"                # chip updated to the tapped Tier-2 label
+- assertVisible:
+    id: "emotion-save-button"         # save still available
 
 ---
 # Scenario 5: Back navigation
