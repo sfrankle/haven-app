@@ -256,8 +256,9 @@ export default function LogPhysicalScreen() {
             {physicalEntryType?.prompt ?? physicalEntryType?.name}
           </Text>
 
-          {/* Energy slider */}
+          {/* Energy section */}
           <View style={styles.energySection}>
+            <Text style={styles.sectionHeader}>Energy</Text>
             <EnergySlider
               value={hasEnergyChip
                 ? (chips.find((c) => c.kind === 'energy') as EnergyChip | undefined)?.value ?? null
@@ -267,7 +268,8 @@ export default function LogPhysicalScreen() {
             />
           </View>
 
-          {/* State search */}
+          {/* Body State section */}
+          <Text style={styles.sectionHeader}>Body State</Text>
           <SearchBar
             value={search}
             onChangeText={setSearch}
@@ -375,8 +377,15 @@ const styles = StyleSheet.create({
   keyboardAvoid: {
     flex: 1,
   },
-  energySection: {
+  sectionHeader: {
+    fontFamily: typeScale.titleMedium.family,
+    fontSize: typeScale.titleMedium.size,
+    lineHeight: lineHeight(typeScale.titleMedium),
+    color: colors.ink,
     marginBottom: spacing.elementGap,
+  },
+  energySection: {
+    marginBottom: spacing.sectionGap,
   },
   suggestionsContainer: {
     flexDirection: 'row',
