@@ -40,7 +40,7 @@ export function summariseEntry(entry: EntryWithLabels): string {
       return feltSummary(labels);
 
     case 'Physical': {
-      const isEnergy = labels.some((l) => l.parentId === null);
+      const isEnergy = labels.some((l) => l.name.toLowerCase() === 'energy');
       if (isEnergy) return `Felt Energy (${numericValue}/5)`;
       const label = labels[0];
       if (!label) return 'Felt';
