@@ -52,6 +52,15 @@ Make a todo list of the following steps. Mark each in_progress when starting, co
 - Dispatch `haven-create-pr` subagent with: technical task issue number
 - It creates the draft PR, writes the changelog row, commits, and pushes
 - Capture the PR number from its output
+- Mark the PR ready for review:
+  ```bash
+  gh pr ready <PR_NUMBER>
+  ```
+- Assign the milestone from the issue:
+  ```bash
+  milestone=$(gh issue view <ISSUE_NUMBER> --json milestone --jq '.milestone.title')
+  gh pr edit <PR_NUMBER> --milestone "$milestone"
+  ```
 - Write state: `step: "pr-created"`, `pr_number: <number>`
 
 ### 7. Simplify
