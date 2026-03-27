@@ -9,13 +9,13 @@ describe('colorForActivityLabel', () => {
   it('returns the correct color for each known category', () => {
     expect(colorForActivityLabel({ categoryName: 'Move' })).toBe(colors.chipMint);
     expect(colorForActivityLabel({ categoryName: 'Connect' })).toBe(colors.chipRose);
-    expect(colorForActivityLabel({ categoryName: 'Create' })).toBe(colors.chipButter);
+    expect(colorForActivityLabel({ categoryName: 'Create' })).toBe(colors.chipPeach);
     expect(colorForActivityLabel({ categoryName: 'Reflect' })).toBe(colors.chipLavender);
     expect(colorForActivityLabel({ categoryName: 'Breathe' })).toBe(colors.chipAqua);
-    expect(colorForActivityLabel({ categoryName: 'Contribute' })).toBe(colors.chipSage);
-    expect(colorForActivityLabel({ categoryName: 'Restore' })).toBe(colors.chipPeriwinkle);
-    expect(colorForActivityLabel({ categoryName: 'Nourish' })).toBe(colors.chipPeach);
-    expect(colorForActivityLabel({ categoryName: 'Structure' })).toBe(colors.chipSage);
+    expect(colorForActivityLabel({ categoryName: 'Contribute' })).toBe(colors.chipPeriwinkle);
+    expect(colorForActivityLabel({ categoryName: 'Restore' })).toBe(colors.chipButter);
+    expect(colorForActivityLabel({ categoryName: 'Nourish' })).toBe(colors.chipSage);
+    expect(colorForActivityLabel({ categoryName: 'Structure' })).toBe(colors.chipCoral);
   });
 
   it('returns the fallback for null categoryName', () => {

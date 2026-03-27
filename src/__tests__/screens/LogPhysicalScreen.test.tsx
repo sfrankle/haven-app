@@ -131,25 +131,17 @@ describe('LogPhysicalScreen', () => {
   });
 
   it('setting energy slider adds energy chip to tray', async () => {
-    const { getByTestId, getAllByRole } = render(<LogPhysicalScreen />);
-    // Press position 3 on energy slider (value = 3)
-    const sliderButtons = getAllByRole('button').filter((b) =>
-      b.props.accessibilityLabel?.startsWith('Energy level')
-    );
-    fireEvent.press(sliderButtons[2]); // index 2 = value 3
+    const { getByTestId, getByLabelText } = render(<LogPhysicalScreen />);
+    fireEvent(getByLabelText('Energy level'), 'onValueChange', 3);
     await waitFor(() => expect(getByTestId('physical-chip-energy')).toBeTruthy());
   });
 
   it('energy chip label shows "Energy: N/5"', async () => {
-    const { getByTestId, getAllByRole } = render(<LogPhysicalScreen />);
-    const sliderButtons = getAllByRole('button').filter((b) =>
-      b.props.accessibilityLabel?.startsWith('Energy level')
-    );
-    fireEvent.press(sliderButtons[4]); // value 5
+    const { getByTestId, getByLabelText } = render(<LogPhysicalScreen />);
+    fireEvent(getByLabelText('Energy level'), 'onValueChange', 5);
     await waitFor(() => {
       const chip = getByTestId('physical-chip-energy');
       expect(chip).toBeTruthy();
-      // The chip's accessibilityLabel contains the display label
       expect(chip.props.accessibilityLabel).toBe('Energy: 5/5');
     });
   });
@@ -216,11 +208,8 @@ describe('LogPhysicalScreen', () => {
   });
 
   it('submit button appears when energy is set', async () => {
-    const { getByTestId, getAllByRole } = render(<LogPhysicalScreen />);
-    const sliderButtons = getAllByRole('button').filter((b) =>
-      b.props.accessibilityLabel?.startsWith('Energy level')
-    );
-    fireEvent.press(sliderButtons[0]);
+    const { getByTestId, getByLabelText } = render(<LogPhysicalScreen />);
+    fireEvent(getByLabelText('Energy level'), 'onValueChange', 1);
     await waitFor(() => expect(getByTestId('physical-save-button')).toBeTruthy());
   });
 
@@ -233,13 +222,10 @@ describe('LogPhysicalScreen', () => {
   });
 
   it('energy-only submit calls saveEntry once with Energy label and numeric_value', async () => {
-    const { getByTestId, getAllByRole } = render(<LogPhysicalScreen />);
+    const { getByTestId, getByLabelText } = render(<LogPhysicalScreen />);
     act(() => { jest.advanceTimersByTime(200); });
     await waitFor(() => {});
-    const sliderButtons = getAllByRole('button').filter((b) =>
-      b.props.accessibilityLabel?.startsWith('Energy level')
-    );
-    fireEvent.press(sliderButtons[1]); // value 2
+    fireEvent(getByLabelText('Energy level'), 'onValueChange', 2);
     await act(async () => {
       fireEvent.press(getByTestId('physical-save-button'));
     });
@@ -275,14 +261,11 @@ describe('LogPhysicalScreen', () => {
   });
 
   it('multiple chips each produce a separate saveEntry call sharing the same timestamp', async () => {
-    const { getByTestId, getAllByRole } = render(<LogPhysicalScreen />);
+    const { getByTestId, getByLabelText } = render(<LogPhysicalScreen />);
     act(() => { jest.advanceTimersByTime(200); });
     await waitFor(() => getByTestId(`physical-suggestion-${CRAMPING_LABEL.id}`));
     // Select energy + 1 state chip
-    const sliderButtons = getAllByRole('button').filter((b) =>
-      b.props.accessibilityLabel?.startsWith('Energy level')
-    );
-    fireEvent.press(sliderButtons[0]); // energy value 1
+    fireEvent(getByLabelText('Energy level'), 'onValueChange', 1);
     fireEvent.press(getByTestId(`physical-suggestion-${CRAMPING_LABEL.id}`));
     await act(async () => {
       fireEvent.press(getByTestId('physical-save-button'));
@@ -294,11 +277,8 @@ describe('LogPhysicalScreen', () => {
   });
 
   it('shows save confirmation after submit', async () => {
-    const { getByTestId, getAllByRole } = render(<LogPhysicalScreen />);
-    const sliderButtons = getAllByRole('button').filter((b) =>
-      b.props.accessibilityLabel?.startsWith('Energy level')
-    );
-    fireEvent.press(sliderButtons[0]);
+    const { getByTestId, getByLabelText } = render(<LogPhysicalScreen />);
+    fireEvent(getByLabelText('Energy level'), 'onValueChange', 1);
     await act(async () => {
       fireEvent.press(getByTestId('physical-save-button'));
     });

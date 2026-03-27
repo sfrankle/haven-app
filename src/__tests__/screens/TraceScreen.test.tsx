@@ -8,6 +8,10 @@ jest.mock('@/hooks/useTraceEntries');
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
 }));
+jest.mock('expo-router', () => ({
+  useFocusEffect: jest.fn(),
+  useRouter: () => ({ back: jest.fn() }),
+}));
 
 const mockUseTraceEntries = useTraceEntries as jest.MockedFunction<typeof useTraceEntries>;
 
