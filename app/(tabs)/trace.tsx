@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen, Chip } from '@/components';
 import { useFocusEffect } from 'expo-router';
 import { useTraceEntries } from '@/hooks/useTraceEntries';
-import { summariseEntry } from '@/lib/utils/traceUtils';
+import { summariseEntry, WHOLE_BODY_NAMES } from '@/lib/utils/traceUtils';
 import { formatEntryTime } from '@/lib/utils/timestamp';
 import { colors, typeScale, lineHeight, spacing } from '@/constants/theme';
 import type { EntryWithLabels } from '@/lib/db/query-types';
@@ -12,13 +12,10 @@ import type { TraceSection } from '@/lib/utils/traceUtils';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const WHOLE_BODY_NAMES = ['whole body', 'body'];
-
 function formatTraceChipLabel(label: EntryWithLabels['labels'][number], entry: EntryWithLabels): string {
   if (entry.entryTypeName !== 'Physical') return label.name;
-  const parentName = label.parentName ?? null;
-  const showPrefix = parentName !== null && !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
-  const base = showPrefix ? `${parentName}: ${label.name}` : label.name;
+  const showPrefix = label.parentName != null && !WHOLE_BODY_NAMES.includes(label.parentName.toLowerCase());
+  const base = showPrefix ? `${label.parentName}: ${label.name}` : label.name;
   return entry.numericValue != null ? `${base} (${entry.numericValue}/5)` : base;
 }
 

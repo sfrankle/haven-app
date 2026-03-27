@@ -2,6 +2,8 @@ import { formatEntryDate } from './timestamp';
 import { energyLabel } from '@/constants/energyLevels';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 
+export const WHOLE_BODY_NAMES = ['whole body', 'body'];
+
 export interface TraceSection {
   /** Formatted date header, e.g. "Today", "Yesterday", "March 2". */
   title: string;
@@ -53,9 +55,8 @@ export function summariseEntry(entry: EntryWithLabels): string {
       }
       const label = labels[0];
       if (!label) return 'Felt';
-      const WHOLE_BODY_NAMES = ['whole body', 'body'];
-      const parentName = label.parentName ?? null;
-      const showPrefix = parentName !== null && !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
+      const parentName = label.parentName;
+      const showPrefix = parentName != null && !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
       const stateName = showPrefix ? `${parentName}: ${label.name}` : label.name;
       return numericValue != null ? `Felt ${stateName} (${numericValue}/5)` : `Felt ${stateName}`;
     }

@@ -99,7 +99,7 @@ export default function LogEmotionScreen2() {
   return (
     <Screen showBack>
       <View style={styles.container} testID="emotion-screen-2">
-        <Text style={[logScreenStyles.prompt, styles.promptPadded]}>
+        <Text style={[logScreenStyles.prompt, logScreenStyles.promptPadded]}>
           {emotionEntryType?.prompt ?? emotionEntryType?.name}
         </Text>
         <SplitPane
@@ -166,9 +166,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: spacing.sectionGap,
-  },
-  promptPadded: {
-    paddingHorizontal: spacing.pagePadding,
   },
   chipTray: {
     paddingHorizontal: spacing.pagePadding,
