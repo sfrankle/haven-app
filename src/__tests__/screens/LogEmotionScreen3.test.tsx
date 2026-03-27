@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act, within } from '@testing-library/react-native';
 import type { EntryType, Label } from '@/lib/db/query-types';
 
 const mockPush = jest.fn();
@@ -124,13 +124,14 @@ describe('LogEmotionScreen3', () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it('tapping a Tier-2 item in left column swaps right column without changing chip', async () => {
+  it('tapping a Tier-2 item in left column swaps right column and updates chip to that Tier-2 label', async () => {
     const { getByTestId, queryByTestId } = render(<LogEmotionScreen3 />);
     await waitFor(() => getByTestId('emotion-tier2-left-21'));
     fireEvent.press(getByTestId('emotion-tier2-left-21'));
     await waitFor(() => expect(queryByTestId('emotion-tier3-right-110')).toBeTruthy());
-    // Original Connected chip should still be showing
-    expect(getByTestId('emotion-chip')).toBeTruthy();
+    // Chip should now show the Tier-2 label that was pressed
+    const chip = getByTestId('emotion-chip');
+    expect(within(chip).getByText('Grateful')).toBeTruthy();
   });
 
   it('chip is visible', async () => {
