@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#108](https://github.com/sfrankle/haven-app/pull/108) | 1 - Core Logging bug fixes. | 2026-03-27 |
 | [#106](https://github.com/sfrankle/haven-app/pull/106) | GitHub Actions workflow to build a sideloadable Android APK and attach it to a GitHub Release on `v*` tag push | 2026-03-27 |
 | [#104](https://github.com/sfrankle/haven-app/pull/104) | Unit tests for `colorForActivityLabel` — covers category color and fallback paths | 2026-03-26 |
 | [#103](https://github.com/sfrankle/haven-app/pull/103) | Trace screen — chronological entry history with date grouping, per-type summaries, and inline expand/collapse | 2026-03-26 |

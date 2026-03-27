@@ -93,14 +93,14 @@ export default function LogFoodScreen() {
   const showAddCustom = search.trim().length > 0 && suggestions.length === 0;
 
   return (
-    <Screen>
+    <Screen showBack>
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={logScreenStyles.screenContent}>
           <Text style={logScreenStyles.prompt}>
-            {foodEntryType?.prompt ?? 'What did you eat?'}
+            {foodEntryType?.prompt ?? foodEntryType?.name}
           </Text>
 
           <Text style={styles.mealContext}>{mealContext}</Text>

@@ -151,6 +151,7 @@ export default function LogPhysicalScreen() {
     };
     setChips((prev) => [...prev, chip]);
     setSearch('');
+    openSeverityRow(label.id);
   }
 
   function handleRemoveChip(chipId: 'energy' | number) {
@@ -176,9 +177,11 @@ export default function LogPhysicalScreen() {
     if (activeSeverityChipId === null) return;
     const id = activeSeverityChipId;
     setChips((prev) =>
-      prev.map((c) =>
-        c.kind === 'state' && c.id === id ? { ...c, severity } : c
-      )
+      prev.map((c) => {
+        if (c.kind !== 'state' || c.id !== id) return c;
+        // tapping the already-selected value clears severity
+        return { ...c, severity: c.severity === severity ? null : severity };
+      })
     );
     if (severityTimerRef.current) clearTimeout(severityTimerRef.current);
     setActiveSeverityChipId(null);
@@ -246,18 +249,19 @@ export default function LogPhysicalScreen() {
   }, []);
 
   return (
-    <Screen>
+    <Screen showBack>
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={logScreenStyles.screenContent}>
           <Text style={logScreenStyles.prompt}>
-            {physicalEntryType?.prompt ?? 'How does your body feel?'}
+            {physicalEntryType?.prompt ?? physicalEntryType?.name}
           </Text>
 
-          {/* Energy slider */}
+          {/* Energy section */}
           <View style={styles.energySection}>
+            <Text style={styles.sectionHeader}>Reserves</Text>
             <EnergySlider
               value={hasEnergyChip
                 ? (chips.find((c) => c.kind === 'energy') as EnergyChip | undefined)?.value ?? null
@@ -267,11 +271,12 @@ export default function LogPhysicalScreen() {
             />
           </View>
 
-          {/* State search */}
+          {/* Sensations section */}
+          <Text style={styles.sectionHeader}>Sensations</Text>
           <SearchBar
             value={search}
             onChangeText={setSearch}
-            placeholder="Search body states"
+            placeholder="Search sensations"
             testID="physical-search"
           />
 
@@ -375,8 +380,15 @@ const styles = StyleSheet.create({
   keyboardAvoid: {
     flex: 1,
   },
-  energySection: {
+  sectionHeader: {
+    fontFamily: typeScale.titleMedium.family,
+    fontSize: typeScale.titleMedium.size,
+    lineHeight: lineHeight(typeScale.titleMedium),
+    color: colors.ink,
     marginBottom: spacing.elementGap,
+  },
+  energySection: {
+    marginBottom: spacing.sectionGap,
   },
   suggestionsContainer: {
     flexDirection: 'row',

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, SplitPane, SplitPaneRow, Chip, Button, SaveConfirmation } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getLabelsByParent, saveEntry } from '@/lib/db/queries';
@@ -8,6 +8,7 @@ import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colorForEmotionLabel } from '@/constants/chipColors';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
+import { logScreenStyles } from '@/constants/sharedStyles';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
@@ -57,22 +58,11 @@ export default function LogEmotionScreen3() {
 
   function handleTier2Press(label: Label) {
     setActiveTier2Id(label.id);
-    // Do NOT change chip when switching Tier-2 left column
+    setChipLabel({ id: label.id, name: label.name });
   }
 
   function handleTier3Press(label: Label) {
-    // setChipLabel avoids a flicker between the router.replace call and the
-    // resulting remount re-initialising chip state from the new params.
     setChipLabel({ id: label.id, name: label.name });
-    router.replace({
-      pathname: '/log/emotion/tier3',
-      params: {
-        tier1Id: params.tier1Id,
-        tier2Id: activeTier2Id,
-        chipLabelId: label.id,
-        chipLabelName: label.name,
-      },
-    });
   }
 
   function handleChipRemove() {
@@ -99,9 +89,12 @@ export default function LogEmotionScreen3() {
   }
 
   return (
-    <Screen>
+    <Screen showBack>
       <View style={styles.container} testID="emotion-screen-3">
-        <SplitPane
+        <Text style={[logScreenStyles.prompt, logScreenStyles.promptPadded]}>
+          {emotionEntryType?.prompt ?? emotionEntryType?.name}
+        </Text>
+        <SplitPane leftFlex={0.42}
           left={
             <>
               {tier2Labels.map((label) => (
@@ -126,7 +119,7 @@ export default function LogEmotionScreen3() {
                   <SplitPaneRow
                     key={label.id}
                     label={label.name}
-                    isActive={false}
+                    isActive={chipLabel?.id === label.id}
                     onPress={() => handleTier3Press(label)}
                     testID={`emotion-tier3-right-${label.id}`}
                   />

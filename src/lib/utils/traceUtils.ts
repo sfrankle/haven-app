@@ -1,5 +1,13 @@
 import { formatEntryDate } from './timestamp';
+import { energyLabel } from '@/constants/energyLevels';
 import type { EntryWithLabels } from '@/lib/db/query-types';
+
+export const WHOLE_BODY_NAMES = ['whole body', 'body'];
+
+/** Returns true when a physical chip should be prefixed with the parent area name (e.g. "Gut: Cramping"). */
+export function shouldShowAreaPrefix(parentName: string | null | undefined): boolean {
+  return parentName != null && !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
+}
 
 export interface TraceSection {
   /** Formatted date header, e.g. "Today", "Yesterday", "March 2". */
@@ -29,8 +37,12 @@ export function summariseEntry(entry: EntryWithLabels): string {
     case 'Sleep':
       return `Slept ${numericValue} hours`;
 
-    case 'Activity':
-      return labels[0]?.name ?? 'Journey';
+    case 'Activity': {
+      if (labels.length === 0) return 'Journey';
+      return labels
+        .map((l) => (l.categoryName ? `${l.name} (${l.categoryName})` : l.name))
+        .join(', ');
+    }
 
     case 'Food':
       if (labels.length === 0) return 'Nourish';
@@ -40,10 +52,16 @@ export function summariseEntry(entry: EntryWithLabels): string {
       return feltSummary(labels);
 
     case 'Physical': {
-      const isEnergy = labels.some((l) => l.parentId === null);
-      if (isEnergy) return `Felt Energy (${numericValue}/5)`;
-      const stateName = labels[0]?.name;
-      if (!stateName) return 'Felt';
+      const isEnergy = labels.some((l) => l.name.toLowerCase() === 'energy');
+      if (isEnergy) {
+        const level = numericValue != null ? energyLabel(numericValue) : null;
+        const levelStr = level ?? String(numericValue);
+        return `Felt ${levelStr} (Energy ${numericValue}/5)`;
+      }
+      const label = labels[0];
+      if (!label) return 'Felt';
+      const parentName = label.parentName;
+      const stateName = shouldShowAreaPrefix(parentName) ? `${parentName}: ${label.name}` : label.name;
       return numericValue != null ? `Felt ${stateName} (${numericValue}/5)` : `Felt ${stateName}`;
     }
 
@@ -70,5 +88,9 @@ export function groupEntriesByDate(entries: EntryWithLabels[], today?: string): 
     sectionMap.get(key)!.data.push(entry);
   }
 
-  return Array.from(sectionMap.values());
+  const sections = Array.from(sectionMap.values());
+  for (const section of sections) {
+    section.data = [...section.data].reverse();
+  }
+  return sections;
 }

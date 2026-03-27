@@ -3,14 +3,13 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { EnergySlider } from '../EnergySlider';
 
 describe('EnergySlider', () => {
-  const LEVEL_LABELS = ['Exhausted', 'Bit Tired', 'Average', 'Well Rested', 'Pumped'];
+  const LEVEL_LABELS = ['Exhausted', 'Weary', 'Steady', 'Rested', 'Energised'];
 
-  it('renders 5 tappable positions', () => {
-    const { getAllByRole } = render(
+  it('renders the slider', () => {
+    const { getByLabelText } = render(
       <EnergySlider value={null} onChange={jest.fn()} />
     );
-    const buttons = getAllByRole('button');
-    expect(buttons.length).toBe(5);
+    expect(getByLabelText('Energy level')).toBeTruthy();
   });
 
   it('renders all 5 level labels', () => {
@@ -22,30 +21,24 @@ describe('EnergySlider', () => {
     }
   });
 
-  it('tapping position 1 calls onChange with value 1', () => {
+  it('changing value calls onChange', () => {
     const onChange = jest.fn();
-    const { getAllByRole } = render(
+    const { getByLabelText } = render(
       <EnergySlider value={null} onChange={onChange} />
     );
-    fireEvent.press(getAllByRole('button')[0]);
+    fireEvent(getByLabelText('Energy level'), 'onValueChange', 1);
     expect(onChange).toHaveBeenCalledWith(1);
   });
 
-  it('tapping position 5 calls onChange with value 5', () => {
+  it('onChange is called with correct values', () => {
     const onChange = jest.fn();
-    const { getAllByRole } = render(
+    const { getByLabelText } = render(
       <EnergySlider value={null} onChange={onChange} />
     );
-    fireEvent.press(getAllByRole('button')[4]);
+    const slider = getByLabelText('Energy level');
+    fireEvent(slider, 'onValueChange', 5);
     expect(onChange).toHaveBeenCalledWith(5);
-  });
-
-  it('tapping position 3 calls onChange with value 3', () => {
-    const onChange = jest.fn();
-    const { getAllByRole } = render(
-      <EnergySlider value={null} onChange={onChange} />
-    );
-    fireEvent.press(getAllByRole('button')[2]);
+    fireEvent(slider, 'onValueChange', 3);
     expect(onChange).toHaveBeenCalledWith(3);
   });
 
@@ -56,21 +49,20 @@ describe('EnergySlider', () => {
     expect(getByTestId('energy-slider')).toBeTruthy();
   });
 
-  it('each position has an accessible label', () => {
-    const { getAllByRole } = render(
-      <EnergySlider value={null} onChange={jest.fn()} />
-    );
-    const buttons = getAllByRole('button');
-    for (let i = 0; i < buttons.length; i++) {
-      expect(buttons[i].props.accessibilityLabel).toBeTruthy();
-    }
-  });
-
-  it('selected position is visually indicated (selected value prop received)', () => {
-    // We test by checking the component renders without error when value is set.
-    const { getAllByRole } = render(
+  it('selected label is visually indicated when value is set', () => {
+    const { getByText } = render(
       <EnergySlider value={3} onChange={jest.fn()} />
     );
-    expect(getAllByRole('button').length).toBe(5);
+    expect(getByText('Steady')).toBeTruthy();
+  });
+
+  it('announces current level name via accessibilityValue.text for screen readers', () => {
+    const { getByLabelText } = render(
+      <EnergySlider value={3} onChange={jest.fn()} />
+    );
+    const slider = getByLabelText('Energy level');
+    expect(slider.props.accessibilityValue).toEqual(
+      expect.objectContaining({ text: 'Steady' })
+    );
   });
 });

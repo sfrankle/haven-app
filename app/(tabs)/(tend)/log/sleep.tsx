@@ -43,9 +43,9 @@ export default function LogSleepScreen() {
   }
 
   return (
-    <Screen>
+    <Screen showBack>
       <View style={logScreenStyles.screenContent}>
-        <Text style={logScreenStyles.prompt}>{sleepEntryType?.prompt ?? 'How long did you rest?'}</Text>
+        <Text style={logScreenStyles.prompt}>{sleepEntryType?.prompt ?? sleepEntryType?.name}</Text>
 
         <NumericInput
           value={hours}

@@ -2,12 +2,21 @@ import React, { useState, useCallback } from 'react';
 import { SectionList, StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen, Chip } from '@/components';
+import { useFocusEffect } from 'expo-router';
 import { useTraceEntries } from '@/hooks/useTraceEntries';
-import { summariseEntry } from '@/lib/utils/traceUtils';
+import { summariseEntry, shouldShowAreaPrefix } from '@/lib/utils/traceUtils';
 import { formatEntryTime } from '@/lib/utils/timestamp';
 import { colors, typeScale, lineHeight, spacing } from '@/constants/theme';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatTraceChipLabel(label: EntryWithLabels['labels'][number], entry: EntryWithLabels): string {
+  if (entry.entryTypeName !== 'Physical') return label.name;
+  const base = shouldShowAreaPrefix(label.parentName) ? `${label.parentName}: ${label.name}` : label.name;
+  return entry.numericValue != null ? `${base} (${entry.numericValue}/5)` : base;
+}
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
@@ -53,7 +62,7 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
               {entry.labels.map((label) => (
                 <Chip
                   key={label.id}
-                  label={label.name}
+                  label={formatTraceChipLabel(label, entry)}
                   color={colors.surfaceVariant}
                   testID={`trace-chip-${label.id}`}
                 />
@@ -71,6 +80,12 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
 export default function TraceScreen() {
   const { sections, loading } = useTraceEntries();
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+
+  useFocusEffect(
+    useCallback(() => {
+      setExpandedIds(new Set());
+    }, [])
+  );
 
   const handleToggle = useCallback((id: number) => {
     setExpandedIds((prev) => {

@@ -34,4 +34,7 @@ export const logScreenStyles = StyleSheet.create({
   saveButton: {
     marginTop: spacing.elementGap,
   },
+  promptPadded: {
+    paddingHorizontal: spacing.pagePadding,
+  },
 });

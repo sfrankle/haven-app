@@ -58,7 +58,9 @@ interface EntryTraceRaw {
   label_id: number | null;
   label_name: string | null;
   label_parent_id: number | null;
+  label_parent_name: string | null;
   label_category_id: number | null;
+  label_category_name: string | null;
   label_sort_order: number | null;
 }
 
@@ -219,11 +221,14 @@ export async function getEntriesForTrace(db: Db): Promise<EntryWithLabels[]> {
       e.id, e.entry_type_id, e.source_type, e.timestamp, e.numeric_value, e.notes,
       et.name AS entry_type_name, et.title AS entry_type_title, et.icon AS entry_type_icon,
       l.id AS label_id, l.name AS label_name, l.parent_id AS label_parent_id,
-      l.category_id AS label_category_id, l.sort_order AS label_sort_order
+      lp.name AS label_parent_name,
+      l.category_id AS label_category_id, c.name AS label_category_name, l.sort_order AS label_sort_order
     FROM entry e
     JOIN entry_type et ON et.id = e.entry_type_id
     LEFT JOIN entry_label el ON el.entry_id = e.id
     LEFT JOIN label l ON l.id = el.label_id
+    LEFT JOIN label lp ON lp.id = l.parent_id
+    LEFT JOIN category c ON c.id = l.category_id
     ORDER BY e.timestamp DESC
   `);
 
@@ -259,7 +264,8 @@ export async function getEntriesForTrace(db: Db): Promise<EntryWithLabels[]> {
         name: row.label_name!,
         parentId: row.label_parent_id,
         categoryId: row.label_category_id,
-        categoryName: null, // not joined in trace query; callers don't need it
+        parentName: row.label_parent_name,
+        categoryName: row.label_category_name,
         sortOrder: row.label_sort_order!,
       });
     }
@@ -374,7 +380,7 @@ export async function getPhysicalStateLabels(
        LEFT JOIN category c ON c.id = l.category_id
        LEFT JOIN label p ON p.id = l.parent_id
        WHERE l.entry_type_id = ?
-         AND l.parent_id IS NOT NULL
+         AND (l.parent_id IS NOT NULL OR l.seed_version = 0)
          AND l.is_enabled = 1
          AND l.name LIKE ? || '%'
        ORDER BY l.sort_order ASC
@@ -395,7 +401,7 @@ export async function getPhysicalStateLabels(
      LEFT JOIN entry_label el ON el.label_id = l.id
      LEFT JOIN entry e ON e.id = el.entry_id
      WHERE l.entry_type_id = ?
-       AND l.parent_id IS NOT NULL
+       AND (l.parent_id IS NOT NULL OR l.seed_version = 0)
        AND l.is_enabled = 1
      GROUP BY l.id
      ORDER BY

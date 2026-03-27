@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { useTraceEntries } from '@/hooks/useTraceEntries';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
@@ -7,6 +7,10 @@ import type { TraceSection } from '@/lib/utils/traceUtils';
 jest.mock('@/hooks/useTraceEntries');
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
+}));
+jest.mock('expo-router', () => ({
+  useFocusEffect: jest.fn(),
+  useRouter: () => ({ back: jest.fn() }),
 }));
 
 const mockUseTraceEntries = useTraceEntries as jest.MockedFunction<typeof useTraceEntries>;
@@ -108,6 +112,33 @@ describe('TraceScreen', () => {
     // tap the row to expand
     fireEvent.press(getByText('Ate Oats'));
     expect(getByText('Oats')).toBeTruthy();
+  });
+
+  it('gaining focus collapses all expanded rows', () => {
+    let focusCb: (() => void) | undefined;
+    (require('expo-router').useFocusEffect as jest.Mock).mockImplementation((cb: () => void) => {
+      focusCb = cb;
+    });
+
+    const entry = makeEntry({
+      numericValue: null,
+      entryTypeName: 'Food',
+      labels: [
+        { id: 10, entryTypeId: 3, name: 'Oats', parentId: null, categoryId: null, categoryName: null, sortOrder: 0 },
+      ],
+    });
+    mockUseTraceEntries.mockReturnValue({
+      sections: [makeSection('Today', [entry])],
+      loading: false,
+      error: null,
+    });
+
+    const { getByText, queryByText } = render(<TraceScreen />);
+    fireEvent.press(getByText('Ate Oats'));
+    expect(getByText('Oats')).toBeTruthy();
+
+    act(() => { focusCb?.(); });
+    expect(queryByText('Oats')).toBeNull();
   });
 
   it('tapping an expanded row collapses it and hides chips', () => {

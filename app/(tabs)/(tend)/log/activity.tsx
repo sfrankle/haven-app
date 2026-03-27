@@ -92,14 +92,14 @@ export default function LogActivityScreen() {
   const showAddCustom = search.trim().length > 0 && suggestions.length === 0;
 
   return (
-    <Screen>
+    <Screen showBack>
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={logScreenStyles.screenContent}>
           <Text style={logScreenStyles.prompt}>
-            {activityEntryType?.prompt ?? 'What did you do today?'}
+            {activityEntryType?.prompt ?? activityEntryType?.name}
           </Text>
 
           <SearchBar
@@ -116,7 +116,7 @@ export default function LogActivityScreen() {
               {suggestions.map((label) => (
                 <Pressable
                   key={label.id}
-                  style={styles.suggestionChip}
+                  style={[styles.suggestionChip, { backgroundColor: colorForActivityLabel(label) }]}
                   onPress={() => handleSelect(label)}
                   testID={`activity-suggestion-${label.id}`}
                 >

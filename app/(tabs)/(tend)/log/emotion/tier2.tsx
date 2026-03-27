@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Screen, SplitPane, SplitPaneRow, Chip, Button, SaveConfirmation } from '@/components';
 import { useEntryTypes } from '@/hooks';
@@ -8,6 +8,7 @@ import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colorForEmotionLabel } from '@/constants/chipColors';
 import { spacing } from '@/constants/theme';
+import { logScreenStyles } from '@/constants/sharedStyles';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
@@ -96,8 +97,11 @@ export default function LogEmotionScreen2() {
   }
 
   return (
-    <Screen>
+    <Screen showBack>
       <View style={styles.container} testID="emotion-screen-2">
+        <Text style={[logScreenStyles.prompt, logScreenStyles.promptPadded]}>
+          {emotionEntryType?.prompt ?? emotionEntryType?.name}
+        </Text>
         <SplitPane
           left={
             <>

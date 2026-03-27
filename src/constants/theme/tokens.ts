@@ -28,6 +28,7 @@ export const colors = {
   chipAqua:       '#D7F0F2', // Tidelight — water/clarity
   chipPeriwinkle: '#DDE7F2', // Periwinkle Haze — quiet intelligence
   chipLavender:   '#E8DFF5', // Lavender Cloud — reflective tone
+  chipCoral:      '#F2C6B6', // Soft Terracotta — grounded warmth
 
   // Semantic colors (pair with icon + label; never decorative)
   success:        '#2F6F62',
@@ -185,4 +186,6 @@ export const spacing = {
   sectionGap:       24, // Major section gap
   elementGap:       12, // Minor element gap
   navBottomPadding: 16, // Bottom content padding above nav (minimum)
+  tight:             8, // Compact vertical spacing (e.g. back button top)
+  micro:             4, // Minimal spacing (e.g. back button bottom)
 } as const;
