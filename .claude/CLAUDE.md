@@ -32,6 +32,11 @@ git commit -m "type: message"
 
 Never use heredoc style (`$(cat <<'EOF'`). The message must fit on one line — drop bullet-point details; they belong in the PR description, not the commit.
 
+## Committing — one commit per logical change
+
+Commit after each fix or self-contained change. Do not leave work uncommitted between responses. One commit per bug fix, feature, or refactor — not one giant commit at the end.
+
+
 ## Plan and spec locations
 
 - `docs/plans/` — ephemeral per-ticket implementation plans. Gitignored. Deleted by `wrap-up-pr` after merge. Never commit files from here.
