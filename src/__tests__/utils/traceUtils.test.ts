@@ -82,13 +82,13 @@ describe('summariseEntry', () => {
     expect(summariseEntry(entry)).toBe('Felt');
   });
 
-  it('Physical energy: parent label (parentId null) → shows energy reading', () => {
+  it('Physical energy: parent label (parentId null) → shows level label and energy reading', () => {
     const entry = makeEntry({
       entryTypeName: 'Physical',
       numericValue: 3,
       labels: [makeLabel(1, 'Energy', null)],
     });
-    expect(summariseEntry(entry)).toBe('Felt Energy (3/5)');
+    expect(summariseEntry(entry)).toBe('Felt Steady (Energy 3/5)');
   });
 
   it('Physical state without severity: child label → shows label name only', () => {

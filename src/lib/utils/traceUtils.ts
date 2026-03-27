@@ -1,4 +1,5 @@
 import { formatEntryDate } from './timestamp';
+import { energyLabel } from '@/constants/energyLevels';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 
 export interface TraceSection {
@@ -41,7 +42,11 @@ export function summariseEntry(entry: EntryWithLabels): string {
 
     case 'Physical': {
       const isEnergy = labels.some((l) => l.name.toLowerCase() === 'energy');
-      if (isEnergy) return `Felt Energy (${numericValue}/5)`;
+      if (isEnergy) {
+        const level = numericValue != null ? energyLabel(numericValue) : null;
+        const levelStr = level ?? String(numericValue);
+        return `Felt ${levelStr} (Energy ${numericValue}/5)`;
+      }
       const label = labels[0];
       if (!label) return 'Felt';
       const WHOLE_BODY_NAMES = ['whole body', 'body'];
