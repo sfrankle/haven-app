@@ -42,8 +42,12 @@ export function summariseEntry(entry: EntryWithLabels): string {
     case 'Physical': {
       const isEnergy = labels.some((l) => l.parentId === null);
       if (isEnergy) return `Felt Energy (${numericValue}/5)`;
-      const stateName = labels[0]?.name;
-      if (!stateName) return 'Felt';
+      const label = labels[0];
+      if (!label) return 'Felt';
+      const WHOLE_BODY_NAMES = ['whole body', 'body'];
+      const parentName = label.parentName ?? null;
+      const showPrefix = parentName !== null && !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
+      const stateName = showPrefix ? `${parentName}: ${label.name}` : label.name;
       return numericValue != null ? `Felt ${stateName} (${numericValue}/5)` : `Felt ${stateName}`;
     }
 
