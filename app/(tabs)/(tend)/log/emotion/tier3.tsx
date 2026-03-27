@@ -101,6 +101,9 @@ export default function LogEmotionScreen3() {
   return (
     <Screen showBack>
       <View style={styles.container} testID="emotion-screen-3">
+        <Text style={styles.prompt}>
+          {emotionEntryType?.prompt ?? emotionEntryType?.name}
+        </Text>
         <SplitPane
           left={
             <>
@@ -171,6 +174,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: spacing.sectionGap,
+  },
+  prompt: {
+    fontFamily: typeScale.titleLarge.family,
+    fontWeight: typeScale.titleLarge.weight,
+    fontSize: typeScale.titleLarge.size,
+    lineHeight: lineHeight(typeScale.titleLarge),
+    color: colors.ink,
+    paddingHorizontal: spacing.pagePadding,
+    marginBottom: spacing.sectionGap,
   },
   chipTray: {
     paddingHorizontal: spacing.pagePadding,
