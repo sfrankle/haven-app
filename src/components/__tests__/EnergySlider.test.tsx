@@ -55,4 +55,14 @@ describe('EnergySlider', () => {
     );
     expect(getByText('Steady')).toBeTruthy();
   });
+
+  it('announces current level name via accessibilityValue.text for screen readers', () => {
+    const { getByLabelText } = render(
+      <EnergySlider value={3} onChange={jest.fn()} />
+    );
+    const slider = getByLabelText('Energy level');
+    expect(slider.props.accessibilityValue).toEqual(
+      expect.objectContaining({ text: 'Steady' })
+    );
+  });
 });

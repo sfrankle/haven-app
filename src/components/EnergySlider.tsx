@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { colors, lineHeight, typeScale, spacing } from '@/constants/theme';
 
-import { ENERGY_LEVELS } from '@/constants/energyLevels';
+import { ENERGY_LEVELS, energyLabel } from '@/constants/energyLevels';
 
 
 interface EnergySliderProps {
@@ -26,7 +26,7 @@ export function EnergySlider({ value, onChange, testID }: EnergySliderProps) {
         maximumTrackTintColor={colors.chrome}
         thumbTintColor={colors.interactive}
         accessibilityLabel="Energy level"
-        accessibilityValue={{ min: 1, max: 5, now: value ?? undefined }}
+        accessibilityValue={{ min: 1, max: 5, now: value ?? undefined, text: value != null ? (energyLabel(value) ?? undefined) : undefined }}
       />
       <View style={styles.labels}>
         {ENERGY_LEVELS.map((level) => (
