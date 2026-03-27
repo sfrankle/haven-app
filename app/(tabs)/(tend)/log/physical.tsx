@@ -246,7 +246,7 @@ export default function LogPhysicalScreen() {
   }, []);
 
   return (
-    <Screen>
+    <Screen showBack>
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

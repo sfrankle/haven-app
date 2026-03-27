@@ -92,7 +92,7 @@ export default function LogActivityScreen() {
   const showAddCustom = search.trim().length > 0 && suggestions.length === 0;
 
   return (
-    <Screen>
+    <Screen showBack>
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

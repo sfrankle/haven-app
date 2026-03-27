@@ -59,7 +59,7 @@ export default function LogHydrationScreen() {
   }
 
   return (
-    <Screen>
+    <Screen showBack>
       <View style={logScreenStyles.screenContent}>
         <Text style={logScreenStyles.prompt}>
           {hydrationEntryType?.prompt ?? 'How much water have you had?'}

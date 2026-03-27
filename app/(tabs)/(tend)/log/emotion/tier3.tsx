@@ -99,7 +99,7 @@ export default function LogEmotionScreen3() {
   }
 
   return (
-    <Screen>
+    <Screen showBack>
       <View style={styles.container} testID="emotion-screen-3">
         <SplitPane
           left={
