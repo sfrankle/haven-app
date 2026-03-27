@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Screen, SplitPane, SplitPaneRow, Chip, Button, SaveConfirmation } from '@/components';
 import { useEntryTypes } from '@/hooks';
@@ -7,7 +7,7 @@ import { getTier1EmotionLabels, getLabelsByParent, saveEntry } from '@/lib/db/qu
 import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colorForEmotionLabel } from '@/constants/chipColors';
-import { spacing } from '@/constants/theme';
+import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
@@ -98,6 +98,9 @@ export default function LogEmotionScreen2() {
   return (
     <Screen showBack>
       <View style={styles.container} testID="emotion-screen-2">
+        <Text style={styles.prompt}>
+          {emotionEntryType?.prompt ?? 'What\'s upon your heart?'}
+        </Text>
         <SplitPane
           left={
             <>
@@ -162,6 +165,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: spacing.sectionGap,
+  },
+  prompt: {
+    fontFamily: typeScale.titleLarge.family,
+    fontWeight: typeScale.titleLarge.weight,
+    fontSize: typeScale.titleLarge.size,
+    lineHeight: lineHeight(typeScale.titleLarge),
+    color: colors.ink,
+    paddingHorizontal: spacing.pagePadding,
+    marginBottom: spacing.sectionGap,
   },
   chipTray: {
     paddingHorizontal: spacing.pagePadding,
