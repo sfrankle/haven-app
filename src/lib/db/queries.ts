@@ -60,6 +60,7 @@ interface EntryTraceRaw {
   label_parent_id: number | null;
   label_parent_name: string | null;
   label_category_id: number | null;
+  label_category_name: string | null;
   label_sort_order: number | null;
 }
 
@@ -221,12 +222,13 @@ export async function getEntriesForTrace(db: Db): Promise<EntryWithLabels[]> {
       et.name AS entry_type_name, et.title AS entry_type_title, et.icon AS entry_type_icon,
       l.id AS label_id, l.name AS label_name, l.parent_id AS label_parent_id,
       lp.name AS label_parent_name,
-      l.category_id AS label_category_id, l.sort_order AS label_sort_order
+      l.category_id AS label_category_id, c.name AS label_category_name, l.sort_order AS label_sort_order
     FROM entry e
     JOIN entry_type et ON et.id = e.entry_type_id
     LEFT JOIN entry_label el ON el.entry_id = e.id
     LEFT JOIN label l ON l.id = el.label_id
     LEFT JOIN label lp ON lp.id = l.parent_id
+    LEFT JOIN category c ON c.id = l.category_id
     ORDER BY e.timestamp DESC
   `);
 
@@ -263,7 +265,7 @@ export async function getEntriesForTrace(db: Db): Promise<EntryWithLabels[]> {
         parentId: row.label_parent_id,
         categoryId: row.label_category_id,
         parentName: row.label_parent_name,
-        categoryName: null, // not joined in trace query; callers don't need it
+        categoryName: row.label_category_name,
         sortOrder: row.label_sort_order!,
       });
     }

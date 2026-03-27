@@ -30,8 +30,12 @@ export function summariseEntry(entry: EntryWithLabels): string {
     case 'Sleep':
       return `Slept ${numericValue} hours`;
 
-    case 'Activity':
-      return labels[0]?.name ?? 'Journey';
+    case 'Activity': {
+      if (labels.length === 0) return 'Journey';
+      return labels
+        .map((l) => (l.categoryName ? `${l.name} (${l.categoryName})` : l.name))
+        .join(', ');
+    }
 
     case 'Food':
       if (labels.length === 0) return 'Nourish';
