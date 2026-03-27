@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { SectionList, StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen, Chip } from '@/components';
+import { useFocusEffect } from 'expo-router';
 import { useTraceEntries } from '@/hooks/useTraceEntries';
 import { summariseEntry } from '@/lib/utils/traceUtils';
 import { formatEntryTime } from '@/lib/utils/timestamp';
@@ -83,6 +84,12 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
 export default function TraceScreen() {
   const { sections, loading } = useTraceEntries();
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+
+  useFocusEffect(
+    useCallback(() => {
+      setExpandedIds(new Set());
+    }, [])
+  );
 
   const handleToggle = useCallback((id: number) => {
     setExpandedIds((prev) => {
