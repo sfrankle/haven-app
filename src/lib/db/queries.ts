@@ -58,6 +58,7 @@ interface EntryTraceRaw {
   label_id: number | null;
   label_name: string | null;
   label_parent_id: number | null;
+  label_parent_name: string | null;
   label_category_id: number | null;
   label_sort_order: number | null;
 }

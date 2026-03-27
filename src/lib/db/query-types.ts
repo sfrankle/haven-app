@@ -20,6 +20,7 @@ export interface Label {
   entryTypeId: number;
   name: string;
   parentId: number | null;
+  parentName?: string | null;
   categoryId: number | null;
   categoryName: string | null;
   sortOrder: number;
