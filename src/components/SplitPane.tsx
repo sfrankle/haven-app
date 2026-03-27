@@ -1,6 +1,6 @@
+import { colors } from '@/constants/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { colors } from '@/constants/theme';
 
 type SplitPaneProps = {
   left: React.ReactNode;
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   leftColumn: {
-    width: '38%',
+    width: '10%',
   },
   divider: {
     width: 1,
@@ -45,5 +45,6 @@ const styles = StyleSheet.create({
   },
   columnContent: {
     paddingVertical: 8,
+    paddingHorizontal: 16,
   },
 });

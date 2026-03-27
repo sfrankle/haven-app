@@ -33,12 +33,15 @@ export function SplitPaneRow({ label, isActive, onPress, testID }: SplitPaneRowP
 const styles = StyleSheet.create({
   row: {
     minHeight: 48,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     justifyContent: 'center',
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   rowActive: {
-    backgroundColor: colors.surfaceVariant,
+    backgroundColor: 'rgba(59,78,119,0.12)',
   },
   label: {
     fontFamily: typeScale.bodyLarge.family,
