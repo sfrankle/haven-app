@@ -116,7 +116,7 @@ export default function LogActivityScreen() {
               {suggestions.map((label) => (
                 <Pressable
                   key={label.id}
-                  style={styles.suggestionChip}
+                  style={[styles.suggestionChip, { backgroundColor: colorForActivityLabel(label) }]}
                   onPress={() => handleSelect(label)}
                   testID={`activity-suggestion-${label.id}`}
                 >
