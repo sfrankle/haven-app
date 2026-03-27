@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, SplitPane, SplitPaneRow, Chip, Button, SaveConfirmation } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getLabelsByParent, saveEntry } from '@/lib/db/queries';
@@ -61,18 +61,7 @@ export default function LogEmotionScreen3() {
   }
 
   function handleTier3Press(label: Label) {
-    // setChipLabel avoids a flicker between the router.replace call and the
-    // resulting remount re-initialising chip state from the new params.
     setChipLabel({ id: label.id, name: label.name });
-    router.replace({
-      pathname: '/log/emotion/tier3',
-      params: {
-        tier1Id: params.tier1Id,
-        tier2Id: activeTier2Id,
-        chipLabelId: label.id,
-        chipLabelName: label.name,
-      },
-    });
   }
 
   function handleChipRemove() {
