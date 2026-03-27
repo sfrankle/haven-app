@@ -14,7 +14,7 @@ type SplitPaneProps = {
  * Two-column split-pane layout. Both columns scroll independently.
  * Used by the emotion flow for Tier navigation.
  */
-export function SplitPane({ left, right, leftFlex = 0.45, testID }: SplitPaneProps) {
+export function SplitPane({ left, right, leftFlex = 0.38, testID }: SplitPaneProps) {
   return (
     <View style={styles.root} testID={testID}>
       <ScrollView style={{ flex: leftFlex }} contentContainerStyle={styles.columnContent}>

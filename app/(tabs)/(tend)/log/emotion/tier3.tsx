@@ -93,7 +93,7 @@ export default function LogEmotionScreen3() {
         <Text style={styles.prompt}>
           {emotionEntryType?.prompt ?? emotionEntryType?.name}
         </Text>
-        <SplitPane
+        <SplitPane leftFlex={0.42}
           left={
             <>
               {tier2Labels.map((label) => (
