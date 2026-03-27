@@ -19,7 +19,7 @@ All work and all critique is done by subagents — the orchestrator only reads, 
 
 ### State File
 
-`.claude/local/ticket-in-progress.json` (gitignored) — written after every step.
+`docs/plans/ticket-in-progress.json` (gitignored) — written after every step.
 
 On start, `complete-ticket` checks for this file:
 - Missing: start fresh

@@ -1,6 +1,6 @@
 # Ticket State Schema
 
-The orchestrator writes `.claude/local/ticket-in-progress.json` after every step. This file is gitignored (`.claude/local/` is in `.gitignore`).
+The orchestrator writes `docs/plans/ticket-in-progress.json` after every step. This file is gitignored (`docs/plan/` is in `.gitignore`).
 
 ## Shape
 
