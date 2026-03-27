@@ -4,9 +4,14 @@ INSERT OR IGNORE INTO tag (name, tag_group, seed_version) VALUES
   ('hormone',              'emotion_system',   1);
 
 -- label: Emotion Layer 1
-WITH v(name) AS (VALUES ('Bright'), ('Warm'), ('Still'), ('Heavy'), ('Charged'))
-INSERT OR IGNORE INTO label (entry_type_id, name)
-SELECT et.id, v.name FROM entry_type et, v WHERE et.name = 'Emotion';
+WITH v(name, sort_order) AS (VALUES
+  ('Bright',  1),
+  ('Warm',    2),
+  ('Still',   3),
+  ('Heavy',   4),
+  ('Charged', 5))
+INSERT OR IGNORE INTO label (entry_type_id, name, sort_order)
+SELECT et.id, v.name, v.sort_order FROM entry_type et, v WHERE et.name = 'Emotion';
 
 -- label: Emotion Layer 2
 WITH v(parent, child) AS (VALUES
