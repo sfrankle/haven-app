@@ -32,6 +32,19 @@ git commit -m "type: message"
 
 Never use heredoc style (`$(cat <<'EOF'`). The message must fit on one line — drop bullet-point details; they belong in the PR description, not the commit.
 
+## Git commands — never chain with &&
+
+Always run `git add` and `git commit` as separate Bash calls, never chained with `&&`. Chained commands don't match the `Bash(git:*)` allow rule and will prompt for permission.
+
+```bash
+# wrong
+git add "file.tsx" && git commit -m "fix: something"
+
+# right (two separate calls)
+git add "file.tsx"
+git commit -m "fix: something"
+```
+
 ## Committing — one commit per logical change
 
 Commit after each fix or self-contained change. Do not leave work uncommitted between responses. One commit per bug fix, feature, or refactor — not one giant commit at the end.
