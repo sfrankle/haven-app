@@ -9,6 +9,18 @@ import { colors, typeScale, lineHeight, spacing } from '@/constants/theme';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const WHOLE_BODY_NAMES = ['whole body', 'body'];
+
+function formatTraceChipLabel(label: EntryWithLabels['labels'][number], entry: EntryWithLabels): string {
+  if (entry.entryTypeName !== 'Physical') return label.name;
+  const parentName = label.parentName ?? null;
+  const showPrefix = parentName !== null && !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
+  const base = showPrefix ? `${parentName}: ${label.name}` : label.name;
+  return entry.numericValue != null ? `${base} (${entry.numericValue}/5)` : base;
+}
+
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 interface EntryRowProps {
@@ -53,7 +65,7 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
               {entry.labels.map((label) => (
                 <Chip
                   key={label.id}
-                  label={label.name}
+                  label={formatTraceChipLabel(label, entry)}
                   color={colors.surfaceVariant}
                   testID={`trace-chip-${label.id}`}
                 />
