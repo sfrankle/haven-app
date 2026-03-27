@@ -129,7 +129,7 @@ export default function LogEmotionScreen3() {
                   <SplitPaneRow
                     key={label.id}
                     label={label.name}
-                    isActive={false}
+                    isActive={chipLabel?.id === label.id}
                     onPress={() => handleTier3Press(label)}
                     testID={`emotion-tier3-right-${label.id}`}
                   />
