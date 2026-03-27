@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { colors, lineHeight, typeScale, spacing } from '@/constants/theme';
 
 const ENERGY_LEVELS: { value: number; label: string }[] = [
@@ -19,32 +20,28 @@ interface EnergySliderProps {
 export function EnergySlider({ value, onChange, testID }: EnergySliderProps) {
   return (
     <View style={styles.container} testID={testID}>
-      <View style={styles.track}>
+      <Slider
+        style={styles.slider}
+        minimumValue={1}
+        maximumValue={5}
+        step={1}
+        value={value ?? 3}
+        onValueChange={onChange}
+        minimumTrackTintColor={colors.interactive}
+        maximumTrackTintColor={colors.chrome}
+        thumbTintColor={colors.interactive}
+        accessibilityLabel="Energy level"
+        accessibilityValue={{ min: 1, max: 5, now: value ?? undefined }}
+      />
+      <View style={styles.labels}>
         {ENERGY_LEVELS.map((level) => (
-          <Pressable
+          <Text
             key={level.value}
-            style={styles.position}
-            onPress={() => onChange(level.value)}
-            accessibilityRole="button"
-            accessibilityLabel={`Energy level ${level.value}: ${level.label}`}
-            accessibilityState={{ selected: value === level.value }}
+            style={[styles.label, value === level.value && styles.labelSelected]}
+            numberOfLines={2}
           >
-            <View
-              style={[
-                styles.dot,
-                value === level.value && styles.dotSelected,
-              ]}
-            />
-            <Text
-              style={[
-                styles.levelLabel,
-                value === level.value && styles.levelLabelSelected,
-              ]}
-              numberOfLines={2}
-            >
-              {level.label}
-            </Text>
-          </Pressable>
+            {level.label}
+          </Text>
         ))}
       </View>
     </View>
@@ -55,38 +52,23 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: spacing.elementGap,
   },
-  track: {
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  labels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
   },
-  position: {
+  label: {
     flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-    minHeight: 48,
-  },
-  dot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.chrome,
-    marginBottom: 6,
-  },
-  dotSelected: {
-    backgroundColor: colors.interactive,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-  },
-  levelLabel: {
     fontFamily: typeScale.labelSmall.family,
     fontSize: typeScale.labelSmall.size,
     lineHeight: lineHeight(typeScale.labelSmall),
     color: colors.chrome,
     textAlign: 'center',
   },
-  levelLabelSelected: {
+  labelSelected: {
     color: colors.interactive,
     fontFamily: typeScale.labelMedium.family,
   },
