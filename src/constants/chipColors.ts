@@ -10,6 +10,7 @@ export const CHIP_COLORS: string[] = [
   colors.chipAqua,
   colors.chipPeriwinkle,
   colors.chipLavender,
+  colors.chipCoral,
 ];
 
 /**
@@ -21,13 +22,13 @@ export const CHIP_COLORS: string[] = [
 export const CATEGORY_CHIP_COLORS: Record<string, string> = {
   Move:       colors.chipMint,
   Connect:    colors.chipRose,
-  Create:     colors.chipButter,
+  Create:     colors.chipPeach,
   Reflect:    colors.chipLavender,
   Breathe:    colors.chipAqua,
-  Contribute: colors.chipSage,
-  Restore:    colors.chipPeriwinkle,
-  Nourish:    colors.chipPeach,
-  Structure:  colors.chipSage, // shares with Contribute — only 8 tokens for 9 categories
+  Contribute: colors.chipPeriwinkle,
+  Restore:    colors.chipButter,
+  Nourish:    colors.chipSage,
+  Structure:  colors.chipCoral,
 };
 
 export const CATEGORY_CHIP_COLOR_FALLBACK = colors.chipPeriwinkle;

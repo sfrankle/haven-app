@@ -28,6 +28,7 @@ export const colors = {
   chipAqua:       '#D7F0F2', // Tidelight — water/clarity
   chipPeriwinkle: '#DDE7F2', // Periwinkle Haze — quiet intelligence
   chipLavender:   '#E8DFF5', // Lavender Cloud — reflective tone
+  chipCoral:      '#F2C6B6', // Soft Terracotta — grounded warmth
 
   // Semantic colors (pair with icon + label; never decorative)
   success:        '#2F6F62',
