@@ -99,7 +99,7 @@ export default function LogEmotionScreen2() {
     <Screen showBack>
       <View style={styles.container} testID="emotion-screen-2">
         <Text style={styles.prompt}>
-          {emotionEntryType?.prompt ?? 'What\'s upon your heart?'}
+          {emotionEntryType?.prompt ?? emotionEntryType?.name}
         </Text>
         <SplitPane
           left={

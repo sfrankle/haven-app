@@ -253,7 +253,7 @@ export default function LogPhysicalScreen() {
       >
         <View style={logScreenStyles.screenContent}>
           <Text style={logScreenStyles.prompt}>
-            {physicalEntryType?.prompt ?? 'How does your body feel?'}
+            {physicalEntryType?.prompt ?? physicalEntryType?.name}
           </Text>
 
           {/* Energy slider */}

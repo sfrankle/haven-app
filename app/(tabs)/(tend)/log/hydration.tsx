@@ -62,7 +62,7 @@ export default function LogHydrationScreen() {
     <Screen showBack>
       <View style={logScreenStyles.screenContent}>
         <Text style={logScreenStyles.prompt}>
-          {hydrationEntryType?.prompt ?? 'How much water have you had?'}
+          {hydrationEntryType?.prompt ?? hydrationEntryType?.name}
         </Text>
 
         <Text style={styles.dailyTotal}>{`Today: ${dailyTotal} oz`}</Text>

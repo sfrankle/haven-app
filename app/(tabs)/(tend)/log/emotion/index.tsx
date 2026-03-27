@@ -36,7 +36,7 @@ export default function LogEmotionScreen1() {
     <Screen showBack>
       <View style={styles.container} testID="emotion-screen-1">
         <Text style={styles.prompt}>
-          {emotionEntryType?.prompt ?? 'What are you feeling?'}
+          {emotionEntryType?.prompt ?? emotionEntryType?.name}
         </Text>
         <View style={styles.list}>
           {tier1Labels.map((label) => (

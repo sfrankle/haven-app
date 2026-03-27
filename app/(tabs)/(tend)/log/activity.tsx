@@ -99,7 +99,7 @@ export default function LogActivityScreen() {
       >
         <View style={logScreenStyles.screenContent}>
           <Text style={logScreenStyles.prompt}>
-            {activityEntryType?.prompt ?? 'What did you do today?'}
+            {activityEntryType?.prompt ?? activityEntryType?.name}
           </Text>
 
           <SearchBar

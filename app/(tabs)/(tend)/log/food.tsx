@@ -100,7 +100,7 @@ export default function LogFoodScreen() {
       >
         <View style={logScreenStyles.screenContent}>
           <Text style={logScreenStyles.prompt}>
-            {foodEntryType?.prompt ?? 'What did you eat?'}
+            {foodEntryType?.prompt ?? foodEntryType?.name}
           </Text>
 
           <Text style={styles.mealContext}>{mealContext}</Text>
