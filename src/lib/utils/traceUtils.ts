@@ -4,6 +4,11 @@ import type { EntryWithLabels } from '@/lib/db/query-types';
 
 export const WHOLE_BODY_NAMES = ['whole body', 'body'];
 
+/** Returns true when a physical chip should be prefixed with the parent area name (e.g. "Gut: Cramping"). */
+export function shouldShowAreaPrefix(parentName: string | null | undefined): boolean {
+  return parentName != null && !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
+}
+
 export interface TraceSection {
   /** Formatted date header, e.g. "Today", "Yesterday", "March 2". */
   title: string;
@@ -56,8 +61,7 @@ export function summariseEntry(entry: EntryWithLabels): string {
       const label = labels[0];
       if (!label) return 'Felt';
       const parentName = label.parentName;
-      const showPrefix = parentName != null && !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
-      const stateName = showPrefix ? `${parentName}: ${label.name}` : label.name;
+      const stateName = shouldShowAreaPrefix(parentName) ? `${parentName}: ${label.name}` : label.name;
       return numericValue != null ? `Felt ${stateName} (${numericValue}/5)` : `Felt ${stateName}`;
     }
 
