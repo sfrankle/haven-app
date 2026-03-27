@@ -151,6 +151,7 @@ export default function LogPhysicalScreen() {
     };
     setChips((prev) => [...prev, chip]);
     setSearch('');
+    openSeverityRow(label.id);
   }
 
   function handleRemoveChip(chipId: 'energy' | number) {
