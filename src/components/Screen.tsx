@@ -5,27 +5,30 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { colors, spacing } from '@/constants/theme';
 
+function BackButton() {
+  const router = useRouter();
+  return (
+    <Pressable
+      onPress={() => router.back()}
+      hitSlop={12}
+      style={styles.backButton}
+      accessibilityRole="button"
+      accessibilityLabel="Go back"
+    >
+      <MaterialCommunityIcons name="chevron-left" size={28} color={colors.chrome} />
+    </Pressable>
+  );
+}
+
 interface ScreenProps extends ViewProps {
   children?: React.ReactNode;
   showBack?: boolean;
 }
 
 export function Screen({ children, style, showBack, ...props }: ScreenProps) {
-  const router = useRouter();
-
   return (
     <SafeAreaView style={[styles.safeArea, style]} {...props}>
-      {showBack && (
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={12}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <MaterialCommunityIcons name="chevron-left" size={28} color={colors.chrome} />
-        </Pressable>
-      )}
+      {showBack && <BackButton />}
       {children}
     </SafeAreaView>
   );
@@ -39,7 +42,7 @@ const styles = StyleSheet.create({
   backButton: {
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.pagePadding,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: spacing.tight,
+    paddingBottom: spacing.micro,
   },
 });

@@ -186,4 +186,6 @@ export const spacing = {
   sectionGap:       24, // Major section gap
   elementGap:       12, // Minor element gap
   navBottomPadding: 16, // Bottom content padding above nav (minimum)
+  tight:             8, // Compact vertical spacing (e.g. back button top)
+  micro:             4, // Minimal spacing (e.g. back button bottom)
 } as const;
