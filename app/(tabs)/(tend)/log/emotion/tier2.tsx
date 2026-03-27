@@ -7,7 +7,8 @@ import { getTier1EmotionLabels, getLabelsByParent, saveEntry } from '@/lib/db/qu
 import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colorForEmotionLabel } from '@/constants/chipColors';
-import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { logScreenStyles } from '@/constants/sharedStyles';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
@@ -98,7 +99,7 @@ export default function LogEmotionScreen2() {
   return (
     <Screen showBack>
       <View style={styles.container} testID="emotion-screen-2">
-        <Text style={styles.prompt}>
+        <Text style={[logScreenStyles.prompt, styles.promptPadded]}>
           {emotionEntryType?.prompt ?? emotionEntryType?.name}
         </Text>
         <SplitPane
@@ -166,14 +167,8 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: spacing.sectionGap,
   },
-  prompt: {
-    fontFamily: typeScale.titleLarge.family,
-    fontWeight: typeScale.titleLarge.weight,
-    fontSize: typeScale.titleLarge.size,
-    lineHeight: lineHeight(typeScale.titleLarge),
-    color: colors.ink,
+  promptPadded: {
     paddingHorizontal: spacing.pagePadding,
-    marginBottom: spacing.sectionGap,
   },
   chipTray: {
     paddingHorizontal: spacing.pagePadding,

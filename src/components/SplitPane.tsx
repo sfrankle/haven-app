@@ -1,5 +1,5 @@
 import { colors } from '@/constants/theme';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 type SplitPaneProps = {
@@ -15,13 +15,16 @@ type SplitPaneProps = {
  * Used by the emotion flow for Tier navigation.
  */
 export function SplitPane({ left, right, leftFlex = 0.38, testID }: SplitPaneProps) {
+  const leftStyle = useMemo(() => ({ flex: leftFlex }), [leftFlex]);
+  const rightStyle = useMemo(() => ({ flex: 1 - leftFlex }), [leftFlex]);
+
   return (
     <View style={styles.root} testID={testID}>
-      <ScrollView style={{ flex: leftFlex }} contentContainerStyle={styles.columnContent}>
+      <ScrollView style={leftStyle} contentContainerStyle={styles.columnContent}>
         {left}
       </ScrollView>
       <View style={styles.divider} />
-      <ScrollView style={{ flex: 1 - leftFlex }} contentContainerStyle={styles.columnContent}>
+      <ScrollView style={rightStyle} contentContainerStyle={styles.columnContent}>
         {right}
       </ScrollView>
     </View>
