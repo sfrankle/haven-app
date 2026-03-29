@@ -4,7 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
-| [#109](https://github.com/sfrankle/haven-app/pull/109) | Save error feedback on all log screens; TraceScreen shows error instead of blank on load failure | 2026-03-29 |
+| [#109](https://github.com/sfrankle/haven-app/pull/109) | Milestone 2 polish: error feedback on all log and trace screens, shared SaveErrorMessage component, copy aligned with voice guide | 2026-03-29 |
 | [#108](https://github.com/sfrankle/haven-app/pull/108) | 1 - Core Logging bug fixes. | 2026-03-27 |
 | [#106](https://github.com/sfrankle/haven-app/pull/106) | GitHub Actions workflow to build a sideloadable Android APK and attach it to a GitHub Release on `v*` tag push | 2026-03-27 |
 | [#104](https://github.com/sfrankle/haven-app/pull/104) | Unit tests for `colorForActivityLabel` — covers category color and fallback paths | 2026-03-26 |
