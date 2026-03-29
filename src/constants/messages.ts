@@ -1,4 +1,4 @@
 export const messages = {
-  saveError: 'Something went wrong. Your entry was not saved.',
-  traceLoadError: 'Could not load your entries.',
+  saveError: "Couldn't save. Try again.",
+  traceLoadError: "Couldn't load your entries.",
 };

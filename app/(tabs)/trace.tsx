@@ -108,7 +108,7 @@ export default function TraceScreen() {
     return (
       <Screen>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText} testID="trace-load-error">
+          <Text style={styles.errorText} testID="trace-load-error">
             {messages.traceLoadError}
           </Text>
         </View>
@@ -216,5 +216,11 @@ const styles = StyleSheet.create({
     fontSize: typeScale.bodyMedium.size,
     lineHeight: lineHeight(typeScale.bodyMedium),
     color: colors.chrome,
+  },
+  errorText: {
+    fontFamily: typeScale.bodyMedium.family,
+    fontSize: typeScale.bodyMedium.size,
+    lineHeight: lineHeight(typeScale.bodyMedium),
+    color: colors.error,
   },
 });
