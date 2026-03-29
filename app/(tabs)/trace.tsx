@@ -78,7 +78,7 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function TraceScreen() {
-  const { sections, loading } = useTraceEntries();
+  const { sections, loading, error } = useTraceEntries();
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   useFocusEffect(
@@ -101,6 +101,18 @@ export default function TraceScreen() {
 
   if (loading) {
     return null;
+  }
+
+  if (error) {
+    return (
+      <Screen>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText} testID="trace-load-error">
+            Could not load your entries.
+          </Text>
+        </View>
+      </Screen>
+    );
   }
 
   const isEmpty = sections.length === 0;
