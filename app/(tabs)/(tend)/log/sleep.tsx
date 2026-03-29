@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, NumericInput, Button, SaveConfirmation } from '@/components';
+import { Screen, NumericInput, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { saveEntry } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import { messages } from '@/constants/messages';
 import type { Db } from '@/lib/db/queries';
 
 export default function LogSleepScreen() {
@@ -68,11 +67,7 @@ export default function LogSleepScreen() {
           testID="sleep-notes-input"
         />
 
-        {saveError && (
-          <Text style={logScreenStyles.saveErrorText} testID="sleep-save-error">
-            {messages.saveError}
-          </Text>
-        )}
+        <SaveErrorMessage visible={saveError} testID="sleep-save-error" />
 
         {hours.trim() !== '' && (
           <View style={logScreenStyles.saveButton}>

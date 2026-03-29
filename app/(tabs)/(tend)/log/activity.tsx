@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, SearchBar, Chip, Button, SaveConfirmation } from '@/components';
+import { Screen, SearchBar, Chip, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getLabels, saveEntry, createLabel } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -16,7 +16,6 @@ import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { colorForActivityLabel } from '@/constants/chipColors';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import { messages } from '@/constants/messages';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
@@ -154,11 +153,7 @@ export default function LogActivityScreen() {
             </View>
           )}
 
-          {saveError && (
-            <Text style={logScreenStyles.saveErrorText} testID="activity-save-error">
-              {messages.saveError}
-            </Text>
-          )}
+          <SaveErrorMessage visible={saveError} testID="activity-save-error" />
 
           {chips.length > 0 && (
             <View style={logScreenStyles.saveButton}>

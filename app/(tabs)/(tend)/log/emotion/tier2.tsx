@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Screen, SplitPane, SplitPaneRow, Chip, Button, SaveConfirmation } from '@/components';
+import { Screen, SplitPane, SplitPaneRow, Chip, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getTier1EmotionLabels, getLabelsByParent, saveEntry } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -9,7 +9,6 @@ import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colorForEmotionLabel } from '@/constants/chipColors';
 import { spacing } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import { messages } from '@/constants/messages';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
@@ -145,11 +144,7 @@ export default function LogEmotionScreen2() {
           </View>
         )}
 
-        {saveError && (
-          <Text style={logScreenStyles.saveErrorText} testID="emotion-save-error">
-            {messages.saveError}
-          </Text>
-        )}
+        <SaveErrorMessage visible={saveError} testID="emotion-save-error" />
 
         {chipLabel && (
           <View style={styles.saveButton}>
