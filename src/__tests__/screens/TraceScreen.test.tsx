@@ -45,6 +45,12 @@ describe('TraceScreen', () => {
     jest.clearAllMocks();
   });
 
+  it('shows an error message when useTraceEntries returns an error', () => {
+    mockUseTraceEntries.mockReturnValue({ sections: [], loading: false, error: new Error('db error') });
+    const { getByTestId } = render(<TraceScreen />);
+    expect(getByTestId('trace-load-error')).toBeTruthy();
+  });
+
   it('renders nothing while loading', () => {
     mockUseTraceEntries.mockReturnValue({ sections: [], loading: true, error: null });
     const { queryByText } = render(<TraceScreen />);

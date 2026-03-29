@@ -139,6 +139,16 @@ describe('LogSleepScreen', () => {
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
+  it('shows an error message when saveEntry throws', async () => {
+    mockSaveEntry.mockRejectedValue(new Error('db error'));
+    const { getByTestId, queryByTestId } = render(<LogSleepScreen />);
+    fireEvent.changeText(getByTestId('sleep-hours-input'), '7');
+    await act(async () => {
+      fireEvent.press(getByTestId('sleep-save-button'));
+    });
+    expect(queryByTestId('sleep-save-error')).toBeTruthy();
+  });
+
   it('does not call saveEntry when navigating back without saving', () => {
     render(<LogSleepScreen />);
     // No interaction — saveEntry must not be called without an explicit submit.

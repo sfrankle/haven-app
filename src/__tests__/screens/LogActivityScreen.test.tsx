@@ -260,6 +260,18 @@ describe('LogActivityScreen', () => {
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
+  it('shows an error message when saveEntry throws', async () => {
+    mockSaveEntry.mockRejectedValue(new Error('db error'));
+    const { getByTestId, queryByTestId } = render(<LogActivityScreen />);
+    act(() => { jest.advanceTimersByTime(200); });
+    await waitFor(() => getByTestId('activity-suggestion-1'));
+    fireEvent.press(getByTestId('activity-suggestion-1'));
+    await act(async () => {
+      fireEvent.press(getByTestId('activity-save-button'));
+    });
+    expect(queryByTestId('activity-save-error')).toBeTruthy();
+  });
+
   it('applies category colour to chip based on label categoryName', async () => {
     const { getByTestId } = render(<LogActivityScreen />);
     act(() => { jest.advanceTimersByTime(200); });
