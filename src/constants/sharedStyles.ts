@@ -38,7 +38,7 @@ export const logScreenStyles = StyleSheet.create({
     fontFamily: typeScale.bodyMedium.family,
     fontSize: typeScale.bodyMedium.size,
     lineHeight: lineHeight(typeScale.bodyMedium),
-    color: colors.chrome,
+    color: colors.error,
     marginTop: spacing.elementGap,
   },
   promptPadded: {

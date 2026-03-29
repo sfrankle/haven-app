@@ -71,6 +71,7 @@ describe('LogHydrationScreen', () => {
   it('shows an error message when saveEntry throws', async () => {
     mockSaveEntry.mockRejectedValue(new Error('db error'));
     const { getByTestId, queryByTestId } = render(<LogHydrationScreen />);
+    fireEvent.changeText(getByTestId('hydration-oz-input'), '16');
     await act(async () => {
       fireEvent.press(getByTestId('hydration-save-button'));
     });
