@@ -31,6 +31,7 @@ export default function LogEmotionScreen2() {
       : null
   );
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const emotionEntryType = entryTypes.find((t) => t.name === 'Emotion');
 
@@ -89,6 +90,7 @@ export default function LogEmotionScreen2() {
       setShowConfirmation(true);
     } catch (err) {
       console.error('[LogEmotionScreen2] failed to save entry:', err);
+      setSaveError(true);
     }
   }
 
@@ -142,11 +144,17 @@ export default function LogEmotionScreen2() {
           </View>
         )}
 
+        {saveError && (
+          <Text style={logScreenStyles.saveErrorText} testID="emotion-save-error">
+            Something went wrong. Your entry was not saved.
+          </Text>
+        )}
+
         {chipLabel && (
           <View style={styles.saveButton}>
             <Button
               label="Save"
-              onPress={() => { void handleSave(); }}
+              onPress={() => { setSaveError(false); void handleSave(); }}
               testID="emotion-save-button"
             />
           </View>

@@ -16,6 +16,7 @@ export default function LogSleepScreen() {
   const [hours, setHours] = useState('');
   const [notes, setNotes] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const sleepEntryType = entryTypes.find((t) => t.name === 'Sleep');
 
@@ -35,6 +36,7 @@ export default function LogSleepScreen() {
       setShowConfirmation(true);
     } catch (err) {
       console.error('[LogSleepScreen] failed to save entry:', err);
+      setSaveError(true);
     }
   }
 
@@ -65,11 +67,17 @@ export default function LogSleepScreen() {
           testID="sleep-notes-input"
         />
 
+        {saveError && (
+          <Text style={logScreenStyles.saveErrorText} testID="sleep-save-error">
+            Something went wrong. Your entry was not saved.
+          </Text>
+        )}
+
         {hours.trim() !== '' && (
           <View style={logScreenStyles.saveButton}>
             <Button
               label="Save"
-              onPress={handleSave}
+              onPress={() => { setSaveError(false); void handleSave(); }}
               testID="sleep-save-button"
             />
           </View>

@@ -28,6 +28,7 @@ export default function LogFoodScreen() {
   const [rawSuggestions, setRawSuggestions] = useState<Label[]>([]);
   const [chips, setChips] = useState<Label[]>([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const foodEntryType = entryTypes.find((t) => t.name === 'Food');
   const mealContext = useMemo(() => getMealContext(nowLocalIso()), []);
@@ -83,6 +84,7 @@ export default function LogFoodScreen() {
       setShowConfirmation(true);
     } catch (err) {
       console.error('[LogFoodScreen] failed to save entry:', err);
+      setSaveError(true);
     }
   }
 
@@ -154,11 +156,17 @@ export default function LogFoodScreen() {
             </View>
           )}
 
+          {saveError && (
+            <Text style={logScreenStyles.saveErrorText} testID="food-save-error">
+              Something went wrong. Your entry was not saved.
+            </Text>
+          )}
+
           {chips.length > 0 && (
             <View style={logScreenStyles.saveButton}>
               <Button
                 label="Save"
-                onPress={() => { void handleSave(); }}
+                onPress={() => { setSaveError(false); void handleSave(); }}
                 testID="food-save-button"
               />
             </View>

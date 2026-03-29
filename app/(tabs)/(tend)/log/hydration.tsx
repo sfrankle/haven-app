@@ -17,6 +17,7 @@ export default function LogHydrationScreen() {
   const [notes, setNotes] = useState('');
   const [dailyTotal, setDailyTotal] = useState<number>(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const hydrationEntryType = entryTypes.find((t) => t.name === 'Hydration');
 
@@ -51,6 +52,7 @@ export default function LogHydrationScreen() {
       setShowConfirmation(true);
     } catch (err) {
       console.error('[LogHydrationScreen] failed to save entry:', err);
+      setSaveError(true);
     }
   }
 
@@ -85,11 +87,17 @@ export default function LogHydrationScreen() {
           testID="hydration-notes-input"
         />
 
+        {saveError && (
+          <Text style={logScreenStyles.saveErrorText} testID="hydration-save-error">
+            Something went wrong. Your entry was not saved.
+          </Text>
+        )}
+
         {oz.trim() !== '' && (
           <View style={logScreenStyles.saveButton}>
             <Button
               label="Save"
-              onPress={handleSave}
+              onPress={() => { setSaveError(false); void handleSave(); }}
               testID="hydration-save-button"
             />
           </View>

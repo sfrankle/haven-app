@@ -28,6 +28,7 @@ export default function LogActivityScreen() {
   const [rawSuggestions, setRawSuggestions] = useState<Label[]>([]);
   const [chips, setChips] = useState<Label[]>([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const activityEntryType = entryTypes.find((t) => t.name === 'Activity');
 
@@ -82,6 +83,7 @@ export default function LogActivityScreen() {
       setShowConfirmation(true);
     } catch (err) {
       console.error('[LogActivityScreen] failed to save entry:', err);
+      setSaveError(true);
     }
   }
 
@@ -151,11 +153,17 @@ export default function LogActivityScreen() {
             </View>
           )}
 
+          {saveError && (
+            <Text style={logScreenStyles.saveErrorText} testID="activity-save-error">
+              Something went wrong. Your entry was not saved.
+            </Text>
+          )}
+
           {chips.length > 0 && (
             <View style={logScreenStyles.saveButton}>
               <Button
                 label="Save"
-                onPress={() => { void handleSave(); }}
+                onPress={() => { setSaveError(false); void handleSave(); }}
                 testID="activity-save-button"
               />
             </View>
