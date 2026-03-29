@@ -16,6 +16,7 @@ import { nowLocalIso, getMealContext } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { colorForFoodLabel } from '@/constants/chipColors';
 import { logScreenStyles } from '@/constants/sharedStyles';
+import { messages } from '@/constants/messages';
 import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
@@ -158,7 +159,7 @@ export default function LogFoodScreen() {
 
           {saveError && (
             <Text style={logScreenStyles.saveErrorText} testID="food-save-error">
-              Something went wrong. Your entry was not saved.
+              {messages.saveError}
             </Text>
           )}
 

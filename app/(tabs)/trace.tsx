@@ -9,6 +9,7 @@ import { formatEntryTime } from '@/lib/utils/timestamp';
 import { colors, typeScale, lineHeight, spacing } from '@/constants/theme';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
+import { messages } from '@/constants/messages';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -108,7 +109,7 @@ export default function TraceScreen() {
       <Screen>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText} testID="trace-load-error">
-            Could not load your entries.
+            {messages.traceLoadError}
           </Text>
         </View>
       </Screen>

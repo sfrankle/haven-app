@@ -8,6 +8,7 @@ import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
+import { messages } from '@/constants/messages';
 import type { Db } from '@/lib/db/queries';
 
 export default function LogSleepScreen() {
@@ -69,7 +70,7 @@ export default function LogSleepScreen() {
 
         {saveError && (
           <Text style={logScreenStyles.saveErrorText} testID="sleep-save-error">
-            Something went wrong. Your entry was not saved.
+            {messages.saveError}
           </Text>
         )}
 

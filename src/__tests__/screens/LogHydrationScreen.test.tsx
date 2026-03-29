@@ -5,7 +5,8 @@ import { useEntryTypes } from '@/hooks';
 import * as queries from '@/lib/db/queries';
 import * as timestamp from '@/lib/utils/timestamp';
 
-// Must be hoisted before module evaluation.
+const mockBack = jest.fn();
+
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: jest.fn(), replace: mockBack, push: jest.fn() }),
 }));
@@ -26,9 +27,6 @@ jest.mock('@/lib/utils/timestamp', () => ({
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
 }));
-
-// Declared after jest.mock; hoisting keeps mocks available at module level.
-const mockBack = jest.fn();
 
 const HYDRATION_ENTRY_TYPE: EntryType = {
   id: 4,

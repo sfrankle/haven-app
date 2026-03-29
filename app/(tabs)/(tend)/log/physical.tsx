@@ -29,6 +29,7 @@ import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { colorForPhysicalLabel } from '@/constants/chipColors';
 import { logScreenStyles } from '@/constants/sharedStyles';
+import { messages } from '@/constants/messages';
 import type { Db } from '@/lib/db/queries';
 import type { PhysicalStateLabel } from '@/lib/db/query-types';
 
@@ -350,8 +351,8 @@ export default function LogPhysicalScreen() {
           )}
 
           {saveError && (
-            <Text style={styles.saveErrorText} testID="physical-save-error">
-              Something went wrong. Your entry was not saved.
+            <Text style={logScreenStyles.saveErrorText} testID="physical-save-error">
+              {messages.saveError}
             </Text>
           )}
 
@@ -421,12 +422,5 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.elementGap,
     marginTop: spacing.sectionGap,
-  },
-  saveErrorText: {
-    fontFamily: typeScale.bodyMedium.family,
-    fontSize: typeScale.bodyMedium.size,
-    lineHeight: lineHeight(typeScale.bodyMedium),
-    color: colors.chrome,
-    marginTop: spacing.elementGap,
   },
 });

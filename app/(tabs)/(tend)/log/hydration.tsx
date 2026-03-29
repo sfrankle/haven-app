@@ -8,6 +8,7 @@ import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
+import { messages } from '@/constants/messages';
 import type { Db } from '@/lib/db/queries';
 
 export default function LogHydrationScreen() {
@@ -89,7 +90,7 @@ export default function LogHydrationScreen() {
 
         {saveError && (
           <Text style={logScreenStyles.saveErrorText} testID="hydration-save-error">
-            Something went wrong. Your entry was not saved.
+            {messages.saveError}
           </Text>
         )}
 
