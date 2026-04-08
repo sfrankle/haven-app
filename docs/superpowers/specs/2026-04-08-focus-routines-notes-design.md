@@ -137,11 +137,12 @@ Routines surface on the Tend dashboard based on their configured time blocks. A 
 1. **Completed in the current time block** — at least one completion today has a timestamp within the current block's window. Stays collapsed until the block turns over.
 2. **Fully done for the day** — total completions today ≥ number of configured time blocks. Stays collapsed for the rest of the day regardless of which block opened.
 
-**Examples:**
-- Routine configured Morning + Afternoon. Completed at 8:55. At 11:55 (still morning): completed in current block → stays in Completed.
-- Same routine. At 12:05 (afternoon block opens): only 1 completion, 1 < 2 blocks, not yet completed in afternoon → resurfaces as Due.
-- Same routine. Completed again at 12:30. At 13:00: 2 completions ≥ 2 blocks → fully done, stays Completed all day.
-- Same routine. Completed at 8:55 and 11:55 (both morning). At 12:05: 2 completions ≥ 2 blocks → fully done, does not resurface.
+**Examples** (Routine configured Morning + Afternoon):
+- Completed at 8:55. At 11:55 (still morning): completed in current block → Completed.
+- At 12:05 (afternoon block opens): 1 completion, 1 < 2 blocks, not yet completed in afternoon → Due.
+- Completed again at 12:30. At 13:00: 2 completions ≥ 2 blocks → fully done, Completed all day.
+- Completed at 8:55 and 11:55 (both morning). At 12:05: 2 ≥ 2 → fully done, does not resurface.
+- Completed only at 8:55. At 20:00 (after all configured blocks have passed): 1 < 2, not completed in evening → **Due.** A routine that isn't fully completed stays accessible for the rest of the day with no language implying it's overdue or missed.
 
 **Dashboard display:**
 - **Due now** (in current time block, not yet completed this block) — full card, prominent, top of the Routines section
