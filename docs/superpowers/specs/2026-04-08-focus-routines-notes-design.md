@@ -132,9 +132,16 @@ On Submit:
 
 ### Time-of-day visibility and completion tracking
 
-Routines surface on the Tend dashboard based on their configured time blocks. Completion state for each block is derived from entries: *"Has this Routine been completed in the current time block today?"* = count entries with `routine_id = X` timestamped within the current block's window today.
+Routines surface on the Tend dashboard based on their configured time blocks. Completion state is derived from entries using this logic:
 
-This means early completion works correctly. If a user completes a Routine at 11:55am (morning block), the afternoon block is still unfulfilled because no entries exist within the afternoon window.
+1. Count how many times this Routine has been completed today (entries with `routine_id = X` timestamped today, grouped by `routine_completion_id`)
+2. Compare against the number of configured time blocks
+
+If completions ≥ configured blocks, the Routine is fully done for the day and stays in the collapsed "Completed" section regardless of the current time block.
+
+**Example:** Routine configured for Morning + Afternoon (2 blocks). Completed at 8:55 and 11:55 (both in the morning window). At 12:05 when the afternoon block opens: 2 completions ≥ 2 blocks → remains in Completed, does not resurface.
+
+If completions < configured blocks, the Routine resurfaces as due in the next upcoming block.
 
 **Dashboard display:**
 - **Due now** (in current time block, not yet completed this block) — full card, prominent, top of the Routines section
