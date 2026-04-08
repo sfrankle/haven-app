@@ -132,16 +132,16 @@ On Submit:
 
 ### Time-of-day visibility and completion tracking
 
-Routines surface on the Tend dashboard based on their configured time blocks. Completion state is derived from entries using this logic:
+Routines surface on the Tend dashboard based on their configured time blocks. A Routine moves to the **Completed** section if either condition is true:
 
-1. Count how many times this Routine has been completed today (entries with `routine_id = X` timestamped today, grouped by `routine_completion_id`)
-2. Compare against the number of configured time blocks
+1. **Completed in the current time block** — at least one completion today has a timestamp within the current block's window. Stays collapsed until the block turns over.
+2. **Fully done for the day** — total completions today ≥ number of configured time blocks. Stays collapsed for the rest of the day regardless of which block opened.
 
-If completions ≥ configured blocks, the Routine is fully done for the day and stays in the collapsed "Completed" section regardless of the current time block.
-
-**Example:** Routine configured for Morning + Afternoon (2 blocks). Completed at 8:55 and 11:55 (both in the morning window). At 12:05 when the afternoon block opens: 2 completions ≥ 2 blocks → remains in Completed, does not resurface.
-
-If completions < configured blocks, the Routine resurfaces as due in the next upcoming block.
+**Examples:**
+- Routine configured Morning + Afternoon. Completed at 8:55. At 11:55 (still morning): completed in current block → stays in Completed.
+- Same routine. At 12:05 (afternoon block opens): only 1 completion, 1 < 2 blocks, not yet completed in afternoon → resurfaces as Due.
+- Same routine. Completed again at 12:30. At 13:00: 2 completions ≥ 2 blocks → fully done, stays Completed all day.
+- Same routine. Completed at 8:55 and 11:55 (both morning). At 12:05: 2 completions ≥ 2 blocks → fully done, does not resurface.
 
 **Dashboard display:**
 - **Due now** (in current time block, not yet completed this block) — full card, prominent, top of the Routines section
