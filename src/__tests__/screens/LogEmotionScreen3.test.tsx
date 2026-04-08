@@ -165,4 +165,14 @@ describe('LogEmotionScreen3', () => {
       expect.objectContaining({ entryTypeId: 3, labelIds: [20] })
     );
   });
+
+  it('shows an error message when saveEntry throws', async () => {
+    mockSaveEntry.mockRejectedValue(new Error('db error'));
+    const { getByTestId, queryByTestId } = render(<LogEmotionScreen3 />);
+    await waitFor(() => getByTestId('emotion-save-button'));
+    await act(async () => {
+      fireEvent.press(getByTestId('emotion-save-button'));
+    });
+    expect(queryByTestId('emotion-save-error')).toBeTruthy();
+  });
 });

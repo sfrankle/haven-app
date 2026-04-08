@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, NumericInput, Button, SaveConfirmation } from '@/components';
+import { Screen, NumericInput, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { saveEntry } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -16,6 +16,7 @@ export default function LogSleepScreen() {
   const [hours, setHours] = useState('');
   const [notes, setNotes] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const sleepEntryType = entryTypes.find((t) => t.name === 'Sleep');
 
@@ -35,6 +36,7 @@ export default function LogSleepScreen() {
       setShowConfirmation(true);
     } catch (err) {
       console.error('[LogSleepScreen] failed to save entry:', err);
+      setSaveError(true);
     }
   }
 
@@ -65,11 +67,13 @@ export default function LogSleepScreen() {
           testID="sleep-notes-input"
         />
 
+        <SaveErrorMessage visible={saveError} testID="sleep-save-error" />
+
         {hours.trim() !== '' && (
           <View style={logScreenStyles.saveButton}>
             <Button
               label="Save"
-              onPress={handleSave}
+              onPress={() => { setSaveError(false); void handleSave(); }}
               testID="sleep-save-button"
             />
           </View>

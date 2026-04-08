@@ -14,6 +14,7 @@ import {
   Chip,
   Button,
   SaveConfirmation,
+  SaveErrorMessage,
   EnergySlider,
   SeverityRow,
 } from '@/components';
@@ -349,11 +350,7 @@ export default function LogPhysicalScreen() {
             </View>
           )}
 
-          {saveError && (
-            <Text style={styles.saveErrorText} testID="physical-save-error">
-              Something went wrong. Your entry was not saved.
-            </Text>
-          )}
+          <SaveErrorMessage visible={saveError} testID="physical-save-error" />
 
           {canSubmit && (
             <View style={logScreenStyles.saveButton}>
@@ -421,12 +418,5 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.elementGap,
     marginTop: spacing.sectionGap,
-  },
-  saveErrorText: {
-    fontFamily: typeScale.bodyMedium.family,
-    fontSize: typeScale.bodyMedium.size,
-    lineHeight: lineHeight(typeScale.bodyMedium),
-    color: colors.chrome,
-    marginTop: spacing.elementGap,
   },
 });

@@ -3,6 +3,7 @@ export { EntryTypeTile } from './EntryTypeTile';
 export { Chip } from './Chip';
 export { NumericInput } from './NumericInput';
 export { SaveConfirmation } from './SaveConfirmation';
+export { SaveErrorMessage } from './SaveErrorMessage';
 export { Screen } from './Screen';
 export { SearchBar } from './SearchBar';
 export { Surface } from './Surface';

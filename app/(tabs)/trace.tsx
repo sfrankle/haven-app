@@ -9,6 +9,7 @@ import { formatEntryTime } from '@/lib/utils/timestamp';
 import { colors, typeScale, lineHeight, spacing } from '@/constants/theme';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
+import { messages } from '@/constants/messages';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,7 +79,7 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function TraceScreen() {
-  const { sections, loading } = useTraceEntries();
+  const { sections, loading, error } = useTraceEntries();
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   useFocusEffect(
@@ -101,6 +102,18 @@ export default function TraceScreen() {
 
   if (loading) {
     return null;
+  }
+
+  if (error) {
+    return (
+      <Screen>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.errorText} testID="trace-load-error">
+            {messages.traceLoadError}
+          </Text>
+        </View>
+      </Screen>
+    );
   }
 
   const isEmpty = sections.length === 0;
@@ -203,5 +216,11 @@ const styles = StyleSheet.create({
     fontSize: typeScale.bodyMedium.size,
     lineHeight: lineHeight(typeScale.bodyMedium),
     color: colors.chrome,
+  },
+  errorText: {
+    fontFamily: typeScale.bodyMedium.family,
+    fontSize: typeScale.bodyMedium.size,
+    lineHeight: lineHeight(typeScale.bodyMedium),
+    color: colors.error,
   },
 });

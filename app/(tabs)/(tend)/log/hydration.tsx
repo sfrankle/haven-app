@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, NumericInput, Button, SaveConfirmation } from '@/components';
+import { Screen, NumericInput, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { saveEntry, getDailyHydrationTotal } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -17,6 +17,7 @@ export default function LogHydrationScreen() {
   const [notes, setNotes] = useState('');
   const [dailyTotal, setDailyTotal] = useState<number>(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const hydrationEntryType = entryTypes.find((t) => t.name === 'Hydration');
 
@@ -51,6 +52,7 @@ export default function LogHydrationScreen() {
       setShowConfirmation(true);
     } catch (err) {
       console.error('[LogHydrationScreen] failed to save entry:', err);
+      setSaveError(true);
     }
   }
 
@@ -85,11 +87,13 @@ export default function LogHydrationScreen() {
           testID="hydration-notes-input"
         />
 
+        <SaveErrorMessage visible={saveError} testID="hydration-save-error" />
+
         {oz.trim() !== '' && (
           <View style={logScreenStyles.saveButton}>
             <Button
               label="Save"
-              onPress={handleSave}
+              onPress={() => { setSaveError(false); void handleSave(); }}
               testID="hydration-save-button"
             />
           </View>

@@ -266,6 +266,18 @@ describe('LogFoodScreen', () => {
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
+  it('shows an error message when saveEntry throws', async () => {
+    mockSaveEntry.mockRejectedValue(new Error('db error'));
+    const { getByTestId, queryByTestId } = render(<LogFoodScreen />);
+    act(() => { jest.advanceTimersByTime(200); });
+    await waitFor(() => getByTestId('food-suggestion-1'));
+    fireEvent.press(getByTestId('food-suggestion-1'));
+    await act(async () => {
+      fireEvent.press(getByTestId('food-save-button'));
+    });
+    expect(queryByTestId('food-save-error')).toBeTruthy();
+  });
+
   it('applies food category colour to chip based on label categoryName', async () => {
     const { getByTestId } = render(<LogFoodScreen />);
     act(() => { jest.advanceTimersByTime(200); });
