@@ -107,7 +107,7 @@ Each item in a Routine is a configured log entry. All fields except name are opt
 | **Name** | Short label shown on the completion screen — "Wrist circles", "Blueberries", "Wash face" |
 | **Entry type** | What kind of Haven entry this creates (Food, Activity, Physical, Emotion, Sleep, Hydration) |
 | **Labels** | The specific label(s) that get logged. Required for most entry types. E.g. Activity → "Wash face" label; Food → "Blueberry" label. Hydration and Sleep are numeric-only (no label needed). Stored as a join: `routine_entry_type_label`. |
-| **Prescribed detail** | Free text. The PT-prescribed or self-defined target — "10 reps · 3 sec hold · 0.5kg". Shown on completion screen as the default value. |
+| **Prescribed detail** | Free text. The PT-prescribed or self-defined target — "10 reps · 3 sec hold · 0.5kg". Pre-populates `entry.notes` on the completion screen. User can edit before saving (e.g. change to "8 reps" if they did fewer). |
 | **Instruction note** | Optional longer description — how to perform the exercise, what to notice, etc. Hidden by default on completion screen; tap to expand. |
 | **Sort order** | User-controlled item order within the Routine |
 
