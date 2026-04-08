@@ -41,13 +41,25 @@ Both flows land on the same simple screen: name field + optional tracked labels 
 
 ### The Focus quick-log
 
-Each active Focus appears as a pill on the Tend dashboard. Tapping a Focus pill opens a quick-log bottom sheet.
+Each active Focus appears as a pill on the Tend dashboard. Tapping a Focus pill opens a quick-log screen (or bottom sheet).
 
-The sheet shows labels in two layers, unified and ordered by frequency:
-1. **Explicitly tracked** — labels the user pinned when creating the Focus
-2. **Historically associated** — labels previously logged under this Focus, surfaced automatically
+The screen is a unified checklist of all tracked labels for this Focus, regardless of entry type. Each row shows:
 
-No setup required for the second layer. The first time a user logs "Neck: stiffness" and associates it with their "Headaches" Focus, that label appears in the quick-log sheet on the next open. The app learns from what the user actually tracks — not what they declared upfront.
+`[Entry type display name]: [Label name]`
+
+Examples: "Nourish: Kombucha", "Journey: Walk", "Attune: Gassy"
+
+The entry type determines the inline control on the row:
+- **Food / Activity** — checkbox only. Checked = logged on submit.
+- **Physical** — checkbox + inline severity selector (1–5) on the same row.
+
+All items are pre-checked by default. The user unchecks anything that doesn't apply today, sets severity on Physical items, and submits. One tap per row at most.
+
+Labels appear in two layers, unified and ordered by frequency:
+1. **Explicitly tracked** — labels the user pinned when creating or editing the Focus
+2. **Historically associated** — labels previously logged under this Focus, surfaced automatically. No setup required — associating a label with a Focus once is enough for it to appear here.
+
+On submit, one entry is created per checked item, each timestamped now and auto-associated with this Focus.
 
 ### Focus on every entry form
 
@@ -284,7 +296,6 @@ Grouping is deterministic: entries share a `routine_id` and a `routine_completio
 | Question | Status |
 |----------|--------|
 | Time block naming: is "Midday" vs "Afternoon" a naming issue or a real distinction? Worth revisiting before implementation. | Open |
-| Focus quick-log: MVP assumes Physical labels (severity-based). What does quick-log look like for Food or Activity labels pinned to a Focus? Likely deferred — start with Physical only. | Open |
 | Can an entry be associated with more than one Focus? MVP says no (one Focus per entry). Revisit when multi-condition users push the limit. | Deferred |
 | Can a note be added during Routine completion (per item, not just on each resulting entry)? | Open |
 | Notifications / reminders per Routine (e.g. "remind me at 2pm to do afternoon PT") — explicitly deferred to Notifications milestone. | Deferred |
