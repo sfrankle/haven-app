@@ -297,7 +297,7 @@ Grouping is deterministic: entries share a `routine_id` and a `routine_completio
 |----------|--------|
 | Time block naming: is "Midday" vs "Afternoon" a naming issue or a real distinction? Worth revisiting before implementation. | Open |
 | Can an entry be associated with more than one Focus? MVP says no (one Focus per entry). Revisit when multi-condition users push the limit. | Deferred |
-| Can a note be added during Routine completion (per item, not just on each resulting entry)? | Open |
+| Notes during Routine completion: each item's `entry.notes` is pre-populated with the prescribed detail and editable before submit. No whole-Routine note for MVP. | Resolved |
 | Notifications / reminders per Routine (e.g. "remind me at 2pm to do afternoon PT") — explicitly deferred to Notifications milestone. | Deferred |
 | Weave: Focus-scoped correlation views — out of scope for this design, but data model supports it. | Deferred |
 | Freeform life-event entry type ("I got married", "significant diagnosis") — deferred to a future milestone. See `docs/concepts/notes.md`. | Deferred |
