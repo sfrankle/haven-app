@@ -13,3 +13,19 @@ appId: com.haven.app
     id: "sleep-save-button"
 - assertVisible: "Entry saved."
 - assertVisible: "Today"   # back on Tend screen
+
+# Notes field is visible before saving
+- launchApp
+- assertVisible: "Slumber"
+- tapOn: "Slumber"
+- tapOn:
+    id: "sleep-hours-input"
+- inputText: "8"
+- assertVisible:
+    id: "sleep-notes-input"
+- tapOn:
+    id: "sleep-notes-input"
+- inputText: "slept well"
+- tapOn:
+    id: "sleep-save-button"
+- assertVisible: "Entry saved."
