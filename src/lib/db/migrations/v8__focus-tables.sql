@@ -19,3 +19,5 @@ CREATE TABLE IF NOT EXISTS entry_focus (
   focus_id INTEGER NOT NULL REFERENCES focus(id) ON DELETE CASCADE,
   PRIMARY KEY (entry_id, focus_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_entry_focus_focus_id ON entry_focus(focus_id);

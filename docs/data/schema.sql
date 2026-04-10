@@ -19,6 +19,8 @@ CREATE TABLE entry_focus (
   PRIMARY KEY (entry_id, focus_id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_entry_focus_focus_id ON entry_focus(focus_id);
+
 CREATE TABLE entry_label (
   entry_id INTEGER NOT NULL REFERENCES entry(id),
   label_id INTEGER NOT NULL REFERENCES label(id),
