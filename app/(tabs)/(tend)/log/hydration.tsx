@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Screen, NumericInput, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
+import { StyleSheet, Text, View } from 'react-native';
+import { Screen, NumericInput, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { saveEntry, getDailyHydrationTotal } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -11,13 +10,9 @@ import { logScreenStyles } from '@/constants/sharedStyles';
 import type { Db } from '@/lib/db/queries';
 
 export default function LogHydrationScreen() {
-  const router = useRouter();
   const { entryTypes } = useEntryTypes();
   const [oz, setOz] = useState('16');
-  const [notes, setNotes] = useState('');
   const [dailyTotal, setDailyTotal] = useState<number>(0);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [saveError, setSaveError] = useState(false);
 
   const hydrationEntryType = entryTypes.find((t) => t.name === 'Hydration');
 
@@ -32,7 +27,7 @@ export default function LogHydrationScreen() {
     return () => { cancelled = true; };
   }, []);
 
-  async function handleSave() {
+  async function handleSave(extras: { notes?: string }) {
     if (!hydrationEntryType || oz.trim() === '') return;
 
     const parsed = parseFloat(oz);
@@ -40,24 +35,14 @@ export default function LogHydrationScreen() {
     const localDate = timestamp.slice(0, 10);
     const db = await getDb() as unknown as Db;
 
-    try {
-      await saveEntry(db, {
-        entryTypeId: hydrationEntryType.id,
-        timestamp,
-        numericValue: isNaN(parsed) ? undefined : parsed,
-        notes: notes.trim() !== '' ? notes.trim() : undefined,
-      });
-      const total = await getDailyHydrationTotal(db, localDate);
-      setDailyTotal(total);
-      setShowConfirmation(true);
-    } catch (err) {
-      console.error('[LogHydrationScreen] failed to save entry:', err);
-      setSaveError(true);
-    }
-  }
-
-  function handleDismiss() {
-    router.replace("/");
+    await saveEntry(db, {
+      entryTypeId: hydrationEntryType.id,
+      timestamp,
+      numericValue: isNaN(parsed) ? undefined : parsed,
+      notes: extras.notes,
+    });
+    const total = await getDailyHydrationTotal(db, localDate);
+    setDailyTotal(total);
   }
 
   return (
@@ -76,35 +61,15 @@ export default function LogHydrationScreen() {
           testID="hydration-oz-input"
         />
 
-        <TextInput
-          style={logScreenStyles.notesInput}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="Notes (optional)"
-          placeholderTextColor={colors.chrome}
-          multiline
-          numberOfLines={3}
-          testID="hydration-notes-input"
+        <LogFormShell
+          canSubmit={oz.trim() !== ''}
+          onSave={handleSave}
+          saveButtonTestID="hydration-save-button"
+          notesTestID="hydration-notes-input"
+          errorTestID="hydration-save-error"
+          confirmationTestID="hydration-save-confirmation"
         />
-
-        <SaveErrorMessage visible={saveError} testID="hydration-save-error" />
-
-        {oz.trim() !== '' && (
-          <View style={logScreenStyles.saveButton}>
-            <Button
-              label="Save"
-              onPress={() => { setSaveError(false); void handleSave(); }}
-              testID="hydration-save-button"
-            />
-          </View>
-        )}
       </View>
-
-      <SaveConfirmation
-        visible={showConfirmation}
-        onDismiss={handleDismiss}
-        testID="hydration-save-confirmation"
-      />
     </Screen>
   );
 }

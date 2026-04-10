@@ -7,14 +7,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import {
   Screen,
   SearchBar,
   Chip,
-  Button,
-  SaveConfirmation,
-  SaveErrorMessage,
+  LogFormShell,
   EnergySlider,
   SeverityRow,
 } from '@/components';
@@ -76,14 +73,11 @@ const SEVERITY_AUTO_DISMISS_MS = 2000;
 // ─── Screen ────────────────────────────────────────────────────────────────
 
 export default function LogPhysicalScreen() {
-  const router = useRouter();
   const { entryTypes } = useEntryTypes();
   const [search, setSearch] = useState('');
   const [rawSuggestions, setRawSuggestions] = useState<PhysicalStateLabel[]>([]);
   const [chips, setChips] = useState<PhysicalChip[]>([]);
   const [activeSeverityChipId, setActiveSeverityChipId] = useState<number | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [saveError, setSaveError] = useState(false);
   const severityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const energyLabelIdRef = useRef<number | null>(null);
 
@@ -208,41 +202,32 @@ export default function LogPhysicalScreen() {
     setSearch('');
   }
 
-  async function handleSave() {
+  async function handleSave(extras: { notes?: string }) {
     if (!physicalEntryType || chips.length === 0) return;
     const db = (await getDb()) as unknown as Db;
     const ts = nowLocalIso();
 
-    try {
-      for (const chip of chips) {
-        if (chip.kind === 'energy') {
-          await saveEntry(db, {
-            entryTypeId: physicalEntryType.id,
-            timestamp: ts,
-            numericValue: chip.value,
-            labelIds: energyLabelIdRef.current !== null ? [energyLabelIdRef.current] : [],
-          });
-        } else {
-          await saveEntry(db, {
-            entryTypeId: physicalEntryType.id,
-            timestamp: ts,
-            numericValue: chip.severity ?? undefined,
-            labelIds: [chip.id],
-          });
-        }
+    await Promise.all(chips.map((chip) => {
+      if (chip.kind === 'energy') {
+        return saveEntry(db, {
+          entryTypeId: physicalEntryType.id,
+          timestamp: ts,
+          numericValue: chip.value,
+          labelIds: energyLabelIdRef.current !== null ? [energyLabelIdRef.current] : [],
+          notes: extras.notes,
+        });
+      } else {
+        return saveEntry(db, {
+          entryTypeId: physicalEntryType.id,
+          timestamp: ts,
+          numericValue: chip.severity ?? undefined,
+          labelIds: [chip.id],
+          notes: extras.notes,
+        });
       }
-      setShowConfirmation(true);
-    } catch (err) {
-      console.error('[LogPhysicalScreen] failed to save entry:', err);
-      setSaveError(true);
-    }
+    }));
   }
 
-  function handleDismiss() {
-    router.replace('/');
-  }
-
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (severityTimerRef.current) clearTimeout(severityTimerRef.current);
@@ -350,25 +335,16 @@ export default function LogPhysicalScreen() {
             </View>
           )}
 
-          <SaveErrorMessage visible={saveError} testID="physical-save-error" />
-
-          {canSubmit && (
-            <View style={logScreenStyles.saveButton}>
-              <Button
-                label="Save"
-                onPress={() => { setSaveError(false); void handleSave(); }}
-                testID="physical-save-button"
-              />
-            </View>
-          )}
+          <LogFormShell
+            canSubmit={canSubmit}
+            onSave={handleSave}
+            saveButtonTestID="physical-save-button"
+            notesTestID="physical-notes-input"
+            errorTestID="physical-save-error"
+            confirmationTestID="physical-save-confirmation"
+          />
         </View>
       </KeyboardAvoidingView>
-
-      <SaveConfirmation
-        visible={showConfirmation}
-        onDismiss={handleDismiss}
-        testID="physical-save-confirmation"
-      />
     </Screen>
   );
 }

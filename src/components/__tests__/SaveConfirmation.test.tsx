@@ -37,7 +37,7 @@ describe('SaveConfirmation', () => {
     render(
       <SaveConfirmation visible={true} duration={1500} onDismiss={onDismiss} />
     );
-    // fade-in: 150ms + duration: 1500ms + fade-out: 200ms = 1850ms total
+    // fade-in: 150ms + duration: 1500ms (explicit) + fade-out: 200ms = 1850ms total
     act(() => {
       jest.advanceTimersByTime(2000);
     });

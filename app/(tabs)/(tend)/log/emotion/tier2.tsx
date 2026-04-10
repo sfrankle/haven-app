@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Screen, SplitPane, SplitPaneRow, Chip, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
+import { Screen, SplitPane, SplitPaneRow, Chip, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getTier1EmotionLabels, getLabelsByParent, saveEntry } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -30,8 +30,6 @@ export default function LogEmotionScreen2() {
       ? { id: Number(params.chipLabelId), name: params.chipLabelName }
       : null
   );
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [saveError, setSaveError] = useState(false);
 
   const emotionEntryType = entryTypes.find((t) => t.name === 'Emotion');
 
@@ -78,24 +76,15 @@ export default function LogEmotionScreen2() {
     setChipLabel(null);
   }
 
-  async function handleSave() {
+  async function handleSave(extras: { notes?: string }) {
     if (!emotionEntryType || !chipLabel) return;
     const db = (await getDb()) as unknown as Db;
-    try {
-      await saveEntry(db, {
-        entryTypeId: emotionEntryType.id,
-        timestamp: nowLocalIso(),
-        labelIds: [chipLabel.id],
-      });
-      setShowConfirmation(true);
-    } catch (err) {
-      console.error('[LogEmotionScreen2] failed to save entry:', err);
-      setSaveError(true);
-    }
-  }
-
-  function handleDismiss() {
-    router.replace('/');
+    await saveEntry(db, {
+      entryTypeId: emotionEntryType.id,
+      timestamp: nowLocalIso(),
+      labelIds: [chipLabel.id],
+      notes: extras.notes,
+    });
   }
 
   return (
@@ -105,32 +94,24 @@ export default function LogEmotionScreen2() {
           {emotionEntryType?.prompt ?? emotionEntryType?.name}
         </Text>
         <SplitPane
-          left={
-            <>
-              {tier1Labels.map((label) => (
-                <SplitPaneRow
-                  key={label.id}
-                  label={label.name}
-                  isActive={label.id === activeTier1Id}
-                  onPress={() => handleTier1Press(label)}
-                  testID={`emotion-tier1-left-${label.id}`}
-                />
-              ))}
-            </>
-          }
-          right={
-            <>
-              {tier2Labels.map((label) => (
-                <SplitPaneRow
-                  key={label.id}
-                  label={label.name}
-                  isActive={false}
-                  onPress={() => handleTier2Press(label)}
-                  testID={`emotion-tier2-right-${label.id}`}
-                />
-              ))}
-            </>
-          }
+          left={tier1Labels.map((label) => (
+            <SplitPaneRow
+              key={label.id}
+              label={label.name}
+              isActive={label.id === activeTier1Id}
+              onPress={() => handleTier1Press(label)}
+              testID={`emotion-tier1-left-${label.id}`}
+            />
+          ))}
+          right={tier2Labels.map((label) => (
+            <SplitPaneRow
+              key={label.id}
+              label={label.name}
+              isActive={false}
+              onPress={() => handleTier2Press(label)}
+              testID={`emotion-tier2-right-${label.id}`}
+            />
+          ))}
         />
 
         {chipLabel && (
@@ -144,24 +125,15 @@ export default function LogEmotionScreen2() {
           </View>
         )}
 
-        <SaveErrorMessage visible={saveError} testID="emotion-save-error" />
-
-        {chipLabel && (
-          <View style={styles.saveButton}>
-            <Button
-              label="Save"
-              onPress={() => { setSaveError(false); void handleSave(); }}
-              testID="emotion-save-button"
-            />
-          </View>
-        )}
+        <LogFormShell
+          canSubmit={!!chipLabel}
+          onSave={handleSave}
+          saveButtonTestID="emotion-save-button"
+          notesTestID="emotion-notes-input"
+          errorTestID="emotion-save-error"
+          confirmationTestID="emotion-save-confirmation"
+        />
       </View>
-
-      <SaveConfirmation
-        visible={showConfirmation}
-        onDismiss={handleDismiss}
-        testID="emotion-save-confirmation"
-      />
     </Screen>
   );
 }
@@ -176,9 +148,5 @@ const styles = StyleSheet.create({
     paddingTop: spacing.elementGap,
     flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  saveButton: {
-    paddingHorizontal: spacing.pagePadding,
-    paddingTop: spacing.elementGap,
   },
 });
