@@ -1,4 +1,5 @@
 export { Button } from './Button';
+export { LogFormShell } from './LogFormShell';
 export { EntryTypeTile } from './EntryTypeTile';
 export { Chip } from './Chip';
 export { NumericInput } from './NumericInput';

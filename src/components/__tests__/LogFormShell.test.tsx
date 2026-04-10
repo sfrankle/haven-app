@@ -1,0 +1,229 @@
+import React from 'react';
+import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
+import { LogFormShell } from '../LogFormShell';
+
+// Mock expo-router
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+}));
+
+// Suppress animated warnings in test env
+jest.useFakeTimers();
+
+describe('LogFormShell', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('hides save button when canSubmit is false', () => {
+    const { queryByTestId } = render(
+      <LogFormShell canSubmit={false} onSave={jest.fn()} saveButtonTestID="save-btn">
+        <></>
+      </LogFormShell>
+    );
+    expect(queryByTestId('save-btn')).toBeNull();
+  });
+
+  it('shows save button when canSubmit is true', () => {
+    const { getByTestId } = render(
+      <LogFormShell canSubmit={true} onSave={jest.fn()} saveButtonTestID="save-btn">
+        <></>
+      </LogFormShell>
+    );
+    expect(getByTestId('save-btn')).toBeTruthy();
+  });
+
+  it('disables button while onSave is in flight and re-enables after resolution', async () => {
+    let resolve!: () => void;
+    const slowSave = jest.fn(
+      () => new Promise<void>((r) => { resolve = r; })
+    );
+
+    const { getByTestId } = render(
+      <LogFormShell canSubmit={true} onSave={slowSave} saveButtonTestID="save-btn">
+        <></>
+      </LogFormShell>
+    );
+
+    const btn = getByTestId('save-btn');
+    fireEvent.press(btn);
+
+    // In-flight: button should be disabled
+    expect(btn.props.accessibilityState?.disabled).toBe(true);
+
+    // Resolve the save
+    await act(async () => { resolve(); });
+
+    // After resolution button is enabled again
+    expect(btn.props.accessibilityState?.disabled).toBe(false);
+  });
+
+  it('does not call onSave a second time if tapped while in flight', async () => {
+    let resolve!: () => void;
+    const slowSave = jest.fn(
+      () => new Promise<void>((r) => { resolve = r; })
+    );
+
+    const { getByTestId } = render(
+      <LogFormShell canSubmit={true} onSave={slowSave} saveButtonTestID="save-btn">
+        <></>
+      </LogFormShell>
+    );
+
+    const btn = getByTestId('save-btn');
+    fireEvent.press(btn);
+    fireEvent.press(btn); // second tap while in flight
+
+    expect(slowSave).toHaveBeenCalledTimes(1);
+
+    await act(async () => { resolve(); });
+  });
+
+  it('passes notes value to onSave', async () => {
+    const onSave = jest.fn().mockResolvedValue(undefined);
+
+    const { getByTestId } = render(
+      <LogFormShell
+        canSubmit={true}
+        onSave={onSave}
+        saveButtonTestID="save-btn"
+        notesTestID="notes-input"
+      >
+        <></>
+      </LogFormShell>
+    );
+
+    fireEvent.changeText(getByTestId('notes-input'), 'felt great today');
+
+    await act(async () => {
+      fireEvent.press(getByTestId('save-btn'));
+    });
+
+    expect(onSave).toHaveBeenCalledWith({ notes: 'felt great today' });
+  });
+
+  it('normalises empty notes to undefined', async () => {
+    const onSave = jest.fn().mockResolvedValue(undefined);
+
+    const { getByTestId } = render(
+      <LogFormShell canSubmit={true} onSave={onSave} saveButtonTestID="save-btn" notesTestID="notes-input">
+        <></>
+      </LogFormShell>
+    );
+
+    // Leave notes empty, press save
+    await act(async () => {
+      fireEvent.press(getByTestId('save-btn'));
+    });
+
+    expect(onSave).toHaveBeenCalledWith({ notes: undefined });
+  });
+
+  it('shows error message when onSave rejects', async () => {
+    const failingSave = jest.fn().mockRejectedValue(new Error('db error'));
+
+    const { getByTestId, queryByTestId } = render(
+      <LogFormShell
+        canSubmit={true}
+        onSave={failingSave}
+        saveButtonTestID="save-btn"
+        errorTestID="save-error"
+      >
+        <></>
+      </LogFormShell>
+    );
+
+    await act(async () => {
+      fireEvent.press(getByTestId('save-btn'));
+    });
+
+    expect(getByTestId('save-error')).toBeTruthy();
+  });
+
+  it('clears error message when Save is pressed again after rejection', async () => {
+    let callCount = 0;
+    const onSave = jest.fn().mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return Promise.reject(new Error('db error'));
+      return Promise.resolve();
+    });
+
+    const { getByTestId, queryByTestId } = render(
+      <LogFormShell
+        canSubmit={true}
+        onSave={onSave}
+        saveButtonTestID="save-btn"
+        errorTestID="save-error"
+      >
+        <></>
+      </LogFormShell>
+    );
+
+    // First press — fails
+    await act(async () => {
+      fireEvent.press(getByTestId('save-btn'));
+    });
+    expect(getByTestId('save-error')).toBeTruthy();
+
+    // Second press — succeeds; error should clear
+    await act(async () => {
+      fireEvent.press(getByTestId('save-btn'));
+    });
+    expect(queryByTestId('save-error')).toBeNull();
+  });
+
+  it('shows SaveConfirmation after successful save', async () => {
+    const onSave = jest.fn().mockResolvedValue(undefined);
+
+    const { getByTestId } = render(
+      <LogFormShell
+        canSubmit={true}
+        onSave={onSave}
+        saveButtonTestID="save-btn"
+        confirmationTestID="save-confirmation"
+      >
+        <></>
+      </LogFormShell>
+    );
+
+    await act(async () => {
+      fireEvent.press(getByTestId('save-btn'));
+    });
+
+    expect(getByTestId('save-confirmation')).toBeTruthy();
+  });
+
+  // Physical-specific: notes attached to every saveEntry call
+  it('passes notes to onSave for Physical multi-row scenario', async () => {
+    // This mirrors physical.tsx's handleSave which receives extras and
+    // attaches notes to every saveEntry call in the loop.
+    const calls: Array<{ notes: string | undefined }> = [];
+    const onSave = jest.fn().mockImplementation(async (extras: { notes?: string }) => {
+      // Simulate a multi-row save by recording extras twice (as physical does)
+      calls.push({ notes: extras.notes });
+      calls.push({ notes: extras.notes });
+    });
+
+    const { getByTestId } = render(
+      <LogFormShell
+        canSubmit={true}
+        onSave={onSave}
+        saveButtonTestID="save-btn"
+        notesTestID="notes-input"
+      >
+        <></>
+      </LogFormShell>
+    );
+
+    fireEvent.changeText(getByTestId('notes-input'), 'my note');
+
+    await act(async () => {
+      fireEvent.press(getByTestId('save-btn'));
+    });
+
+    // onSave is called once; the handler internally propagates notes to all rows
+    expect(onSave).toHaveBeenCalledWith({ notes: 'my note' });
+    // All simulated rows received the note
+    expect(calls).toEqual([{ notes: 'my note' }, { notes: 'my note' }]);
+  });
+});
