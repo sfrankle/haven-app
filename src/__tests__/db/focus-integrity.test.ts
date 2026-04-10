@@ -152,6 +152,20 @@ describe('focus schema integrity', () => {
     expect(focusStillExists).toBeDefined();
   });
 
+  test('duplicate focus name is rejected (UNIQUE constraint)', () => {
+    insertTestFocus('UniqueName', 50);
+    expect(() => insertTestFocus('UniqueName', 51)).toThrow();
+  });
+
+  test('duplicate entry_focus (entry_id, focus_id) pair is rejected (PK constraint)', () => {
+    const entryId = insertTestEntry();
+    const focusId = insertTestFocus('DupPKFocus', 60);
+    db.prepare(`INSERT INTO entry_focus (entry_id, focus_id) VALUES (?, ?)`).run(entryId, focusId);
+    expect(() => {
+      db.prepare(`INSERT INTO entry_focus (entry_id, focus_id) VALUES (?, ?)`).run(entryId, focusId);
+    }).toThrow();
+  });
+
   test('existing entry_type and label seeded data is intact after migration', () => {
     const entryTypeCount = (
       db.prepare(`SELECT COUNT(*) as cnt FROM entry_type`).get() as { cnt: number }

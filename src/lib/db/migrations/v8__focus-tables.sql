@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS focus (
   id          INTEGER PRIMARY KEY,
-  name        TEXT NOT NULL,
+  name        TEXT NOT NULL UNIQUE,
   description TEXT,
   archived    INTEGER NOT NULL DEFAULT 0,
   sort_order  INTEGER NOT NULL DEFAULT 0,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS focus (
 
 CREATE TABLE IF NOT EXISTS focus_label (
   focus_id   INTEGER NOT NULL REFERENCES focus(id) ON DELETE CASCADE,
-  label_id   INTEGER NOT NULL REFERENCES label(id) ON DELETE CASCADE,
+  label_id   INTEGER NOT NULL REFERENCES label(id) ON DELETE RESTRICT,
   sort_order INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (focus_id, label_id)
 );
