@@ -76,14 +76,37 @@ erDiagram
     tag ||--o{ label_tag : "applied via"
     entry ||--o{ entry_label : "has"
     label ||--o{ entry_label : "selected in"
+
+    focus {
+        INTEGER id PK
+        TEXT name
+        TEXT description
+        INTEGER archived
+        INTEGER sort_order
+        TEXT created_at
+    }
+
+    focus_label {
+        INTEGER focus_id FK
+        INTEGER label_id FK
+        INTEGER sort_order
+    }
+
+    entry_focus {
+        INTEGER entry_id FK
+        INTEGER focus_id FK
+    }
+
+    focus ||--o{ focus_label : "pins"
+    label ||--o{ focus_label : "pinned in"
+    entry ||--o{ entry_focus : "linked to"
+    focus ||--o{ entry_focus : "linked from"
 ```
 
 ## Planned tables (not yet implemented)
 
 | Table | Purpose |
 |-------|---------|
-| `issue` | User-defined named health concern (e.g. "Carpal tunnel") for grouping physical state entries over time |
-| `entry_issue` | Join table linking entries to tracked issues |
 | `anchor_activity` | Grounding activity suggestions with effort tracking |
 | `anchor_tag` | Join table linking anchor activities to tags |
 
@@ -98,3 +121,7 @@ erDiagram
 **label.seed_version** — incremented when new seed rows are introduced in an app update. On app open, only rows where `seed_version > last_applied_version` are inserted (via `INSERT OR IGNORE`), so user-deleted associations are never re-applied.
 
 **entry_type.measurement_type_id** — drives which logging form is shown. Types: `numeric` (sleep, hydration), `label_select` (food, emotion, activity), `label_select_severity` (physical).
+
+**focus.archived** — `0` = active, `1` = archived. Archived focuses are hidden from the logging UI but preserved for historical correlation queries.
+
+**entry_focus** — MVP enforces one Focus per entry at the app layer. The schema uses a composite PK `(entry_id, focus_id)` to remain forward-compatible if multi-focus is introduced later. App-layer code should use a delete-then-insert transaction when changing a focus association (not `INSERT OR REPLACE`).

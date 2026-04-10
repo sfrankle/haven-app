@@ -27,5 +27,7 @@ const v5Seed = require('./v5__seed-emotions.sql') as string;
 const v6Seed = require('./v6__seed-activity.sql') as string;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const v7Seed = require('./v7__seed-physical.sql') as string;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const v8Focus = require('./v8__focus-tables.sql') as string;
 
-export const migrations: string[] = [v1Schema, v2Seed, v3Seed, v4Seed, v5Seed, v6Seed, v7Seed];
+export const migrations: string[] = [v1Schema, v2Seed, v3Seed, v4Seed, v5Seed, v6Seed, v7Seed, v8Focus];
