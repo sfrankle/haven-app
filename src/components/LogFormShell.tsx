@@ -41,7 +41,7 @@ export function LogFormShell({
       const notesValue = notes.trim() !== '' ? notes.trim() : undefined;
       await onSave({ notes: notesValue });
       setShowConfirmation(true);
-    } catch (err) {
+    } catch {
       setSaveError(true);
     } finally {
       setSaving(false);

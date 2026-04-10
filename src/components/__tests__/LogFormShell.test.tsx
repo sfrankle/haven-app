@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { LogFormShell } from '../LogFormShell';
 
 // Mock expo-router
@@ -122,7 +122,7 @@ describe('LogFormShell', () => {
   it('shows error message when onSave rejects', async () => {
     const failingSave = jest.fn().mockRejectedValue(new Error('db error'));
 
-    const { getByTestId, queryByTestId } = render(
+    const { getByTestId } = render(
       <LogFormShell
         canSubmit={true}
         onSave={failingSave}
@@ -197,7 +197,7 @@ describe('LogFormShell', () => {
   it('passes notes to onSave for Physical multi-row scenario', async () => {
     // This mirrors physical.tsx's handleSave which receives extras and
     // attaches notes to every saveEntry call in the loop.
-    const calls: Array<{ notes: string | undefined }> = [];
+    const calls: { notes: string | undefined }[] = [];
     const onSave = jest.fn().mockImplementation(async (extras: { notes?: string }) => {
       // Simulate a multi-row save by recording extras twice (as physical does)
       calls.push({ notes: extras.notes });
