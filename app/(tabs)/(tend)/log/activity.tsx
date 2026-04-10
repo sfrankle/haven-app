@@ -7,8 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Screen, SearchBar, Chip, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
+import { Screen, SearchBar, Chip, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getLabels, saveEntry, createLabel } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -22,13 +21,10 @@ import type { Label } from '@/lib/db/query-types';
 const SUGGESTION_LIMIT = 5;
 
 export default function LogActivityScreen() {
-  const router = useRouter();
   const { entryTypes } = useEntryTypes();
   const [search, setSearch] = useState('');
   const [rawSuggestions, setRawSuggestions] = useState<Label[]>([]);
   const [chips, setChips] = useState<Label[]>([]);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [saveError, setSaveError] = useState(false);
 
   const activityEntryType = entryTypes.find((t) => t.name === 'Activity');
 
@@ -71,24 +67,15 @@ export default function LogActivityScreen() {
     setSearch('');
   }
 
-  async function handleSave() {
+  async function handleSave(extras: { notes?: string }) {
     if (!activityEntryType || chips.length === 0) return;
     const db = (await getDb()) as unknown as Db;
-    try {
-      await saveEntry(db, {
-        entryTypeId: activityEntryType.id,
-        timestamp: nowLocalIso(),
-        labelIds: chips.map((c) => c.id),
-      });
-      setShowConfirmation(true);
-    } catch (err) {
-      console.error('[LogActivityScreen] failed to save entry:', err);
-      setSaveError(true);
-    }
-  }
-
-  function handleDismiss() {
-    router.replace("/");
+    await saveEntry(db, {
+      entryTypeId: activityEntryType.id,
+      timestamp: nowLocalIso(),
+      labelIds: chips.map((c) => c.id),
+      notes: extras.notes,
+    });
   }
 
   const showAddCustom = search.trim().length > 0 && suggestions.length === 0;
@@ -153,25 +140,18 @@ export default function LogActivityScreen() {
             </View>
           )}
 
-          <SaveErrorMessage visible={saveError} testID="activity-save-error" />
-
-          {chips.length > 0 && (
-            <View style={logScreenStyles.saveButton}>
-              <Button
-                label="Save"
-                onPress={() => { setSaveError(false); void handleSave(); }}
-                testID="activity-save-button"
-              />
-            </View>
-          )}
+          <LogFormShell
+            canSubmit={chips.length > 0}
+            onSave={handleSave}
+            saveButtonTestID="activity-save-button"
+            notesTestID="activity-notes-input"
+            errorTestID="activity-save-error"
+            confirmationTestID="activity-save-confirmation"
+          >
+            {null}
+          </LogFormShell>
         </View>
       </KeyboardAvoidingView>
-
-      <SaveConfirmation
-        visible={showConfirmation}
-        onDismiss={handleDismiss}
-        testID="activity-save-confirmation"
-      />
     </Screen>
   );
 }
