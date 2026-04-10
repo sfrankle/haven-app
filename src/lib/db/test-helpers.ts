@@ -27,6 +27,7 @@ export const MIGRATION_FILES = [
   'v5__seed-emotions.sql',
   'v6__seed-activity.sql',
   'v7__seed-physical.sql',
+  'v8__focus-tables.sql',
 ];
 
 export function readMigration(filename: string): string {
