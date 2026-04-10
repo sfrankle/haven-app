@@ -85,37 +85,31 @@ export default function LogEmotionScreen3() {
           {emotionEntryType?.prompt ?? emotionEntryType?.name}
         </Text>
         <SplitPane leftFlex={0.42}
-          left={
-            <>
-              {tier2Labels.map((label) => (
+          left={tier2Labels.map((label) => (
+            <SplitPaneRow
+              key={label.id}
+              label={label.name}
+              isActive={label.id === activeTier2Id}
+              onPress={() => handleTier2Press(label)}
+              testID={`emotion-tier2-left-${label.id}`}
+            />
+          ))}
+          right={
+            tier3Labels.length === 0 ? (
+              <Text style={styles.emptyRight} testID="emotion-tier3-empty">
+                No further detail available.
+              </Text>
+            ) : (
+              tier3Labels.map((label) => (
                 <SplitPaneRow
                   key={label.id}
                   label={label.name}
-                  isActive={label.id === activeTier2Id}
-                  onPress={() => handleTier2Press(label)}
-                  testID={`emotion-tier2-left-${label.id}`}
+                  isActive={chipLabel?.id === label.id}
+                  onPress={() => handleTier3Press(label)}
+                  testID={`emotion-tier3-right-${label.id}`}
                 />
-              ))}
-            </>
-          }
-          right={
-            <>
-              {tier3Labels.length === 0 ? (
-                <Text style={styles.emptyRight} testID="emotion-tier3-empty">
-                  No further detail available.
-                </Text>
-              ) : (
-                tier3Labels.map((label) => (
-                  <SplitPaneRow
-                    key={label.id}
-                    label={label.name}
-                    isActive={chipLabel?.id === label.id}
-                    onPress={() => handleTier3Press(label)}
-                    testID={`emotion-tier3-right-${label.id}`}
-                  />
-                ))
-              )}
-            </>
+              ))
+            )
           }
         />
 
@@ -137,9 +131,7 @@ export default function LogEmotionScreen3() {
           notesTestID="emotion-notes-input"
           errorTestID="emotion-save-error"
           confirmationTestID="emotion-save-confirmation"
-        >
-          {null}
-        </LogFormShell>
+        />
       </View>
     </Screen>
   );

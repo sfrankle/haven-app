@@ -150,9 +150,7 @@ export default function LogFoodScreen() {
             notesTestID="food-notes-input"
             errorTestID="food-save-error"
             confirmationTestID="food-save-confirmation"
-          >
-            {null}
-          </LogFormShell>
+          />
         </View>
       </KeyboardAvoidingView>
     </Screen>

@@ -94,32 +94,24 @@ export default function LogEmotionScreen2() {
           {emotionEntryType?.prompt ?? emotionEntryType?.name}
         </Text>
         <SplitPane
-          left={
-            <>
-              {tier1Labels.map((label) => (
-                <SplitPaneRow
-                  key={label.id}
-                  label={label.name}
-                  isActive={label.id === activeTier1Id}
-                  onPress={() => handleTier1Press(label)}
-                  testID={`emotion-tier1-left-${label.id}`}
-                />
-              ))}
-            </>
-          }
-          right={
-            <>
-              {tier2Labels.map((label) => (
-                <SplitPaneRow
-                  key={label.id}
-                  label={label.name}
-                  isActive={false}
-                  onPress={() => handleTier2Press(label)}
-                  testID={`emotion-tier2-right-${label.id}`}
-                />
-              ))}
-            </>
-          }
+          left={tier1Labels.map((label) => (
+            <SplitPaneRow
+              key={label.id}
+              label={label.name}
+              isActive={label.id === activeTier1Id}
+              onPress={() => handleTier1Press(label)}
+              testID={`emotion-tier1-left-${label.id}`}
+            />
+          ))}
+          right={tier2Labels.map((label) => (
+            <SplitPaneRow
+              key={label.id}
+              label={label.name}
+              isActive={false}
+              onPress={() => handleTier2Press(label)}
+              testID={`emotion-tier2-right-${label.id}`}
+            />
+          ))}
         />
 
         {chipLabel && (
@@ -140,9 +132,7 @@ export default function LogEmotionScreen2() {
           notesTestID="emotion-notes-input"
           errorTestID="emotion-save-error"
           confirmationTestID="emotion-save-confirmation"
-        >
-          {null}
-        </LogFormShell>
+        />
       </View>
     </Screen>
   );

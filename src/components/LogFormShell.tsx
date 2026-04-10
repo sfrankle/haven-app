@@ -10,8 +10,6 @@ import { logScreenStyles } from '@/constants/sharedStyles';
 interface LogFormShellProps {
   canSubmit: boolean;
   onSave: (extras: { notes?: string }) => Promise<void>;
-  children: React.ReactNode;
-  testID?: string;
   confirmationTestID?: string;
   errorTestID?: string;
   saveButtonTestID?: string;
@@ -21,7 +19,6 @@ interface LogFormShellProps {
 export function LogFormShell({
   canSubmit,
   onSave,
-  children,
   confirmationTestID,
   errorTestID,
   saveButtonTestID,
@@ -38,7 +35,8 @@ export function LogFormShell({
     setSaveError(false);
     setSaving(true);
     try {
-      const notesValue = notes.trim() !== '' ? notes.trim() : undefined;
+      const trimmed = notes.trim();
+      const notesValue = trimmed !== '' ? trimmed : undefined;
       await onSave({ notes: notesValue });
       setShowConfirmation(true);
     } catch {
@@ -54,8 +52,6 @@ export function LogFormShell({
 
   return (
     <>
-      {children}
-
       <TextInput
         style={logScreenStyles.notesInput}
         value={notes}

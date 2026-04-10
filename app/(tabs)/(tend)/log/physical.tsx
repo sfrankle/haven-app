@@ -202,16 +202,14 @@ export default function LogPhysicalScreen() {
     setSearch('');
   }
 
-  // Notes are attached to every saveEntry call so that any entry in the
-  // multi-row save carries the user's context (per issue #138 correction).
   async function handleSave(extras: { notes?: string }) {
     if (!physicalEntryType || chips.length === 0) return;
     const db = (await getDb()) as unknown as Db;
     const ts = nowLocalIso();
 
-    for (const chip of chips) {
+    await Promise.all(chips.map((chip) => {
       if (chip.kind === 'energy') {
-        await saveEntry(db, {
+        return saveEntry(db, {
           entryTypeId: physicalEntryType.id,
           timestamp: ts,
           numericValue: chip.value,
@@ -219,7 +217,7 @@ export default function LogPhysicalScreen() {
           notes: extras.notes,
         });
       } else {
-        await saveEntry(db, {
+        return saveEntry(db, {
           entryTypeId: physicalEntryType.id,
           timestamp: ts,
           numericValue: chip.severity ?? undefined,
@@ -227,10 +225,9 @@ export default function LogPhysicalScreen() {
           notes: extras.notes,
         });
       }
-    }
+    }));
   }
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (severityTimerRef.current) clearTimeout(severityTimerRef.current);
@@ -345,9 +342,7 @@ export default function LogPhysicalScreen() {
             notesTestID="physical-notes-input"
             errorTestID="physical-save-error"
             confirmationTestID="physical-save-confirmation"
-          >
-            {null}
-          </LogFormShell>
+          />
         </View>
       </KeyboardAvoidingView>
     </Screen>

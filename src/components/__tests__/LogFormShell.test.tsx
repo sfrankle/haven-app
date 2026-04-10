@@ -17,18 +17,14 @@ describe('LogFormShell', () => {
 
   it('hides save button when canSubmit is false', () => {
     const { queryByTestId } = render(
-      <LogFormShell canSubmit={false} onSave={jest.fn()} saveButtonTestID="save-btn">
-        <></>
-      </LogFormShell>
+      <LogFormShell canSubmit={false} onSave={jest.fn()} saveButtonTestID="save-btn" />
     );
     expect(queryByTestId('save-btn')).toBeNull();
   });
 
   it('shows save button when canSubmit is true', () => {
     const { getByTestId } = render(
-      <LogFormShell canSubmit={true} onSave={jest.fn()} saveButtonTestID="save-btn">
-        <></>
-      </LogFormShell>
+      <LogFormShell canSubmit={true} onSave={jest.fn()} saveButtonTestID="save-btn" />
     );
     expect(getByTestId('save-btn')).toBeTruthy();
   });
@@ -40,9 +36,7 @@ describe('LogFormShell', () => {
     );
 
     const { getByTestId } = render(
-      <LogFormShell canSubmit={true} onSave={slowSave} saveButtonTestID="save-btn">
-        <></>
-      </LogFormShell>
+      <LogFormShell canSubmit={true} onSave={slowSave} saveButtonTestID="save-btn" />
     );
 
     const btn = getByTestId('save-btn');
@@ -65,9 +59,7 @@ describe('LogFormShell', () => {
     );
 
     const { getByTestId } = render(
-      <LogFormShell canSubmit={true} onSave={slowSave} saveButtonTestID="save-btn">
-        <></>
-      </LogFormShell>
+      <LogFormShell canSubmit={true} onSave={slowSave} saveButtonTestID="save-btn" />
     );
 
     const btn = getByTestId('save-btn');
@@ -88,9 +80,7 @@ describe('LogFormShell', () => {
         onSave={onSave}
         saveButtonTestID="save-btn"
         notesTestID="notes-input"
-      >
-        <></>
-      </LogFormShell>
+      />
     );
 
     fireEvent.changeText(getByTestId('notes-input'), 'felt great today');
@@ -106,9 +96,7 @@ describe('LogFormShell', () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
 
     const { getByTestId } = render(
-      <LogFormShell canSubmit={true} onSave={onSave} saveButtonTestID="save-btn" notesTestID="notes-input">
-        <></>
-      </LogFormShell>
+      <LogFormShell canSubmit={true} onSave={onSave} saveButtonTestID="save-btn" notesTestID="notes-input" />
     );
 
     // Leave notes empty, press save
@@ -128,9 +116,7 @@ describe('LogFormShell', () => {
         onSave={failingSave}
         saveButtonTestID="save-btn"
         errorTestID="save-error"
-      >
-        <></>
-      </LogFormShell>
+      />
     );
 
     await act(async () => {
@@ -154,9 +140,7 @@ describe('LogFormShell', () => {
         onSave={onSave}
         saveButtonTestID="save-btn"
         errorTestID="save-error"
-      >
-        <></>
-      </LogFormShell>
+      />
     );
 
     // First press — fails
@@ -181,9 +165,7 @@ describe('LogFormShell', () => {
         onSave={onSave}
         saveButtonTestID="save-btn"
         confirmationTestID="save-confirmation"
-      >
-        <></>
-      </LogFormShell>
+      />
     );
 
     await act(async () => {
@@ -210,9 +192,7 @@ describe('LogFormShell', () => {
         onSave={onSave}
         saveButtonTestID="save-btn"
         notesTestID="notes-input"
-      >
-        <></>
-      </LogFormShell>
+      />
     );
 
     fireEvent.changeText(getByTestId('notes-input'), 'my note');

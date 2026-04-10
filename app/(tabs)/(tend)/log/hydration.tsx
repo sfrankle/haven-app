@@ -68,9 +68,7 @@ export default function LogHydrationScreen() {
           notesTestID="hydration-notes-input"
           errorTestID="hydration-save-error"
           confirmationTestID="hydration-save-confirmation"
-        >
-          {null}
-        </LogFormShell>
+        />
       </View>
     </Screen>
   );

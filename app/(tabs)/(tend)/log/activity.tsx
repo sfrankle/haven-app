@@ -147,9 +147,7 @@ export default function LogActivityScreen() {
             notesTestID="activity-notes-input"
             errorTestID="activity-save-error"
             confirmationTestID="activity-save-confirmation"
-          >
-            {null}
-          </LogFormShell>
+          />
         </View>
       </KeyboardAvoidingView>
     </Screen>

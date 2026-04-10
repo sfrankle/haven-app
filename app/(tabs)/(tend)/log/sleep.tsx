@@ -47,9 +47,7 @@ export default function LogSleepScreen() {
           notesTestID="sleep-notes-input"
           errorTestID="sleep-save-error"
           confirmationTestID="sleep-save-confirmation"
-        >
-          {null}
-        </LogFormShell>
+        />
       </View>
     </Screen>
   );
