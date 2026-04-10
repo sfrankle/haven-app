@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, SplitPane, SplitPaneRow, Chip, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
+import { Screen, SplitPane, SplitPaneRow, Chip, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getLabelsByParent, saveEntry } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -13,7 +13,6 @@ import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
 export default function LogEmotionScreen3() {
-  const router = useRouter();
   const params = useLocalSearchParams<{
     tier1Id: string;
     tier2Id: string;
@@ -31,8 +30,6 @@ export default function LogEmotionScreen3() {
       ? { id: Number(params.chipLabelId), name: params.chipLabelName }
       : null
   );
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [saveError, setSaveError] = useState(false);
 
   const emotionEntryType = entryTypes.find((t) => t.name === 'Emotion');
 
@@ -70,24 +67,15 @@ export default function LogEmotionScreen3() {
     setChipLabel(null);
   }
 
-  async function handleSave() {
+  async function handleSave(extras: { notes?: string }) {
     if (!emotionEntryType || !chipLabel) return;
     const db = (await getDb()) as unknown as Db;
-    try {
-      await saveEntry(db, {
-        entryTypeId: emotionEntryType.id,
-        timestamp: nowLocalIso(),
-        labelIds: [chipLabel.id],
-      });
-      setShowConfirmation(true);
-    } catch (err) {
-      console.error('[LogEmotionScreen3] failed to save entry:', err);
-      setSaveError(true);
-    }
-  }
-
-  function handleDismiss() {
-    router.replace('/');
+    await saveEntry(db, {
+      entryTypeId: emotionEntryType.id,
+      timestamp: nowLocalIso(),
+      labelIds: [chipLabel.id],
+      notes: extras.notes,
+    });
   }
 
   return (
@@ -142,24 +130,17 @@ export default function LogEmotionScreen3() {
           </View>
         )}
 
-        <SaveErrorMessage visible={saveError} testID="emotion-save-error" />
-
-        {chipLabel && (
-          <View style={styles.saveButton}>
-            <Button
-              label="Save"
-              onPress={() => { setSaveError(false); void handleSave(); }}
-              testID="emotion-save-button"
-            />
-          </View>
-        )}
+        <LogFormShell
+          canSubmit={!!chipLabel}
+          onSave={handleSave}
+          saveButtonTestID="emotion-save-button"
+          notesTestID="emotion-notes-input"
+          errorTestID="emotion-save-error"
+          confirmationTestID="emotion-save-confirmation"
+        >
+          {null}
+        </LogFormShell>
       </View>
-
-      <SaveConfirmation
-        visible={showConfirmation}
-        onDismiss={handleDismiss}
-        testID="emotion-save-confirmation"
-      />
     </Screen>
   );
 }
@@ -174,10 +155,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.elementGap,
     flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  saveButton: {
-    paddingHorizontal: spacing.pagePadding,
-    paddingTop: spacing.elementGap,
   },
   emptyRight: {
     fontFamily: typeScale.bodyMedium.family,
