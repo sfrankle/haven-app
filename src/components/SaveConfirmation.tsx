@@ -13,7 +13,7 @@ interface SaveConfirmationProps {
 export function SaveConfirmation({
   visible,
   message = 'Entry saved.',
-  duration = 1500,
+  duration = 800,
   onDismiss,
   testID,
 }: SaveConfirmationProps) {
