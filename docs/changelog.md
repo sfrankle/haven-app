@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#143](https://github.com/sfrankle/haven-app/pull/143) | Focus schema migration (v8): adds `focus`, `focus_label`, and `entry_focus` tables with FK constraints and 11 data integrity tests | 2026-04-10 |
 | [#142](https://github.com/sfrankle/haven-app/pull/142) | `LogFormShell` centralises submit state, Notes field, and save feedback across all six log screens; fixes duplicate-entry bug by guarding the save button while a write is in flight | 2026-04-10 |
 | [#109](https://github.com/sfrankle/haven-app/pull/109) | Milestone 2 polish: error feedback on all log and trace screens, shared SaveErrorMessage component, copy aligned with voice guide | 2026-03-29 |
 | [#108](https://github.com/sfrankle/haven-app/pull/108) | 1 - Core Logging bug fixes. | 2026-03-27 |
