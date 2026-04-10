@@ -7,8 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Screen, SearchBar, Chip, Button, SaveConfirmation, SaveErrorMessage } from '@/components';
+import { Screen, SearchBar, Chip, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getLabels, saveEntry, createLabel } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -22,13 +21,10 @@ import type { Label } from '@/lib/db/query-types';
 const SUGGESTION_LIMIT = 5;
 
 export default function LogFoodScreen() {
-  const router = useRouter();
   const { entryTypes } = useEntryTypes();
   const [search, setSearch] = useState('');
   const [rawSuggestions, setRawSuggestions] = useState<Label[]>([]);
   const [chips, setChips] = useState<Label[]>([]);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [saveError, setSaveError] = useState(false);
 
   const foodEntryType = entryTypes.find((t) => t.name === 'Food');
   const mealContext = useMemo(() => getMealContext(nowLocalIso()), []);
@@ -72,24 +68,15 @@ export default function LogFoodScreen() {
     setSearch('');
   }
 
-  async function handleSave() {
+  async function handleSave(extras: { notes?: string }) {
     if (!foodEntryType || chips.length === 0) return;
     const db = (await getDb()) as unknown as Db;
-    try {
-      await saveEntry(db, {
-        entryTypeId: foodEntryType.id,
-        timestamp: nowLocalIso(),
-        labelIds: chips.map((c) => c.id),
-      });
-      setShowConfirmation(true);
-    } catch (err) {
-      console.error('[LogFoodScreen] failed to save entry:', err);
-      setSaveError(true);
-    }
-  }
-
-  function handleDismiss() {
-    router.replace('/');
+    await saveEntry(db, {
+      entryTypeId: foodEntryType.id,
+      timestamp: nowLocalIso(),
+      labelIds: chips.map((c) => c.id),
+      notes: extras.notes,
+    });
   }
 
   const showAddCustom = search.trim().length > 0 && suggestions.length === 0;
@@ -156,25 +143,18 @@ export default function LogFoodScreen() {
             </View>
           )}
 
-          <SaveErrorMessage visible={saveError} testID="food-save-error" />
-
-          {chips.length > 0 && (
-            <View style={logScreenStyles.saveButton}>
-              <Button
-                label="Save"
-                onPress={() => { setSaveError(false); void handleSave(); }}
-                testID="food-save-button"
-              />
-            </View>
-          )}
+          <LogFormShell
+            canSubmit={chips.length > 0}
+            onSave={handleSave}
+            saveButtonTestID="food-save-button"
+            notesTestID="food-notes-input"
+            errorTestID="food-save-error"
+            confirmationTestID="food-save-confirmation"
+          >
+            {null}
+          </LogFormShell>
         </View>
       </KeyboardAvoidingView>
-
-      <SaveConfirmation
-        visible={showConfirmation}
-        onDismiss={handleDismiss}
-        testID="food-save-confirmation"
-      />
     </Screen>
   );
 }
