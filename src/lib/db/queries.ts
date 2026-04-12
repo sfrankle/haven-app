@@ -9,7 +9,8 @@
  * No screen should call db.getAllAsync / db.runAsync / db.getFirstAsync directly.
  */
 
-import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel } from './query-types';
+import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem } from './query-types';
+import { nowLocalIso } from '@/lib/utils/timestamp';
 
 // ─── minimal interface ────────────────────────────────────────────────────────
 // We type `db` against the subset of expo-sqlite's SQLiteDatabase that we
@@ -68,6 +69,24 @@ interface HydrationTotalRaw {
   total: number;
 }
 
+interface FocusRaw {
+  id: number;
+  name: string;
+  description: string | null;
+  archived: number; // INTEGER 0/1
+  sort_order: number;
+  created_at: string;
+}
+
+interface FocusItemRaw {
+  label_id: number;
+  label_name: string;
+  entry_type_id: number;
+  entry_type_name: string;
+  entry_type_title: string;
+  source: 'pinned' | 'historical';
+}
+
 // ─── mappers ──────────────────────────────────────────────────────────────────
 
 function mapLabel(raw: LabelRaw): Label {
@@ -79,6 +98,17 @@ function mapLabel(raw: LabelRaw): Label {
     categoryId: raw.category_id,
     categoryName: raw.category_name ?? null,
     sortOrder: raw.sort_order,
+  };
+}
+
+function mapFocus(raw: FocusRaw): Focus {
+  return {
+    id: raw.id,
+    name: raw.name,
+    description: raw.description,
+    archived: raw.archived === 1,
+    sortOrder: raw.sort_order,
+    createdAt: raw.created_at,
   };
 }
 
@@ -196,6 +226,16 @@ export async function saveEntry(db: Db, input: SaveEntryInput): Promise<number> 
       await db.runAsync(
         `INSERT INTO entry_label (entry_id, label_id) VALUES ${placeholders}`,
         params
+      );
+    }
+
+    // Associate with a focus if provided. If focusId references a non-existent
+    // focus, the FK constraint will throw here and roll back the entire transaction
+    // (including the entry insert). Callers must ensure the focus exists first.
+    if (input.focusId != null) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO entry_focus (entry_id, focus_id) VALUES (?, ?)`,
+        [newEntryId, input.focusId]
       );
     }
   });
@@ -452,4 +492,155 @@ export async function getDailyHydrationTotal(db: Db, localDateString: string): P
     [localDateString]
   );
   return row?.total ?? 0;
+}
+
+// ─── Focus query functions ────────────────────────────────────────────────────
+
+/**
+ * Returns all focuses ordered by sort_order ASC.
+ * Archived focuses are excluded by default; pass `includeArchived: true` to include them.
+ */
+export async function getFocuses(
+  db: Db,
+  options?: { includeArchived?: boolean }
+): Promise<Focus[]> {
+  const sql = options?.includeArchived
+    ? `SELECT id, name, description, archived, sort_order, created_at FROM focus ORDER BY sort_order ASC`
+    : `SELECT id, name, description, archived, sort_order, created_at FROM focus WHERE archived = 0 ORDER BY sort_order ASC`;
+
+  const rows = await db.getAllAsync<FocusRaw>(sql);
+  return rows.map(mapFocus);
+}
+
+/**
+ * Creates a new focus with an optional set of pinned label IDs.
+ *
+ * If `labelIds` is provided, corresponding `focus_label` rows are inserted
+ * with `sort_order` equal to the array index.
+ *
+ * Returns the newly created Focus.
+ */
+export async function createFocus(
+  db: Db,
+  input: { name: string; labelIds?: number[] }
+): Promise<Focus> {
+  let focusId: number | undefined;
+
+  await db.withTransactionAsync(async () => {
+    const result = await db.runAsync(
+      `INSERT INTO focus (name, archived, sort_order, created_at) VALUES (?, 0, 0, ?)`,
+      [input.name, nowLocalIso()]
+    );
+    focusId = result.lastInsertRowId;
+
+    if (input.labelIds?.length) {
+      for (let i = 0; i < input.labelIds.length; i++) {
+        await db.runAsync(
+          `INSERT INTO focus_label (focus_id, label_id, sort_order) VALUES (?, ?, ?)`,
+          [focusId, input.labelIds[i], i]
+        );
+      }
+    }
+  });
+
+  if (focusId === undefined) {
+    throw new Error('createFocus: transaction completed without setting focusId');
+  }
+
+  const raw = await db.getFirstAsync<FocusRaw>(
+    `SELECT id, name, description, archived, sort_order, created_at FROM focus WHERE id = ?`,
+    [focusId]
+  );
+  if (!raw) throw new Error('createFocus: could not fetch newly inserted focus');
+  return mapFocus(raw);
+}
+
+/**
+ * Updates a focus's name and/or pinned labels.
+ *
+ * If `labelIds` is provided, existing `focus_label` rows are deleted and
+ * replaced with the new set. Passing `labelIds: []` removes all pinned labels —
+ * this is a valid operation, not a no-op.
+ */
+export async function updateFocus(
+  db: Db,
+  id: number,
+  patch: { name?: string; labelIds?: number[] }
+): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    if (patch.name !== undefined) {
+      await db.runAsync(`UPDATE focus SET name = ? WHERE id = ?`, [patch.name, id]);
+    }
+
+    if (patch.labelIds !== undefined) {
+      await db.runAsync(`DELETE FROM focus_label WHERE focus_id = ?`, [id]);
+      for (let i = 0; i < patch.labelIds.length; i++) {
+        await db.runAsync(
+          `INSERT INTO focus_label (focus_id, label_id, sort_order) VALUES (?, ?, ?)`,
+          [id, patch.labelIds[i], i]
+        );
+      }
+    }
+  });
+}
+
+/**
+ * Archives a focus (sets archived = 1). Archived focuses are hidden from the
+ * default getFocuses result but not deleted.
+ */
+export async function archiveFocus(db: Db, id: number): Promise<void> {
+  await db.runAsync(`UPDATE focus SET archived = 1 WHERE id = ?`, [id]);
+}
+
+/**
+ * Unarchives a focus (sets archived = 0).
+ */
+export async function unarchiveFocus(db: Db, id: number): Promise<void> {
+  await db.runAsync(`UPDATE focus SET archived = 0 WHERE id = ?`, [id]);
+}
+
+/**
+ * Returns the items (labels) associated with a focus.
+ *
+ * Each item has a `source` of:
+ * - `"pinned"` — explicitly added via focus_label
+ * - `"historical"` — appeared in an entry associated with this focus (via entry_focus + entry_label)
+ *   and NOT already in focus_label for this focus
+ *
+ * A label that is both pinned and historical appears once as `"pinned"`.
+ */
+export async function getFocusItems(db: Db, focusId: number): Promise<FocusItem[]> {
+  const rows = await db.getAllAsync<FocusItemRaw>(
+    `SELECT
+       l.id            AS label_id,
+       l.name          AS label_name,
+       et.id           AS entry_type_id,
+       et.name         AS entry_type_name,
+       et.title        AS entry_type_title,
+       'pinned'        AS source
+     FROM focus_label fl
+     JOIN label l      ON l.id = fl.label_id
+     JOIN entry_type et ON et.id = l.entry_type_id
+     WHERE fl.focus_id = ?
+     UNION ALL
+     SELECT DISTINCT
+       l.id, l.name, et.id, et.name, et.title,
+       'historical' AS source
+     FROM entry_focus ef
+     JOIN entry_label el ON el.entry_id = ef.entry_id
+     JOIN label l        ON l.id = el.label_id
+     JOIN entry_type et  ON et.id = l.entry_type_id
+     WHERE ef.focus_id = ?
+       AND l.id NOT IN (SELECT label_id FROM focus_label WHERE focus_id = ?)`,
+    [focusId, focusId, focusId]
+  );
+
+  return rows.map((r) => ({
+    labelId: r.label_id,
+    labelName: r.label_name,
+    entryTypeId: r.entry_type_id,
+    entryTypeName: r.entry_type_name,
+    entryTypeTitle: r.entry_type_title,
+    source: r.source,
+  }));
 }
