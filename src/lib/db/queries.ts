@@ -234,7 +234,7 @@ export async function saveEntry(db: Db, input: SaveEntryInput): Promise<number> 
     // (including the entry insert). Callers must ensure the focus exists first.
     if (input.focusId != null) {
       await db.runAsync(
-        `INSERT OR IGNORE INTO entry_focus (entry_id, focus_id) VALUES (?, ?)`,
+        `INSERT INTO entry_focus (entry_id, focus_id) VALUES (?, ?)`,
         [newEntryId, input.focusId]
       );
     }
@@ -585,18 +585,11 @@ export async function updateFocus(
 }
 
 /**
- * Archives a focus (sets archived = 1). Archived focuses are hidden from the
+ * Archives or unarchives a focus. Archived focuses are hidden from the
  * default getFocuses result but not deleted.
  */
-export async function archiveFocus(db: Db, id: number): Promise<void> {
-  await db.runAsync(`UPDATE focus SET archived = 1 WHERE id = ?`, [id]);
-}
-
-/**
- * Unarchives a focus (sets archived = 0).
- */
-export async function unarchiveFocus(db: Db, id: number): Promise<void> {
-  await db.runAsync(`UPDATE focus SET archived = 0 WHERE id = ?`, [id]);
+export async function setFocusArchived(db: Db, id: number, archived: boolean): Promise<void> {
+  await db.runAsync(`UPDATE focus SET archived = ? WHERE id = ?`, [archived ? 1 : 0, id]);
 }
 
 /**
@@ -631,7 +624,7 @@ export async function getFocusItems(db: Db, focusId: number): Promise<FocusItem[
      JOIN label l        ON l.id = el.label_id
      JOIN entry_type et  ON et.id = l.entry_type_id
      WHERE ef.focus_id = ?
-       AND l.id NOT IN (SELECT label_id FROM focus_label WHERE focus_id = ?)`,
+       AND NOT EXISTS (SELECT 1 FROM focus_label WHERE focus_id = ? AND label_id = l.id)`,
     [focusId, focusId, focusId]
   );
 

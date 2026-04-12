@@ -5,42 +5,18 @@
  * Jest/Node without an Expo device or the expo-sqlite native module.
  */
 import type Database from 'better-sqlite3';
-import { applyAllMigrations, openTestDb } from '../../lib/db/test-helpers';
+import { applyAllMigrations, openTestDb, anyLabelId, entryTypeId } from '../../lib/db/test-helpers';
 import { createAdapter, type AdaptedDb } from './adapter';
 import {
   getFocuses,
   createFocus,
   updateFocus,
-  archiveFocus,
-  unarchiveFocus,
+  setFocusArchived,
   getFocusItems,
   saveEntry,
 } from '../../lib/db/queries';
 
 const TEST_TS = '2026-04-10T09:00:00-07:00';
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
-function anyLabelId(raw: Database.Database, entryTypeName: string): number {
-  const row = raw
-    .prepare(
-      `SELECT l.id FROM label l
-       JOIN entry_type et ON l.entry_type_id = et.id
-       WHERE et.name = ? AND l.is_enabled = 1
-       LIMIT 1`
-    )
-    .get(entryTypeName) as { id: number } | undefined;
-  if (!row) throw new Error(`No enabled label for entry_type '${entryTypeName}'`);
-  return row.id;
-}
-
-function entryTypeId(raw: Database.Database, name: string): number {
-  const row = raw.prepare('SELECT id FROM entry_type WHERE name = ?').get(name) as
-    | { id: number }
-    | undefined;
-  if (!row) throw new Error(`entry_type '${name}' not found in seed`);
-  return row.id;
-}
 
 // ─── suite setup ─────────────────────────────────────────────────────────────
 
@@ -214,12 +190,12 @@ describe('focus query layer', () => {
     });
   });
 
-  // ── archiveFocus / unarchiveFocus ────────────────────────────────────────────
+  // ── setFocusArchived ─────────────────────────────────────────────────────────
 
-  describe('archiveFocus / unarchiveFocus', () => {
-    test('archiveFocus sets archived to true', async () => {
+  describe('setFocusArchived', () => {
+    test('archives a focus (archived: true)', async () => {
       const focus = await createFocus(db, { name: 'To Archive' });
-      await archiveFocus(db, focus.id);
+      await setFocusArchived(db, focus.id, true);
 
       const all = await getFocuses(db, { includeArchived: true });
       const found = all.find((f) => f.id === focus.id);
@@ -228,10 +204,10 @@ describe('focus query layer', () => {
       raw.prepare(`DELETE FROM focus WHERE id = ?`).run(focus.id);
     });
 
-    test('unarchiveFocus sets archived to false', async () => {
+    test('unarchives a focus (archived: false)', async () => {
       const focus = await createFocus(db, { name: 'To Unarchive' });
-      await archiveFocus(db, focus.id);
-      await unarchiveFocus(db, focus.id);
+      await setFocusArchived(db, focus.id, true);
+      await setFocusArchived(db, focus.id, false);
 
       const all = await getFocuses(db, { includeArchived: true });
       const found = all.find((f) => f.id === focus.id);
