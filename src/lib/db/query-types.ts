@@ -55,4 +55,38 @@ export interface SaveEntryInput {
   numericValue?: number;
   notes?: string;
   labelIds?: number[];
+  focusId?: number;
+}
+
+export interface Focus {
+  id: number;
+  name: string;
+  description: string | null;
+  archived: boolean; // stored as INTEGER 0/1 — mapped in query
+  sortOrder: number;
+  createdAt: string; // ISO-8601
+}
+
+export interface FocusLabel {
+  focusId: number;
+  labelId: number;
+  labelName: string;
+  entryTypeId: number;
+  entryTypeName: string;
+  sortOrder: number;
+}
+
+/**
+ * A single "item" associated with a focus — either a pinned label
+ * (from focus_label) or a historically-associated label (from entry_focus
+ * + entry_label). Both surface entry type info for display.
+ */
+export interface FocusItem {
+  labelId: number;
+  labelName: string;
+  entryTypeId: number;
+  entryTypeName: string;
+  entryTypeTitle: string;
+  /** "pinned" = explicitly added to focus_label; "historical" = appeared in an associated entry */
+  source: 'pinned' | 'historical';
 }

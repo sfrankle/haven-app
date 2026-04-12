@@ -10,7 +10,7 @@
  *   createAdapter()     → wraps better-sqlite3 to look like expo-sqlite
  */
 import type Database from 'better-sqlite3';
-import { applyAllMigrations, openTestDb } from '../../lib/db/test-helpers';
+import { applyAllMigrations, openTestDb, anyLabelId, entryTypeId } from '../../lib/db/test-helpers';
 import { createAdapter, type AdaptedDb } from './adapter';
 import {
   getEntryTypes,
@@ -20,31 +20,6 @@ import {
   getDailyHydrationTotal,
   createLabel,
 } from '../../lib/db/queries';
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
-/** Returns the entry_type id for a given name (guaranteed by seed). */
-function entryTypeId(raw: Database.Database, name: string): number {
-  const row = raw.prepare('SELECT id FROM entry_type WHERE name = ?').get(name) as
-    | { id: number }
-    | undefined;
-  if (!row) throw new Error(`entry_type '${name}' not found in seed`);
-  return row.id;
-}
-
-/** Returns any label id for a given entry_type name. */
-function anyLabelId(raw: Database.Database, entryTypeName: string): number {
-  const row = raw
-    .prepare(
-      `SELECT l.id FROM label l
-       JOIN entry_type et ON l.entry_type_id = et.id
-       WHERE et.name = ? AND l.is_enabled = 1
-       LIMIT 1`
-    )
-    .get(entryTypeName) as { id: number } | undefined;
-  if (!row) throw new Error(`No enabled label for entry_type '${entryTypeName}'`);
-  return row.id;
-}
 
 // ─── suite setup ─────────────────────────────────────────────────────────────
 

@@ -46,3 +46,26 @@ export function openTestDb(): Database.Database {
   db.pragma('foreign_keys = ON');
   return db;
 }
+
+/** Returns the entry_type id for a given name (guaranteed by seed). */
+export function entryTypeId(raw: Database.Database, name: string): number {
+  const row = raw.prepare('SELECT id FROM entry_type WHERE name = ?').get(name) as
+    | { id: number }
+    | undefined;
+  if (!row) throw new Error(`entry_type '${name}' not found in seed`);
+  return row.id;
+}
+
+/** Returns any enabled label id for a given entry_type name. */
+export function anyLabelId(raw: Database.Database, entryTypeName: string): number {
+  const row = raw
+    .prepare(
+      `SELECT l.id FROM label l
+       JOIN entry_type et ON l.entry_type_id = et.id
+       WHERE et.name = ? AND l.is_enabled = 1
+       LIMIT 1`
+    )
+    .get(entryTypeName) as { id: number } | undefined;
+  if (!row) throw new Error(`No enabled label for entry_type '${entryTypeName}'`);
+  return row.id;
+}
