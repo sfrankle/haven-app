@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { FlatList, Text, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, Text, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import dayjs from 'dayjs';
 import { Screen, EntryTypeTile } from '@/components';
@@ -32,6 +32,19 @@ export default function TendScreen() {
     />
   ), [handlePress]);
 
+  const AddFocusPill = useCallback(() => (
+    <View style={styles.focusRow}>
+      <Pressable
+        style={styles.addFocusPill}
+        onPress={() => router.push('/focus/create')}
+        testID="add-focus-pill"
+        accessibilityRole="button"
+      >
+        <Text style={styles.addFocusPillText}>+ Add Focus</Text>
+      </Pressable>
+    </View>
+  ), [router]);
+
   return (
     <Screen>
       <FlatList
@@ -39,6 +52,7 @@ export default function TendScreen() {
         numColumns={2}
         keyExtractor={(item) => String(item.id)}
         ListHeaderComponent={DateHeader}
+        ListFooterComponent={AddFocusPill}
         contentContainerStyle={styles.listContent}
         columnWrapperStyle={styles.columnWrapper}
         renderItem={renderItem}
@@ -63,6 +77,24 @@ const styles = StyleSheet.create({
     fontWeight: typeScale.titleLarge.weight,
     fontSize: typeScale.titleLarge.size,
     lineHeight: lineHeight(typeScale.titleLarge),
+    color: colors.ink,
+  },
+  focusRow: {
+    marginTop: spacing.sectionGap,
+    alignItems: 'flex-start',
+  },
+  addFocusPill: {
+    paddingHorizontal: spacing.sectionGap,
+    paddingVertical: spacing.elementGap,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.chrome,
+    backgroundColor: colors.surface,
+  },
+  addFocusPillText: {
+    fontFamily: typeScale.labelLarge.family,
+    fontSize: typeScale.labelLarge.size,
+    lineHeight: lineHeight(typeScale.labelLarge),
     color: colors.ink,
   },
 });
