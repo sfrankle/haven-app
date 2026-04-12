@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -29,14 +29,19 @@ export default function CreateFocusScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchSeq = useRef(0);
+
   const fetchSuggestions = useCallback(async () => {
     if (search.length === 0) {
       setRawSuggestions([]);
       return;
     }
+    const seq = ++fetchSeq.current;
     const db = (await getDb()) as unknown as Db;
     const labels = await searchLabelsAcross(db, search, SUGGESTION_LIMIT);
-    setRawSuggestions(labels);
+    if (seq === fetchSeq.current) {
+      setRawSuggestions(labels);
+    }
   }, [search]);
 
   useEffect(() => {
@@ -46,10 +51,12 @@ export default function CreateFocusScreen() {
     return () => clearTimeout(timer);
   }, [fetchSuggestions]);
 
-  const suggestions = useMemo(() => {
-    const selectedIds = new Set(chips.map((c) => c.id));
-    return rawSuggestions.filter((l) => !selectedIds.has(l.id));
-  }, [rawSuggestions, chips]);
+  const selectedIds = useMemo(() => new Set(chips.map((c) => c.id)), [chips]);
+
+  const suggestions = useMemo(
+    () => rawSuggestions.filter((l) => !selectedIds.has(l.id)),
+    [rawSuggestions, selectedIds],
+  );
 
   function handleSelect(label: Label) {
     setChips((prev) => [...prev, label]);
@@ -60,24 +67,26 @@ export default function CreateFocusScreen() {
     setChips((prev) => prev.filter((c) => c.id !== labelId));
   }
 
+  const trimmedName = name.trim();
+  const canSave = trimmedName.length > 0;
+
   async function handleSave() {
-    if (name.trim().length === 0) return;
+    if (!canSave) return;
     setSaving(true);
     setError(null);
     try {
       const db = (await getDb()) as unknown as Db;
       await createFocus(db, {
-        name: name.trim(),
+        name: trimmedName,
         labelIds: chips.map((c) => c.id),
       });
+      setSaving(false);
       router.back();
     } catch {
       setError('Something went wrong. Please try again.');
       setSaving(false);
     }
   }
-
-  const canSave = name.trim().length > 0;
 
   return (
     <Screen showBack>

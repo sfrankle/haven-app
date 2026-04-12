@@ -35,7 +35,6 @@ function makeLabel(id: number, name: string, entryTypeId = 1): Label {
 const LABEL_A = makeLabel(1, 'Oats');
 const LABEL_B = makeLabel(2, 'Running', 6);
 
-// ─── import screen after mocks ────────────────────────────────────────────────
 // eslint-disable-next-line import/first
 import CreateFocusScreen from '../create';
 

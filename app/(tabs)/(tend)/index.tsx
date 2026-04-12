@@ -7,6 +7,22 @@ import { useEntryTypes } from '@/hooks';
 import { colors, typeScale, spacing, lineHeight } from '@/constants/theme';
 import type { EntryType } from '@/lib/db/query-types';
 
+function AddFocusPill() {
+  const router = useRouter();
+  return (
+    <View style={styles.focusRow}>
+      <Pressable
+        style={styles.addFocusPill}
+        onPress={() => router.push('/focus/create')}
+        testID="add-focus-pill"
+        accessibilityRole="button"
+      >
+        <Text style={styles.addFocusPillText}>+ Add Focus</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function DateHeader() {
   const dateStr = dayjs().format('MMMM D');
   return (
@@ -31,19 +47,6 @@ export default function TendScreen() {
       testID={`tile-${item.name.toLowerCase()}`}
     />
   ), [handlePress]);
-
-  const AddFocusPill = useCallback(() => (
-    <View style={styles.focusRow}>
-      <Pressable
-        style={styles.addFocusPill}
-        onPress={() => router.push('/focus/create')}
-        testID="add-focus-pill"
-        accessibilityRole="button"
-      >
-        <Text style={styles.addFocusPillText}>+ Add Focus</Text>
-      </Pressable>
-    </View>
-  ), [router]);
 
   return (
     <Screen>
