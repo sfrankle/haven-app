@@ -71,7 +71,7 @@ export default function CreateFocusScreen() {
         labelIds: chips.map((c) => c.id),
       });
       router.back();
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
       setSaving(false);
     }
