@@ -95,7 +95,7 @@ export default function CreateFocusScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={logScreenStyles.screenContent}>
-          <Text style={logScreenStyles.prompt}>New focus</Text>
+          <Text style={logScreenStyles.prompt}>What would you like to keep an eye on?</Text>
 
           <TextInput
             style={styles.nameInput}
@@ -132,7 +132,7 @@ export default function CreateFocusScreen() {
 
           {search.length === 0 && chips.length === 0 && (
             <Text style={styles.emptyHint}>
-              Log an entry first to see new labels here
+              Labels from your entries will appear here
             </Text>
           )}
 
