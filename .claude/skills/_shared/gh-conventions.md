@@ -85,5 +85,5 @@ gh api repos/sfrankle/haven-app/pulls/<NUMBER>/comments/<COMMENT_ID>/replies \
 
 | Command / Pattern | Status |
 |---|---|
-| `gh api graphql addBlockedBy` | Works — use for task→user story relationships |
+| `gh api graphql addBlockedBy` | Works — use `issueId` and `blockingIssueId` fields (not `subjectId`/`blockingId`): `addBlockedBy(input: {issueId: $issueId, blockingIssueId: $blockingIssueId})` |
 | `gh project` (classic) | Deprecated — avoid |
