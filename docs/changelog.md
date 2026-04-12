@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#145](https://github.com/sfrankle/haven-app/pull/145) | Create Focus screen: name field, label picker, \"+ Add Focus\" pill on Tend, and Maestro flow test | 2026-04-12 |
 | [#144](https://github.com/sfrankle/haven-app/pull/144) | Focus data layer: `Focus`/`FocusLabel`/`FocusItem` types, six query functions, `saveEntry` focus association, and `useFocuses` hook with 24 tests | 2026-04-12 |
 | [#143](https://github.com/sfrankle/haven-app/pull/143) | Focus schema migration (v8): adds `focus`, `focus_label`, and `entry_focus` tables with FK constraints and 11 data integrity tests | 2026-04-10 |
 | [#142](https://github.com/sfrankle/haven-app/pull/142) | `LogFormShell` centralises submit state, Notes field, and save feedback across all six log screens; fixes duplicate-entry bug by guarding the save button while a write is in flight | 2026-04-10 |
