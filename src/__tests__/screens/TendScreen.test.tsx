@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import type { EntryType } from '@/lib/db/query-types';
-import { useEntryTypes } from '@/hooks';
+import { useEntryTypes, useFocuses } from '@/hooks';
 import TendScreen from '../../../app/(tabs)/(tend)/index';
 
 // Mock expo-router — must be declared before module is evaluated.
@@ -9,9 +9,10 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-// Mock the hook so we control data without a real DB.
+// Mock the hooks so we control data without a real DB.
 jest.mock('@/hooks', () => ({
   useEntryTypes: jest.fn(),
+  useFocuses: jest.fn(),
 }));
 
 // Declare after jest.mock so hoisting still works, but capture reference once.
@@ -26,13 +27,24 @@ const FIXTURE_ENTRY_TYPES: EntryType[] = [
   { id: 6, name: 'Activity',  title: 'Journey',    icon: 'hand-holding-heart', prompt: 'What did you do?',           measurementType: 'label_select' },
 ];
 
+const FIXTURE_FOCUSES = [
+  { id: 1, name: 'Gut Health', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01' },
+  { id: 2, name: 'Energy',     description: null, archived: false, sortOrder: 1, createdAt: '2026-01-02' },
+];
+
 describe('TendScreen', () => {
   const mockUseEntryTypes = jest.mocked(useEntryTypes);
+  const mockUseFocuses = jest.mocked(useFocuses);
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseEntryTypes.mockReturnValue({
       entryTypes: FIXTURE_ENTRY_TYPES,
+      loading: false,
+      error: null,
+    });
+    mockUseFocuses.mockReturnValue({
+      focuses: [],
       loading: false,
       error: null,
     });
@@ -50,7 +62,6 @@ describe('TendScreen', () => {
 
   it('renders a date header containing "Today"', () => {
     const { getByText } = render(<TendScreen />);
-    // The header format is "Today, Month D" — just assert "Today" is present.
     expect(getByText(/Today/)).toBeTruthy();
   });
 
@@ -68,11 +79,10 @@ describe('TendScreen', () => {
   it('renders tiles in the order returned by useEntryTypes', () => {
     const { getAllByRole } = render(<TendScreen />);
     const buttons = getAllByRole('button');
-    // There should be one button per entry type
     expect(buttons.length).toBeGreaterThanOrEqual(6);
   });
 
-  it('renders the "+ Add Focus" pill', () => {
+  it('renders the "+ Add Focus" pill always', () => {
     const { getByTestId } = render(<TendScreen />);
     expect(getByTestId('add-focus-pill')).toBeTruthy();
   });
@@ -81,5 +91,39 @@ describe('TendScreen', () => {
     const { getByTestId } = render(<TendScreen />);
     fireEvent.press(getByTestId('add-focus-pill'));
     expect(mockPush).toHaveBeenCalledWith('/focus/create');
+  });
+
+  it('renders focus pills for active focuses', () => {
+    mockUseFocuses.mockReturnValue({ focuses: FIXTURE_FOCUSES, loading: false, error: null });
+    const { getByTestId } = render(<TendScreen />);
+    expect(getByTestId('focus-pill-1')).toBeTruthy();
+    expect(getByTestId('focus-pill-2')).toBeTruthy();
+  });
+
+  it('shows focus pill labels', () => {
+    mockUseFocuses.mockReturnValue({ focuses: FIXTURE_FOCUSES, loading: false, error: null });
+    const { getByText } = render(<TendScreen />);
+    expect(getByText('Gut Health')).toBeTruthy();
+    expect(getByText('Energy')).toBeTruthy();
+  });
+
+  it('focus row absent when no active focuses', () => {
+    mockUseFocuses.mockReturnValue({ focuses: [], loading: false, error: null });
+    const { queryByTestId } = render(<TendScreen />);
+    expect(queryByTestId('focus-pill-1')).toBeNull();
+    expect(queryByTestId('focus-pill-2')).toBeNull();
+  });
+
+  it('tapping a focus pill navigates to /focus/[id]', () => {
+    mockUseFocuses.mockReturnValue({ focuses: FIXTURE_FOCUSES, loading: false, error: null });
+    const { getByTestId } = render(<TendScreen />);
+    fireEvent.press(getByTestId('focus-pill-1'));
+    expect(mockPush).toHaveBeenCalledWith('/focus/1');
+  });
+
+  it('+ Add Focus pill is present alongside focus pills', () => {
+    mockUseFocuses.mockReturnValue({ focuses: FIXTURE_FOCUSES, loading: false, error: null });
+    const { getByTestId } = render(<TendScreen />);
+    expect(getByTestId('add-focus-pill')).toBeTruthy();
   });
 });
