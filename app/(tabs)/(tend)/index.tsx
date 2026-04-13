@@ -20,8 +20,6 @@ function FocusRow() {
   const router = useRouter();
   const { focuses, loading } = useFocuses();
 
-  if (loading) return null;
-
   return (
     <ScrollView
       horizontal
@@ -29,10 +27,11 @@ function FocusRow() {
       contentContainerStyle={styles.focusRowContent}
       style={styles.focusRow}
     >
-      {focuses.map((focus) => (
+      {!loading && focuses.map((focus) => (
         <FocusPill
           key={focus.id}
           label={focus.name}
+          // Route is intentionally dead until #135 (Focus quick-log) ships
           onPress={() => router.push(`/focus/${focus.id}`)}
           testID={`focus-pill-${focus.id}`}
         />
