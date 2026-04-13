@@ -1,0 +1,28 @@
+appId: com.haven.app
+---
+- launchApp
+
+# Assert Tend tab is visible
+- assertVisible:
+    id: "tile-food"
+
+# Tap the "+ Add Focus" pill
+- tapOn:
+    id: "add-focus-pill"
+
+# Assert the Create Focus screen is shown
+- assertVisible:
+    id: "focus-name-input"
+
+# Type a focus name
+- tapOn:
+    id: "focus-name-input"
+- inputText: "Morning Routine"
+
+# Tap Save
+- tapOn:
+    id: "focus-save-button"
+
+# Assert returned to Tend screen
+- assertVisible:
+    id: "add-focus-pill"

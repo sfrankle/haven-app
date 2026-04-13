@@ -71,4 +71,15 @@ describe('TendScreen', () => {
     // There should be one button per entry type
     expect(buttons.length).toBeGreaterThanOrEqual(6);
   });
+
+  it('renders the "+ Add Focus" pill', () => {
+    const { getByTestId } = render(<TendScreen />);
+    expect(getByTestId('add-focus-pill')).toBeTruthy();
+  });
+
+  it('tapping the "+ Add Focus" pill pushes to /focus/create', () => {
+    const { getByTestId } = render(<TendScreen />);
+    fireEvent.press(getByTestId('add-focus-pill'));
+    expect(mockPush).toHaveBeenCalledWith('/focus/create');
+  });
 });

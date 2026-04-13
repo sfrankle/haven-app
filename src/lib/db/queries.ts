@@ -196,6 +196,33 @@ export async function getLabels(
 }
 
 /**
+ * Searches for labels by name prefix across all entry types simultaneously.
+ *
+ * Unlike `getLabels`, this function is not scoped to a single entry type —
+ * it is intended for cross-entry-type pickers such as the Focus label picker.
+ *
+ * Results are ordered by sort_order ASC. Default limit: 50.
+ */
+export async function searchLabelsAcross(
+  db: Db,
+  search: string,
+  limit: number = 50
+): Promise<Label[]> {
+  const rows = await db.getAllAsync<LabelRaw>(
+    `SELECT l.id, l.entry_type_id, l.name, l.parent_id, l.category_id,
+            c.name AS category_name, l.sort_order
+     FROM label l
+     LEFT JOIN category c ON c.id = l.category_id
+     WHERE l.is_enabled = 1
+       AND l.name LIKE ? || '%'
+     ORDER BY l.sort_order ASC
+     LIMIT ?`,
+    [search, limit]
+  );
+  return rows.map(mapLabel);
+}
+
+/**
  * Saves a new entry (source_type = 'log') inside a transaction.
  * Returns the new entry's auto-incremented ID.
  *
