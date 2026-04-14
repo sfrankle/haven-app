@@ -298,8 +298,7 @@ export async function getEntriesForTrace(
 
   // Build two query strings to avoid any risk of conditional SQL injection.
   // The JOIN variant restricts results to entries linked to the given focus.
-  const FILTERED_SQL = `${SELECT}
-    JOIN entry_focus ef ON ef.entry_id = e.id AND ef.focus_id = ?
+  const TAIL = `
     LEFT JOIN entry_label el ON el.entry_id = e.id
     LEFT JOIN label l ON l.id = el.label_id
     LEFT JOIN label lp ON lp.id = l.parent_id
@@ -307,13 +306,10 @@ export async function getEntriesForTrace(
     -- TODO(Milestone 9): add GROUP BY routine_completion_id layer here for Routines grouping
     ORDER BY e.timestamp DESC`;
 
-  const UNFILTERED_SQL = `${SELECT}
-    LEFT JOIN entry_label el ON el.entry_id = e.id
-    LEFT JOIN label l ON l.id = el.label_id
-    LEFT JOIN label lp ON lp.id = l.parent_id
-    LEFT JOIN category c ON c.id = l.category_id
-    -- TODO(Milestone 9): add GROUP BY routine_completion_id layer here for Routines grouping
-    ORDER BY e.timestamp DESC`;
+  const FILTERED_SQL = `${SELECT}
+    JOIN entry_focus ef ON ef.entry_id = e.id AND ef.focus_id = ?${TAIL}`;
+
+  const UNFILTERED_SQL = `${SELECT}${TAIL}`;
 
   const rows = await (options?.focusId != null
     ? db.getAllAsync<EntryTraceRaw>(FILTERED_SQL, [options.focusId])

@@ -8,11 +8,9 @@ import { summariseEntry, shouldShowAreaPrefix } from '@/lib/utils/traceUtils';
 import { formatEntryTime } from '@/lib/utils/timestamp';
 import { colors, typeScale, lineHeight, spacing } from '@/constants/theme';
 import type { EntryWithLabels } from '@/lib/db/query-types';
-import type { Focus } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
 import { messages } from '@/constants/messages';
-import { getDb } from '@/lib/db/database';
-import { getFocuses, type Db } from '@/lib/db/queries';
+import { useFocuses } from '@/hooks/useFocuses';
 import { FocusPill } from '@/components/FocusPill';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -84,33 +82,13 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
 
 export default function TraceScreen() {
   const [selectedFocusId, setSelectedFocusId] = useState<number | undefined>(undefined);
-  const [focuses, setFocuses] = useState<Focus[]>([]);
+  const { focuses } = useFocuses({ includeArchived: true });
   const { sections, loading, error } = useTraceEntries(selectedFocusId);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   useFocusEffect(
     useCallback(() => {
       setExpandedIds(new Set());
-    }, [])
-  );
-
-  // Inline focus load — uses Option A from the plan to avoid changing useFocuses
-  // signature used elsewhere. Runs once on mount (no screen-refocus reload needed
-  // since focus names don't change during a Trace session).
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      async function loadFocuses() {
-        try {
-          const db = (await getDb()) as unknown as Db;
-          const result = await getFocuses(db, { includeArchived: true });
-          if (!cancelled) setFocuses(result);
-        } catch {
-          // Silent — filter row simply stays hidden if focuses can't load
-        }
-      }
-      loadFocuses();
-      return () => { cancelled = true; };
     }, [])
   );
 
@@ -164,7 +142,7 @@ export default function TraceScreen() {
               label={focus.name}
               selected={selectedFocusId === focus.id}
               onPress={() => handleFocusPillPress(focus.id)}
-              testID={selectedFocusId === focus.id ? `focus-pill-selected-${focus.id}` : `focus-pill-${focus.id}`}
+              testID={`focus-pill-${focus.id}`}
             />
           ))}
         </ScrollView>

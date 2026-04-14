@@ -1,5 +1,6 @@
 /**
- * Returns all active focuses, reloaded whenever the screen gains focus.
+ * Returns focuses, reloaded whenever the screen gains focus.
+ * Pass `{ includeArchived: true }` to include archived focuses (active first).
  */
 
 import { useState, useCallback } from 'react';
@@ -14,7 +15,7 @@ export interface UseFocusesResult {
   error: Error | null;
 }
 
-export function useFocuses(): UseFocusesResult {
+export function useFocuses(options?: { includeArchived?: boolean }): UseFocusesResult {
   const [focuses, setFocuses] = useState<Focus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -26,7 +27,7 @@ export function useFocuses(): UseFocusesResult {
       async function load() {
         try {
           const db = (await getDb()) as unknown as Db;
-          const result = await getFocuses(db);
+          const result = await getFocuses(db, options);
           if (!cancelled) {
             setFocuses(result);
           }
@@ -46,7 +47,7 @@ export function useFocuses(): UseFocusesResult {
       return () => {
         cancelled = true;
       };
-    }, [])
+    }, [options?.includeArchived])
   );
 
   return { focuses, loading, error };

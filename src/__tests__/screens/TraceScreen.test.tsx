@@ -125,8 +125,8 @@ describe('TraceScreen', () => {
     let focusCb: (() => void) | undefined;
     (require('expo-router').useFocusEffect as jest.Mock).mockImplementation((cb: () => void) => {
       callCount += 1;
-      // First useFocusEffect in the screen resets expanded rows — capture that one.
-      if (callCount === 1) focusCb = cb;
+      // useFocuses (call 1) runs first; expand-reset is call 2.
+      if (callCount === 2) focusCb = cb;
     });
 
     const entry = makeEntry({

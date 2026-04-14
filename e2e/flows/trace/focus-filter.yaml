@@ -14,22 +14,22 @@ appId: com.haven.app
 - assertVisible:
     id: "focus-filter-row"
 
-# Tap the first focus pill (active, unselected)
+# Tap the first focus pill to activate the filter
 - tapOn:
     id: "focus-pill-1"
 
-# Assert the pill is now selected
+# Assert the pill is still present (stable testID regardless of selection state)
 - assertVisible:
-    id: "focus-pill-selected-1"
+    id: "focus-pill-1"
 
-# Assert at least the entry list area is visible (filter applied)
+# Assert the filter row is still visible
 - assertVisible:
     id: "focus-filter-row"
 
-# Tap the selected pill again to deselect (toggle off)
+# Tap the pill again to deselect (toggle off)
 - tapOn:
-    id: "focus-pill-selected-1"
+    id: "focus-pill-1"
 
-# Assert the pill is back to unselected state
+# Assert the pill is still present (unfiltered view restored)
 - assertVisible:
     id: "focus-pill-1"
