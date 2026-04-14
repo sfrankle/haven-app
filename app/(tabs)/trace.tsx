@@ -72,6 +72,14 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
               ))}
             </View>
           )}
+          {entry.notes != null && entry.notes !== '' && (
+            <Text
+              style={styles.expandedNotes}
+              testID={`trace-notes-${entry.id}`}
+            >
+              {entry.notes}
+            </Text>
+          )}
         </View>
       )}
     </View>
@@ -246,6 +254,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.elementGap,
+  },
+  expandedNotes: {
+    fontFamily: typeScale.bodyMedium.family,
+    fontSize: typeScale.bodyMedium.size,
+    lineHeight: lineHeight(typeScale.bodyMedium),
+    color: colors.chrome,
+    paddingTop: spacing.elementGap,
   },
   emptyContainer: {
     flex: 1,

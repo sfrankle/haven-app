@@ -150,6 +150,32 @@ describe('TraceScreen', () => {
     expect(queryByText('Oats')).toBeNull();
   });
 
+  it('shows notes text when entry has notes and row is expanded', () => {
+    const entry = makeEntry({ notes: 'felt great today', id: 7 });
+    mockUseTraceEntries.mockReturnValue({
+      sections: [makeSection('Today', [entry])],
+      loading: false,
+      error: null,
+    });
+    const { getByText, getByTestId, queryByTestId } = render(<TraceScreen />);
+    expect(queryByTestId('trace-notes-7')).toBeNull();
+    fireEvent.press(getByText('Slept 7 hours'));
+    expect(getByTestId('trace-notes-7')).toBeTruthy();
+    expect(getByText('felt great today')).toBeTruthy();
+  });
+
+  it('does not show notes when entry notes is null', () => {
+    const entry = makeEntry({ notes: null, id: 8 });
+    mockUseTraceEntries.mockReturnValue({
+      sections: [makeSection('Today', [entry])],
+      loading: false,
+      error: null,
+    });
+    const { getByText, queryByTestId } = render(<TraceScreen />);
+    fireEvent.press(getByText('Slept 7 hours'));
+    expect(queryByTestId('trace-notes-8')).toBeNull();
+  });
+
   it('tapping an expanded row collapses it and hides chips', () => {
     const entry = makeEntry({
       numericValue: null,
