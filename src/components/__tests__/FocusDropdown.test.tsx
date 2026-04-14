@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { FocusDropdown } from '../FocusDropdown';
 
 // Mock expo-router (useFocusEffect inside useFocuses)
@@ -21,7 +21,9 @@ jest.mock('@/lib/db/queries', () => ({
   createFocus: jest.fn(),
 }));
 
+// eslint-disable-next-line import/first
 import { useFocuses } from '@/hooks/useFocuses';
+// eslint-disable-next-line import/first
 import * as queries from '@/lib/db/queries';
 
 const mockUseFocuses = jest.mocked(useFocuses);

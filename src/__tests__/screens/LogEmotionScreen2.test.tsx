@@ -9,6 +9,7 @@ let mockParams: Record<string, string> = {};
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn() }),
   useLocalSearchParams: () => mockParams,
+  useFocusEffect: (cb: () => void) => { cb(); },
 }));
 
 jest.mock('@/hooks', () => ({
@@ -19,10 +20,15 @@ jest.mock('@/lib/db/queries', () => ({
   getTier1EmotionLabels: jest.fn(),
   getLabelsByParent: jest.fn(),
   saveEntry: jest.fn(),
+  createFocus: jest.fn(),
 }));
 
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
+}));
+
+jest.mock('@/hooks/useFocuses', () => ({
+  useFocuses: () => ({ focuses: [], loading: false, error: null }),
 }));
 
 jest.mock('@/lib/utils/timestamp', () => ({
