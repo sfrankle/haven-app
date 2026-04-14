@@ -29,4 +29,18 @@ describe('FocusPill', () => {
     const { getByLabelText } = render(<FocusPill label="Mood" onPress={jest.fn()} />);
     expect(getByLabelText('Mood')).toBeTruthy();
   });
+
+  it('renders unselected style by default', () => {
+    const { getByRole } = render(<FocusPill label="Gut Health" onPress={jest.fn()} />);
+    const pill = getByRole('button');
+    expect(pill.props.accessibilityState?.selected).toBeFalsy();
+  });
+
+  it('renders selected style when selected={true}', () => {
+    const { getByRole } = render(
+      <FocusPill label="Gut Health" onPress={jest.fn()} selected={true} />
+    );
+    const pill = getByRole('button');
+    expect(pill.props.accessibilityState?.selected).toBe(true);
+  });
 });

@@ -16,7 +16,7 @@ export interface UseTraceEntriesResult {
   error: Error | null;
 }
 
-export function useTraceEntries(): UseTraceEntriesResult {
+export function useTraceEntries(focusId?: number): UseTraceEntriesResult {
   const [sections, setSections] = useState<TraceSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -28,7 +28,7 @@ export function useTraceEntries(): UseTraceEntriesResult {
       async function load() {
         try {
           const db = (await getDb()) as unknown as Db;
-          const entries = await getEntriesForTrace(db);
+          const entries = await getEntriesForTrace(db, { focusId });
           if (!cancelled) {
             setSections(groupEntriesByDate(entries));
           }
@@ -48,7 +48,7 @@ export function useTraceEntries(): UseTraceEntriesResult {
       return () => {
         cancelled = true;
       };
-    }, [])
+    }, [focusId])
   );
 
   return { sections, loading, error };

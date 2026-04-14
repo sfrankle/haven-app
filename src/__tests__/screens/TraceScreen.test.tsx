@@ -5,6 +5,9 @@ import type { EntryWithLabels } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
 
 jest.mock('@/hooks/useTraceEntries');
+jest.mock('@/hooks/useFocuses', () => ({
+  useFocuses: jest.fn().mockReturnValue({ focuses: [], loading: false, error: null }),
+}));
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
 }));
