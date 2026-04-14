@@ -121,9 +121,12 @@ describe('TraceScreen', () => {
   });
 
   it('gaining focus collapses all expanded rows', () => {
+    let callCount = 0;
     let focusCb: (() => void) | undefined;
     (require('expo-router').useFocusEffect as jest.Mock).mockImplementation((cb: () => void) => {
-      focusCb = cb;
+      callCount += 1;
+      // First useFocusEffect in the screen resets expanded rows — capture that one.
+      if (callCount === 1) focusCb = cb;
     });
 
     const entry = makeEntry({
