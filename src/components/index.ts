@@ -14,3 +14,5 @@ export { SplitPaneRow } from './SplitPaneRow';
 export { EnergySlider } from './EnergySlider';
 export { SeverityRow } from './SeverityRow';
 export { FocusPill } from './FocusPill';
+export { ChipTray } from './ChipTray';
+export { FocusDropdown } from './FocusDropdown';

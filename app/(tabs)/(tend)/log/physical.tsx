@@ -10,7 +10,7 @@ import {
 import {
   Screen,
   SearchBar,
-  Chip,
+  ChipTray,
   LogFormShell,
   EnergySlider,
   SeverityRow,
@@ -202,7 +202,7 @@ export default function LogPhysicalScreen() {
     setSearch('');
   }
 
-  async function handleSave(extras: { notes?: string }) {
+  async function handleSave(extras: { notes?: string; focusId?: number }) {
     if (!physicalEntryType || chips.length === 0) return;
     const db = (await getDb()) as unknown as Db;
     const ts = nowLocalIso();
@@ -215,6 +215,7 @@ export default function LogPhysicalScreen() {
           numericValue: chip.value,
           labelIds: energyLabelIdRef.current !== null ? [energyLabelIdRef.current] : [],
           notes: extras.notes,
+          focusId: extras.focusId,
         });
       } else {
         return saveEntry(db, {
@@ -223,6 +224,7 @@ export default function LogPhysicalScreen() {
           numericValue: chip.severity ?? undefined,
           labelIds: [chip.id],
           notes: extras.notes,
+          focusId: extras.focusId,
         });
       }
     }));
@@ -308,31 +310,24 @@ export default function LogPhysicalScreen() {
 
           {/* Chip tray */}
           {chips.length > 0 && (
-            <View style={styles.chipTray}>
-              {chips.map((chip) => {
-                if (chip.kind === 'energy') {
-                  return (
-                    <Chip
-                      key="energy"
-                      label={formatChipLabel(chip)}
-                      color={colorForPhysicalLabel()}
-                      onRemove={() => handleRemoveChip('energy')}
-                      testID="physical-chip-energy"
-                    />
-                  );
-                }
-                return (
-                  <Chip
-                    key={chip.id}
-                    label={formatChipLabel(chip)}
-                    color={colorForPhysicalLabel()}
-                    onRemove={() => handleRemoveChip(chip.id)}
-                    onOpenSeverity={() => openSeverityRow(chip.id)}
-                    testID={`physical-chip-${chip.id}`}
-                  />
-                );
-              })}
-            </View>
+            <ChipTray
+              chips={chips.map((chip) =>
+                chip.kind === 'energy'
+                  ? {
+                      id: 'energy' as const,
+                      label: formatChipLabel(chip),
+                      color: colorForPhysicalLabel(),
+                    }
+                  : {
+                      id: chip.id,
+                      label: formatChipLabel(chip),
+                      color: colorForPhysicalLabel(),
+                      onOpenSeverity: () => openSeverityRow(chip.id),
+                    }
+              )}
+              onRemove={handleRemoveChip}
+              testID="physical"
+            />
           )}
 
           <LogFormShell
@@ -388,11 +383,5 @@ const styles = StyleSheet.create({
     fontSize: typeScale.bodyLarge.size,
     lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.glow,
-  },
-  chipTray: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.elementGap,
-    marginTop: spacing.sectionGap,
   },
 });

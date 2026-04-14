@@ -27,7 +27,7 @@ export default function LogHydrationScreen() {
     return () => { cancelled = true; };
   }, []);
 
-  async function handleSave(extras: { notes?: string }) {
+  async function handleSave(extras: { notes?: string; focusId?: number }) {
     if (!hydrationEntryType || oz.trim() === '') return;
 
     const parsed = parseFloat(oz);
@@ -40,6 +40,7 @@ export default function LogHydrationScreen() {
       timestamp,
       numericValue: isNaN(parsed) ? undefined : parsed,
       notes: extras.notes,
+      focusId: extras.focusId,
     });
     const total = await getDailyHydrationTotal(db, localDate);
     setDailyTotal(total);

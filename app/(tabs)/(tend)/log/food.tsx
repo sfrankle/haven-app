@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Screen, SearchBar, Chip, LogFormShell } from '@/components';
+import { Screen, SearchBar, ChipTray, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getLabels, saveEntry, createLabel } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -68,7 +68,7 @@ export default function LogFoodScreen() {
     setSearch('');
   }
 
-  async function handleSave(extras: { notes?: string }) {
+  async function handleSave(extras: { notes?: string; focusId?: number }) {
     if (!foodEntryType || chips.length === 0) return;
     const db = (await getDb()) as unknown as Db;
     await saveEntry(db, {
@@ -76,6 +76,7 @@ export default function LogFoodScreen() {
       timestamp: nowLocalIso(),
       labelIds: chips.map((c) => c.id),
       notes: extras.notes,
+      focusId: extras.focusId,
     });
   }
 
@@ -130,17 +131,11 @@ export default function LogFoodScreen() {
 
           {/* Selected chip tray */}
           {chips.length > 0 && (
-            <View style={styles.chipTray}>
-              {chips.map((chip) => (
-                <Chip
-                  key={chip.id}
-                  label={chip.name}
-                  color={colorForFoodLabel(chip)}
-                  onRemove={() => handleRemove(chip.id)}
-                  testID={`food-chip-${chip.id}`}
-                />
-              ))}
-            </View>
+            <ChipTray
+              chips={chips.map((c) => ({ id: c.id, label: c.name, color: colorForFoodLabel(c) }))}
+              onRemove={(id) => handleRemove(id as number)}
+              testID="food"
+            />
           )}
 
           <LogFormShell
@@ -193,11 +188,5 @@ const styles = StyleSheet.create({
     fontSize: typeScale.bodyLarge.size,
     lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.glow,
-  },
-  chipTray: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.elementGap,
-    marginTop: spacing.sectionGap,
   },
 });

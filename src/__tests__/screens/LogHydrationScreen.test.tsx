@@ -9,6 +9,7 @@ const mockBack = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: jest.fn(), replace: mockBack, push: jest.fn() }),
+  useFocusEffect: (cb: () => void) => { cb(); },
 }));
 
 jest.mock('@/hooks', () => ({
@@ -18,6 +19,7 @@ jest.mock('@/hooks', () => ({
 jest.mock('@/lib/db/queries', () => ({
   saveEntry: jest.fn(),
   getDailyHydrationTotal: jest.fn(),
+  createFocus: jest.fn(),
 }));
 
 jest.mock('@/lib/utils/timestamp', () => ({
@@ -26,6 +28,10 @@ jest.mock('@/lib/utils/timestamp', () => ({
 
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
+}));
+
+jest.mock('@/hooks/useFocuses', () => ({
+  useFocuses: () => ({ focuses: [], loading: false, error: null }),
 }));
 
 const HYDRATION_ENTRY_TYPE: EntryType = {

@@ -8,6 +8,7 @@ import * as timestamp from '@/lib/utils/timestamp';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: jest.fn(), replace: mockReplace, push: jest.fn() }),
+  useFocusEffect: (cb: () => void) => { cb(); },
 }));
 
 jest.mock('@/hooks', () => ({
@@ -19,6 +20,7 @@ jest.mock('@/lib/db/queries', () => ({
   getPhysicalParentLabels: jest.fn(),
   saveEntry: jest.fn(),
   createLabel: jest.fn(),
+  createFocus: jest.fn(),
 }));
 
 jest.mock('@/lib/utils/timestamp', () => ({
@@ -27,6 +29,10 @@ jest.mock('@/lib/utils/timestamp', () => ({
 
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
+}));
+
+jest.mock('@/hooks/useFocuses', () => ({
+  useFocuses: () => ({ focuses: [], loading: false, error: null }),
 }));
 
 const mockReplace = jest.fn();
