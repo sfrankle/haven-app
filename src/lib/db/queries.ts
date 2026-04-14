@@ -282,8 +282,11 @@ export async function saveEntry(db: Db, input: SaveEntryInput): Promise<number> 
  * NOTE: No pagination for MVP. Add cursor-based pagination when entry count
  * exceeds ~1000 rows.
  */
-export async function getEntriesForTrace(db: Db): Promise<EntryWithLabels[]> {
-  const rows = await db.getAllAsync<EntryTraceRaw>(`
+export async function getEntriesForTrace(
+  db: Db,
+  options?: { focusId?: number }
+): Promise<EntryWithLabels[]> {
+  const SELECT = `
     SELECT
       e.id, e.entry_type_id, e.source_type, e.timestamp, e.numeric_value, e.notes,
       et.name AS entry_type_name, et.title AS entry_type_title, et.icon AS entry_type_icon,
@@ -291,13 +294,30 @@ export async function getEntriesForTrace(db: Db): Promise<EntryWithLabels[]> {
       lp.name AS label_parent_name,
       l.category_id AS label_category_id, c.name AS label_category_name, l.sort_order AS label_sort_order
     FROM entry e
-    JOIN entry_type et ON et.id = e.entry_type_id
+    JOIN entry_type et ON et.id = e.entry_type_id`;
+
+  // Build two query strings to avoid any risk of conditional SQL injection.
+  // The JOIN variant restricts results to entries linked to the given focus.
+  const FILTERED_SQL = `${SELECT}
+    JOIN entry_focus ef ON ef.entry_id = e.id AND ef.focus_id = ?
     LEFT JOIN entry_label el ON el.entry_id = e.id
     LEFT JOIN label l ON l.id = el.label_id
     LEFT JOIN label lp ON lp.id = l.parent_id
     LEFT JOIN category c ON c.id = l.category_id
-    ORDER BY e.timestamp DESC
-  `);
+    -- TODO(Milestone 9): add GROUP BY routine_completion_id layer here for Routines grouping
+    ORDER BY e.timestamp DESC`;
+
+  const UNFILTERED_SQL = `${SELECT}
+    LEFT JOIN entry_label el ON el.entry_id = e.id
+    LEFT JOIN label l ON l.id = el.label_id
+    LEFT JOIN label lp ON lp.id = l.parent_id
+    LEFT JOIN category c ON c.id = l.category_id
+    -- TODO(Milestone 9): add GROUP BY routine_completion_id layer here for Routines grouping
+    ORDER BY e.timestamp DESC`;
+
+  const rows = await (options?.focusId != null
+    ? db.getAllAsync<EntryTraceRaw>(FILTERED_SQL, [options.focusId])
+    : db.getAllAsync<EntryTraceRaw>(UNFILTERED_SQL));
 
   // Collapse flat rows into structured entries, preserving timestamp DESC order.
   const entryMap = new Map<number, EntryWithLabels>();
@@ -532,7 +552,7 @@ export async function getFocuses(
   options?: { includeArchived?: boolean }
 ): Promise<Focus[]> {
   const sql = options?.includeArchived
-    ? `SELECT id, name, description, archived, sort_order, created_at FROM focus ORDER BY sort_order ASC`
+    ? `SELECT id, name, description, archived, sort_order, created_at FROM focus ORDER BY archived ASC, sort_order ASC`
     : `SELECT id, name, description, archived, sort_order, created_at FROM focus WHERE archived = 0 ORDER BY sort_order ASC`;
 
   const rows = await db.getAllAsync<FocusRaw>(sql);
