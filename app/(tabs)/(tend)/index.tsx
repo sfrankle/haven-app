@@ -1,16 +1,43 @@
 import React, { useCallback } from 'react';
-import { FlatList, Pressable, Text, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, Text, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import dayjs from 'dayjs';
-import { Screen, EntryTypeTile } from '@/components';
-import { useEntryTypes } from '@/hooks';
+import { Screen, EntryTypeTile, FocusPill } from '@/components';
+import { useEntryTypes, useFocuses } from '@/hooks';
 import { colors, typeScale, spacing, lineHeight } from '@/constants/theme';
 import type { EntryType } from '@/lib/db/query-types';
 
-function AddFocusPill() {
-  const router = useRouter();
+function DateHeader() {
+  const dateStr = dayjs().format('MMMM D');
   return (
-    <View style={styles.focusRow}>
+    <View style={styles.header}>
+      <Text style={styles.headerText}>{`Today, ${dateStr}`}</Text>
+    </View>
+  );
+}
+
+function FocusRow() {
+  const router = useRouter();
+  // error is intentionally ignored: if the DB query fails, the row shows only
+  // "+ Add Focus" so the user can still navigate. No error UI at this surface.
+  const { focuses, loading } = useFocuses();
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.focusRowContent}
+      style={styles.focusRow}
+    >
+      {!loading && focuses.map((focus) => (
+        <FocusPill
+          key={focus.id}
+          label={focus.name}
+          // Route is intentionally dead until #135 (Focus quick-log) ships
+          onPress={() => router.push(`/focus/${focus.id}`)}
+          testID={`focus-pill-${focus.id}`}
+        />
+      ))}
       <Pressable
         style={styles.addFocusPill}
         onPress={() => router.push('/focus/create')}
@@ -19,16 +46,16 @@ function AddFocusPill() {
       >
         <Text style={styles.addFocusPillText}>+ Add Focus</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
-function DateHeader() {
-  const dateStr = dayjs().format('MMMM D');
+function ListHeader() {
   return (
-    <View style={styles.header}>
-      <Text style={styles.headerText}>{`Today, ${dateStr}`}</Text>
-    </View>
+    <>
+      <DateHeader />
+      <FocusRow />
+    </>
   );
 }
 
@@ -54,8 +81,7 @@ export default function TendScreen() {
         data={loading ? [] : entryTypes}
         numColumns={2}
         keyExtractor={(item) => String(item.id)}
-        ListHeaderComponent={DateHeader}
-        ListFooterComponent={AddFocusPill}
+        ListHeaderComponent={ListHeader}
         contentContainerStyle={styles.listContent}
         columnWrapperStyle={styles.columnWrapper}
         renderItem={renderItem}
@@ -83,8 +109,11 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   focusRow: {
-    marginTop: spacing.sectionGap,
-    alignItems: 'flex-start',
+    marginBottom: spacing.sectionGap,
+  },
+  focusRowContent: {
+    gap: spacing.elementGap,
+    alignItems: 'center',
   },
   addFocusPill: {
     paddingHorizontal: spacing.sectionGap,

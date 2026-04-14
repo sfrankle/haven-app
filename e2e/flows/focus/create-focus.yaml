@@ -23,6 +23,8 @@ appId: com.haven.app
 - tapOn:
     id: "focus-save-button"
 
-# Assert returned to Tend screen
+# Assert returned to Tend screen with named focus pill visible
 - assertVisible:
     id: "add-focus-pill"
+- assertVisible:
+    text: "Morning Routine"
