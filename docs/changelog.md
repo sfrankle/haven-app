@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#147](https://github.com/sfrankle/haven-app/pull/147) | Focus filter in Trace: filter control narrows entry list by Focus (active or archived), with clear affordance to restore unfiltered view | 2026-04-14 |
 | [#146](https://github.com/sfrankle/haven-app/pull/146) | Focus pills row on Tend dashboard: named focus pills and \"+ Add Focus\" pill displayed above the entry grid | 2026-04-13 |
 | [#145](https://github.com/sfrankle/haven-app/pull/145) | Create Focus screen: name field, label picker, \"+ Add Focus\" pill on Tend, and Maestro flow test | 2026-04-12 |
 | [#144](https://github.com/sfrankle/haven-app/pull/144) | Focus data layer: `Focus`/`FocusLabel`/`FocusItem` types, six query functions, `saveEntry` focus association, and `useFocuses` hook with 24 tests | 2026-04-12 |
