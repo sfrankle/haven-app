@@ -1,0 +1,32 @@
+appId: com.haven.app
+name: Trace — notes visible in expanded row
+---
+# Log a sleep entry with notes, then verify notes appear in Trace.
+- launchApp:
+    clearState: true
+
+# Navigate to Tend tab and log a Sleep entry with notes
+- tapOn:
+    id: "tab-tend"
+- tapOn:
+    text: "Sleep"
+- tapOn:
+    id: "sleep-hours-input"
+- inputText: "8"
+- tapOn:
+    id: "sleep-notes-input"
+- inputText: "Slept well"
+- tapOn:
+    id: "sleep-save-button"
+- assertVisible: "Entry saved."
+
+# Navigate to Trace
+- tapOn:
+    id: "tab-trace"
+- assertVisible: "Slept 8 hours"
+
+# Expand the entry row
+- tapOn: "Slept 8 hours"
+
+# Notes should be visible
+- assertVisible: "Slept well"

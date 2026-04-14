@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, SearchBar, Chip } from '@/components';
+import { Screen, SearchBar, ChipTray } from '@/components';
 import { Button } from '@/components/Button';
 import { createFocus, searchLabelsAcross } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -63,7 +63,8 @@ export default function CreateFocusScreen() {
     setSearch('');
   }
 
-  function handleRemove(labelId: number) {
+  function handleRemove(labelId: number | 'energy') {
+    if (labelId === 'energy') return;
     setChips((prev) => prev.filter((c) => c.id !== labelId));
   }
 
@@ -137,17 +138,11 @@ export default function CreateFocusScreen() {
           )}
 
           {chips.length > 0 && (
-            <View style={styles.chipTray}>
-              {chips.map((chip) => (
-                <Chip
-                  key={chip.id}
-                  label={chip.name}
-                  color={colors.chrome}
-                  onRemove={() => handleRemove(chip.id)}
-                  testID={`focus-chip-${chip.id}`}
-                />
-              ))}
-            </View>
+            <ChipTray
+              chips={chips.map((c) => ({ id: c.id, label: c.name, color: colors.chrome }))}
+              onRemove={handleRemove}
+              testID="focus"
+            />
           )}
 
           {error !== null && (
@@ -205,12 +200,6 @@ const styles = StyleSheet.create({
     fontSize: typeScale.bodyLarge.size,
     lineHeight: lineHeight(typeScale.bodyLarge),
     color: colors.ink,
-  },
-  chipTray: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.elementGap,
-    marginTop: spacing.sectionGap,
   },
   emptyHint: {
     fontFamily: typeScale.bodyMedium.family,

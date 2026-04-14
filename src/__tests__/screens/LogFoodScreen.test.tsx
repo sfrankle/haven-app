@@ -8,6 +8,7 @@ import * as timestamp from '@/lib/utils/timestamp';
 // Must be hoisted before module evaluation.
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: jest.fn(), replace: mockBack, push: jest.fn() }),
+  useFocusEffect: (cb: () => void) => { cb(); },
 }));
 
 jest.mock('@/hooks', () => ({
@@ -18,6 +19,7 @@ jest.mock('@/lib/db/queries', () => ({
   getLabels: jest.fn(),
   saveEntry: jest.fn(),
   createLabel: jest.fn(),
+  createFocus: jest.fn(),
 }));
 
 jest.mock('@/lib/utils/timestamp', () => ({
@@ -27,6 +29,10 @@ jest.mock('@/lib/utils/timestamp', () => ({
 
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
+}));
+
+jest.mock('@/hooks/useFocuses', () => ({
+  useFocuses: () => ({ focuses: [], loading: false, error: null }),
 }));
 
 // Declared after jest.mock; hoisting keeps mocks available at module level.

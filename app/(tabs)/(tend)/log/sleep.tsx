@@ -14,7 +14,7 @@ export default function LogSleepScreen() {
 
   const sleepEntryType = entryTypes.find((t) => t.name === 'Sleep');
 
-  async function handleSave(extras: { notes?: string }) {
+  async function handleSave(extras: { notes?: string; focusId?: number }) {
     if (!sleepEntryType || hours.trim() === '') return;
 
     const parsed = parseFloat(hours);
@@ -25,6 +25,7 @@ export default function LogSleepScreen() {
       timestamp: nowLocalIso(),
       numericValue: isNaN(parsed) ? undefined : parsed,
       notes: extras.notes,
+      focusId: extras.focusId,
     });
   }
 

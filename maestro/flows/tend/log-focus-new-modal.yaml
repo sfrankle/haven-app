@@ -1,0 +1,39 @@
+appId: com.haven.app
+---
+- launchApp
+- assertVisible: "Nourish"
+- tapOn: "Nourish"
+- assertVisible:
+    id: "food-search"
+- tapOn:
+    id: "food-search"
+- inputText: "Eggs"
+- assertVisible:
+    id: "food-suggestion-*"
+- tapOn: "Eggs"
+- assertVisible:
+    id: "food-chip-*"
+# Open focus dropdown
+- tapOn:
+    id: "focus-toggle"
+- assertVisible:
+    id: "focus-new"
+# Open the new focus modal
+- tapOn:
+    id: "focus-new"
+- assertVisible:
+    id: "focus-new-modal"
+- tapOn:
+    id: "focus-new-name-input"
+- inputText: "Digestion"
+- tapOn:
+    id: "focus-new-submit"
+# Modal should close; new focus name should appear as selected in toggle
+- assertNotVisible:
+    id: "focus-new-modal"
+# Save the entry
+- assertVisible:
+    id: "food-save-button"
+- tapOn:
+    id: "food-save-button"
+- assertVisible: "Entry saved."

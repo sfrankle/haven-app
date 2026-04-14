@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { SectionList, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Screen, Chip } from '@/components';
+import { Screen, ChipTray } from '@/components';
 import { useFocusEffect } from 'expo-router';
 import { useTraceEntries } from '@/hooks/useTraceEntries';
 import { summariseEntry, shouldShowAreaPrefix } from '@/lib/utils/traceUtils';
@@ -61,16 +61,22 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
       {expanded && (
         <View style={styles.expandedContainer}>
           {entry.labels.length > 0 && (
-            <View style={styles.chipsRow}>
-              {entry.labels.map((label) => (
-                <Chip
-                  key={label.id}
-                  label={formatTraceChipLabel(label, entry)}
-                  color={colors.surfaceVariant}
-                  testID={`trace-chip-${label.id}`}
-                />
-              ))}
-            </View>
+            <ChipTray
+              chips={entry.labels.map((label) => ({
+                id: label.id,
+                label: formatTraceChipLabel(label, entry),
+                color: colors.surfaceVariant,
+              }))}
+              testID="trace-expanded"
+            />
+          )}
+          {entry.notes != null && entry.notes !== '' && (
+            <Text
+              style={styles.expandedNotes}
+              testID={`trace-notes-${entry.id}`}
+            >
+              {entry.notes}
+            </Text>
           )}
         </View>
       )}
@@ -107,6 +113,24 @@ export default function TraceScreen() {
       return next;
     });
   }, []);
+
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: TraceSection }) => (
+      <Text style={styles.sectionHeader}>{section.title}</Text>
+    ),
+    [],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: EntryWithLabels }) => (
+      <EntryRow
+        entry={item}
+        expanded={expandedIds.has(item.id)}
+        onToggle={handleToggle}
+      />
+    ),
+    [expandedIds, handleToggle],
+  );
 
   if (loading) {
     return null;
@@ -161,16 +185,8 @@ export default function TraceScreen() {
           keyExtractor={(item) => String(item.id)}
           stickySectionHeadersEnabled={false}
           contentContainerStyle={styles.listContent}
-          renderSectionHeader={({ section }) => (
-            <Text style={styles.sectionHeader}>{section.title}</Text>
-          )}
-          renderItem={({ item }) => (
-            <EntryRow
-              entry={item}
-              expanded={expandedIds.has(item.id)}
-              onToggle={handleToggle}
-            />
-          )}
+          renderSectionHeader={renderSectionHeader}
+          renderItem={renderItem}
         />
       )}
     </Screen>
@@ -242,10 +258,12 @@ const styles = StyleSheet.create({
     paddingTop: spacing.elementGap,
     paddingBottom: 32,
   },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.elementGap,
+  expandedNotes: {
+    fontFamily: typeScale.bodyMedium.family,
+    fontSize: typeScale.bodyMedium.size,
+    lineHeight: lineHeight(typeScale.bodyMedium),
+    color: colors.chrome,
+    paddingTop: spacing.elementGap,
   },
   emptyContainer: {
     flex: 1,

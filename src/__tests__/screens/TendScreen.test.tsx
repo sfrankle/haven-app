@@ -7,12 +7,25 @@ import TendScreen from '../../../app/(tabs)/(tend)/index';
 // Mock expo-router — must be declared before module is evaluated.
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
+  useFocusEffect: (cb: () => void) => { cb(); },
 }));
 
 // Mock the hooks so we control data without a real DB.
 jest.mock('@/hooks', () => ({
   useEntryTypes: jest.fn(),
   useFocuses: jest.fn(),
+}));
+
+jest.mock('@/hooks/useFocuses', () => ({
+  useFocuses: () => ({ focuses: [], loading: false, error: null }),
+}));
+
+jest.mock('@/lib/db/database', () => ({
+  getDb: jest.fn().mockResolvedValue({}),
+}));
+
+jest.mock('@/lib/db/queries', () => ({
+  createFocus: jest.fn(),
 }));
 
 // Declare after jest.mock so hoisting still works, but capture reference once.

@@ -67,7 +67,7 @@ export default function LogEmotionScreen3() {
     setChipLabel(null);
   }
 
-  async function handleSave(extras: { notes?: string }) {
+  async function handleSave(extras: { notes?: string; focusId?: number }) {
     if (!emotionEntryType || !chipLabel) return;
     const db = (await getDb()) as unknown as Db;
     await saveEntry(db, {
@@ -75,6 +75,7 @@ export default function LogEmotionScreen3() {
       timestamp: nowLocalIso(),
       labelIds: [chipLabel.id],
       notes: extras.notes,
+      focusId: extras.focusId,
     });
   }
 

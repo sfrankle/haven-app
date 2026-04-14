@@ -4,12 +4,14 @@ import { useRouter } from 'expo-router';
 import { Button } from './Button';
 import { SaveConfirmation } from './SaveConfirmation';
 import { SaveErrorMessage } from './SaveErrorMessage';
+import { FocusDropdown } from './FocusDropdown';
 import { colors } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
 
 interface LogFormShellProps {
   canSubmit: boolean;
-  onSave: (extras: { notes?: string }) => Promise<void>;
+  onSave: (extras: { notes?: string; focusId?: number }) => Promise<void>;
+  initialFocusId?: number;
   confirmationTestID?: string;
   errorTestID?: string;
   saveButtonTestID?: string;
@@ -19,6 +21,7 @@ interface LogFormShellProps {
 export function LogFormShell({
   canSubmit,
   onSave,
+  initialFocusId,
   confirmationTestID,
   errorTestID,
   saveButtonTestID,
@@ -29,6 +32,7 @@ export function LogFormShell({
   const [saveError, setSaveError] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [notes, setNotes] = useState('');
+  const [focusId, setFocusId] = useState<number | undefined>(initialFocusId);
 
   async function handlePress() {
     if (saving) return;
@@ -37,7 +41,7 @@ export function LogFormShell({
     try {
       const trimmed = notes.trim();
       const notesValue = trimmed !== '' ? trimmed : undefined;
-      await onSave({ notes: notesValue });
+      await onSave({ notes: notesValue, focusId });
       setShowConfirmation(true);
     } catch {
       setSaveError(true);
@@ -52,6 +56,13 @@ export function LogFormShell({
 
   return (
     <>
+      <FocusDropdown
+        selectedId={focusId}
+        onSelect={setFocusId}
+        defaultExpanded={initialFocusId !== undefined}
+        testID="focus-dropdown"
+      />
+
       <TextInput
         style={logScreenStyles.notesInput}
         value={notes}

@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#148](https://github.com/sfrankle/haven-app/pull/148) | Focus field added to all six log screens via `LogFormShell`; new `FocusDropdown` and `ChipTray` components extracted | 2026-04-14 |
 | [#147](https://github.com/sfrankle/haven-app/pull/147) | Focus filter in Trace: filter control narrows entry list by Focus (active or archived), with clear affordance to restore unfiltered view | 2026-04-14 |
 | [#146](https://github.com/sfrankle/haven-app/pull/146) | Focus pills row on Tend dashboard: named focus pills and \"+ Add Focus\" pill displayed above the entry grid | 2026-04-13 |
 | [#145](https://github.com/sfrankle/haven-app/pull/145) | Create Focus screen: name field, label picker, \"+ Add Focus\" pill on Tend, and Maestro flow test | 2026-04-12 |
