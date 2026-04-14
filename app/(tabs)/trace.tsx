@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { SectionList, StyleSheet, Text, View, Pressable } from 'react-native';
+import { SectionList, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen, Chip } from '@/components';
 import { useFocusEffect } from 'expo-router';
@@ -8,8 +8,12 @@ import { summariseEntry, shouldShowAreaPrefix } from '@/lib/utils/traceUtils';
 import { formatEntryTime } from '@/lib/utils/timestamp';
 import { colors, typeScale, lineHeight, spacing } from '@/constants/theme';
 import type { EntryWithLabels } from '@/lib/db/query-types';
+import type { Focus } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
 import { messages } from '@/constants/messages';
+import { getDb } from '@/lib/db/database';
+import { getFocuses, type Db } from '@/lib/db/queries';
+import { FocusPill } from '@/components/FocusPill';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -79,7 +83,9 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function TraceScreen() {
-  const { sections, loading, error } = useTraceEntries();
+  const [selectedFocusId, setSelectedFocusId] = useState<number | undefined>(undefined);
+  const [focuses, setFocuses] = useState<Focus[]>([]);
+  const { sections, loading, error } = useTraceEntries(selectedFocusId);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   useFocusEffect(
@@ -87,6 +93,30 @@ export default function TraceScreen() {
       setExpandedIds(new Set());
     }, [])
   );
+
+  // Inline focus load — uses Option A from the plan to avoid changing useFocuses
+  // signature used elsewhere. Runs once on mount (no screen-refocus reload needed
+  // since focus names don't change during a Trace session).
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      async function loadFocuses() {
+        try {
+          const db = (await getDb()) as unknown as Db;
+          const result = await getFocuses(db, { includeArchived: true });
+          if (!cancelled) setFocuses(result);
+        } catch {
+          // Silent — filter row simply stays hidden if focuses can't load
+        }
+      }
+      loadFocuses();
+      return () => { cancelled = true; };
+    }, [])
+  );
+
+  const handleFocusPillPress = useCallback((id: number) => {
+    setSelectedFocusId((prev) => (prev === id ? undefined : id));
+  }, []);
 
   const handleToggle = useCallback((id: number) => {
     setExpandedIds((prev) => {
@@ -120,9 +150,32 @@ export default function TraceScreen() {
 
   return (
     <Screen>
+      {focuses.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterRow}
+          contentContainerStyle={styles.filterRowContent}
+          testID="focus-filter-row"
+        >
+          {focuses.map((focus) => (
+            <FocusPill
+              key={focus.id}
+              label={focus.name}
+              selected={selectedFocusId === focus.id}
+              onPress={() => handleFocusPillPress(focus.id)}
+              testID={selectedFocusId === focus.id ? `focus-pill-selected-${focus.id}` : `focus-pill-${focus.id}`}
+            />
+          ))}
+        </ScrollView>
+      )}
       {isEmpty ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Nothing logged yet.</Text>
+          <Text style={styles.emptyText}>
+            {selectedFocusId != null
+              ? 'No entries for this Focus yet.'
+              : 'Nothing logged yet.'}
+          </Text>
         </View>
       ) : (
         <SectionList<EntryWithLabels, TraceSection>
@@ -149,6 +202,16 @@ export default function TraceScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  filterRow: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  filterRowContent: {
+    flexDirection: 'row',
+    gap: spacing.elementGap,
+    paddingHorizontal: spacing.pagePadding,
+    paddingVertical: spacing.elementGap,
+  },
   listContent: {
     paddingBottom: spacing.pagePadding,
   },
