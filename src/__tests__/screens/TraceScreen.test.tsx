@@ -5,6 +5,9 @@ import type { EntryWithLabels } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
 
 jest.mock('@/hooks/useTraceEntries');
+jest.mock('@/hooks/useFocuses', () => ({
+  useFocuses: jest.fn().mockReturnValue({ focuses: [], loading: false, error: null }),
+}));
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
 }));
@@ -121,12 +124,9 @@ describe('TraceScreen', () => {
   });
 
   it('gaining focus collapses all expanded rows', () => {
-    let callCount = 0;
     let focusCb: (() => void) | undefined;
     (require('expo-router').useFocusEffect as jest.Mock).mockImplementation((cb: () => void) => {
-      callCount += 1;
-      // useFocuses (call 1) runs first; expand-reset is call 2.
-      if (callCount === 2) focusCb = cb;
+      focusCb = cb;
     });
 
     const entry = makeEntry({

@@ -74,11 +74,14 @@ describe('useTraceEntries', () => {
     expect(mockGetEntriesForTrace).toHaveBeenCalledWith(MOCK_DB, { focusId: 3 });
   });
 
-  it('re-fetches when focusId changes', async () => {
-    // Render with focusId=5 directly — the hook must pass that value through
-    const { result } = renderHook(() => useTraceEntries(5));
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(mockGetEntriesForTrace).toHaveBeenCalledWith(MOCK_DB, { focusId: 5 });
+  it('passes updated focusId when re-rendered with a new value', async () => {
+    const { rerender } = renderHook(({ id }: { id?: number }) => useTraceEntries(id), {
+      initialProps: { id: undefined as number | undefined },
+    });
+    await waitFor(() => expect(mockGetEntriesForTrace).toHaveBeenCalledWith(MOCK_DB, { focusId: undefined }));
+
+    rerender({ id: 7 });
+    await waitFor(() => expect(mockGetEntriesForTrace).toHaveBeenCalledWith(MOCK_DB, { focusId: 7 }));
   });
 
   it('sets error and loading=false on db failure', async () => {
