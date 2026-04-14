@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   Pressable,
@@ -16,28 +16,21 @@ import type { Db } from '@/lib/db/queries';
 interface FocusDropdownProps {
   selectedId: number | undefined;
   onSelect: (id: number | undefined) => void;
-  initialFocusId?: number;
+  defaultExpanded?: boolean;
   testID?: string;
 }
 
 export function FocusDropdown({
   selectedId,
   onSelect,
-  initialFocusId,
+  defaultExpanded,
   testID,
 }: FocusDropdownProps) {
   const { focuses } = useFocuses();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded ?? false);
   const [modalVisible, setModalVisible] = useState(false);
   const [newName, setNewName] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  // Auto-expand when initialFocusId provided
-  useEffect(() => {
-    if (initialFocusId !== undefined) {
-      setExpanded(true);
-    }
-  }, [initialFocusId]);
 
   function handleToggle() {
     setExpanded((prev) => !prev);
@@ -75,9 +68,12 @@ export function FocusDropdown({
     }
   }
 
-  const toggleLabel = selectedId !== undefined
-    ? (focuses.find((f) => f.id === selectedId)?.name ?? '+ Focus')
-    : '+ Focus';
+  const toggleLabel = useMemo(
+    () => selectedId !== undefined
+      ? (focuses.find((f) => f.id === selectedId)?.name ?? '+ Focus')
+      : '+ Focus',
+    [focuses, selectedId],
+  );
 
   return (
     <View testID={testID}>

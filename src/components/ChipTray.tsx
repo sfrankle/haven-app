@@ -12,13 +12,11 @@ export interface ChipTrayItem {
 
 interface ChipTrayProps {
   chips: ChipTrayItem[];
-  onRemove: (id: number | 'energy') => void;
+  onRemove?: (id: number | 'energy') => void;
   testID?: string;
 }
 
 export function ChipTray({ chips, onRemove, testID }: ChipTrayProps) {
-  if (chips.length === 0) return null;
-
   return (
     <View style={styles.tray} testID={testID}>
       {chips.map((chip) => (
@@ -26,7 +24,7 @@ export function ChipTray({ chips, onRemove, testID }: ChipTrayProps) {
           key={String(chip.id)}
           label={chip.label}
           color={chip.color}
-          onRemove={() => onRemove(chip.id)}
+          onRemove={onRemove ? () => onRemove(chip.id) : undefined}
           onOpenSeverity={chip.onOpenSeverity}
           testID={testID ? `${testID}-chip-${chip.id}` : `chip-${chip.id}`}
         />

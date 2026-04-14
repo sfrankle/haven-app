@@ -77,9 +77,9 @@ describe('FocusDropdown', () => {
     expect(onSelect).toHaveBeenCalledWith(undefined);
   });
 
-  it('auto-expands when initialFocusId is provided', () => {
+  it('auto-expands when defaultExpanded is true', () => {
     const { getByTestId } = render(
-      <FocusDropdown selectedId={2} onSelect={jest.fn()} initialFocusId={2} />
+      <FocusDropdown selectedId={2} onSelect={jest.fn()} defaultExpanded />
     );
     // Should be expanded without needing to tap toggle
     expect(getByTestId('focus-option-1')).toBeTruthy();

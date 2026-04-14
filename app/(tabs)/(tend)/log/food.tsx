@@ -60,6 +60,11 @@ export default function LogFoodScreen() {
     setChips((prev) => prev.filter((c) => c.id !== labelId));
   }
 
+  const chipTrayItems = useMemo(
+    () => chips.map((c) => ({ id: c.id, label: c.name, color: colorForFoodLabel(c) })),
+    [chips],
+  );
+
   async function handleAddCustom() {
     if (!foodEntryType || search.trim() === '') return;
     const db = (await getDb()) as unknown as Db;
@@ -132,7 +137,7 @@ export default function LogFoodScreen() {
           {/* Selected chip tray */}
           {chips.length > 0 && (
             <ChipTray
-              chips={chips.map((c) => ({ id: c.id, label: c.name, color: colorForFoodLabel(c) }))}
+              chips={chipTrayItems}
               onRemove={(id) => handleRemove(id as number)}
               testID="food"
             />

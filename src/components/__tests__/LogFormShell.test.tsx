@@ -10,7 +10,7 @@ jest.mock('expo-router', () => ({
 
 // Mock FocusDropdown to isolate LogFormShell tests
 jest.mock('../FocusDropdown', () => ({
-  FocusDropdown: ({ onSelect, testID }: { onSelect: (id: number | undefined) => void; testID?: string; initialFocusId?: number }) => {
+  FocusDropdown: ({ onSelect, testID }: { onSelect: (id: number | undefined) => void; testID?: string; defaultExpanded?: boolean }) => {
     const React = require('react');
     const { Pressable, Text } = require('react-native');
     return (

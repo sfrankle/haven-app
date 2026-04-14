@@ -59,7 +59,7 @@ export function LogFormShell({
       <FocusDropdown
         selectedId={focusId}
         onSelect={setFocusId}
-        initialFocusId={initialFocusId}
+        defaultExpanded={initialFocusId !== undefined}
         testID="focus-dropdown"
       />
 

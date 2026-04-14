@@ -122,7 +122,7 @@ export default function LogPhysicalScreen() {
     [rawSuggestions, selectedStateIds]
   );
 
-  const hasEnergyChip = chips.some((c) => c.kind === 'energy');
+  const hasEnergyChip = useMemo(() => chips.some((c) => c.kind === 'energy'), [chips]);
   const canSubmit = chips.length > 0;
   const showAddCustom = search.trim().length > 0 && suggestions.length === 0;
 
@@ -160,13 +160,22 @@ export default function LogPhysicalScreen() {
     }
   }
 
-  function openSeverityRow(chipId: number) {
+  const openSeverityRow = useCallback((chipId: number) => {
     if (severityTimerRef.current) clearTimeout(severityTimerRef.current);
     setActiveSeverityChipId(chipId);
     severityTimerRef.current = setTimeout(() => {
       setActiveSeverityChipId(null);
     }, SEVERITY_AUTO_DISMISS_MS);
-  }
+  }, []);
+
+  const chipTrayItems = useMemo(
+    () => chips.map((chip) =>
+      chip.kind === 'energy'
+        ? { id: 'energy' as const, label: formatChipLabel(chip), color: colorForPhysicalLabel() }
+        : { id: chip.id, label: formatChipLabel(chip), color: colorForPhysicalLabel(), onOpenSeverity: () => openSeverityRow(chip.id) }
+    ),
+    [chips, openSeverityRow],
+  );
 
   function handleSeverityChange(severity: number) {
     if (activeSeverityChipId === null) return;
@@ -311,20 +320,7 @@ export default function LogPhysicalScreen() {
           {/* Chip tray */}
           {chips.length > 0 && (
             <ChipTray
-              chips={chips.map((chip) =>
-                chip.kind === 'energy'
-                  ? {
-                      id: 'energy' as const,
-                      label: formatChipLabel(chip),
-                      color: colorForPhysicalLabel(),
-                    }
-                  : {
-                      id: chip.id,
-                      label: formatChipLabel(chip),
-                      color: colorForPhysicalLabel(),
-                      onOpenSeverity: () => openSeverityRow(chip.id),
-                    }
-              )}
+              chips={chipTrayItems}
               onRemove={handleRemoveChip}
               testID="physical"
             />

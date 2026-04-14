@@ -59,6 +59,11 @@ export default function LogActivityScreen() {
     setChips((prev) => prev.filter((c) => c.id !== labelId));
   }
 
+  const chipTrayItems = useMemo(
+    () => chips.map((c) => ({ id: c.id, label: c.name, color: colorForActivityLabel(c) })),
+    [chips],
+  );
+
   async function handleAddCustom() {
     if (!activityEntryType || search.trim() === '') return;
     const db = (await getDb()) as unknown as Db;
@@ -129,7 +134,7 @@ export default function LogActivityScreen() {
           {/* Selected chip tray */}
           {chips.length > 0 && (
             <ChipTray
-              chips={chips.map((c) => ({ id: c.id, label: c.name, color: colorForActivityLabel(c) }))}
+              chips={chipTrayItems}
               onRemove={(id) => handleRemove(id as number)}
               testID="activity"
             />
