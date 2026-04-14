@@ -1,7 +1,18 @@
 appId: com.haven.app
 ---
-- launchApp
-- assertVisible: "Nourish"
+- launchApp:
+    clearState: true
+# First create a focus so the dropdown has something to select
+- tapOn:
+    id: "add-focus-pill"
+- assertVisible:
+    id: "focus-name-input"
+- tapOn:
+    id: "focus-name-input"
+- inputText: "Digestion"
+- tapOn:
+    id: "focus-save-button"
+# Back on Tend — now log a food entry and attach the focus
 - tapOn: "Nourish"
 - assertVisible:
     id: "food-search"
@@ -13,12 +24,14 @@ appId: com.haven.app
 - tapOn: "Oats"
 - assertVisible:
     id: "food-chip-*"
-# Expand focus field
+# Expand focus field and select the focus
 - tapOn:
     id: "focus-toggle"
-# If focuses exist, tap the first one
 - assertVisible:
     id: "focus-new"
+- tapOn:
+    id: "focus-option-*"
+# Save the entry
 - assertVisible:
     id: "food-save-button"
 - tapOn:

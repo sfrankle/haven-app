@@ -63,7 +63,8 @@ export default function CreateFocusScreen() {
     setSearch('');
   }
 
-  function handleRemove(labelId: number) {
+  function handleRemove(labelId: number | 'energy') {
+    if (labelId === 'energy') return;
     setChips((prev) => prev.filter((c) => c.id !== labelId));
   }
 
@@ -139,7 +140,7 @@ export default function CreateFocusScreen() {
           {chips.length > 0 && (
             <ChipTray
               chips={chips.map((c) => ({ id: c.id, label: c.name, color: colors.chrome }))}
-              onRemove={(id) => handleRemove(id as number)}
+              onRemove={handleRemove}
               testID="focus"
             />
           )}

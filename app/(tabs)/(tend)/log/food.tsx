@@ -56,7 +56,8 @@ export default function LogFoodScreen() {
     setSearch('');
   }
 
-  function handleRemove(labelId: number) {
+  function handleRemove(labelId: number | 'energy') {
+    if (labelId === 'energy') return;
     setChips((prev) => prev.filter((c) => c.id !== labelId));
   }
 
@@ -138,7 +139,7 @@ export default function LogFoodScreen() {
           {chips.length > 0 && (
             <ChipTray
               chips={chipTrayItems}
-              onRemove={(id) => handleRemove(id as number)}
+              onRemove={handleRemove}
               testID="food"
             />
           )}
