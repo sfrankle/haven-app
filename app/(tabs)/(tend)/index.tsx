@@ -18,6 +18,8 @@ function DateHeader() {
 
 function FocusRow() {
   const router = useRouter();
+  // error is intentionally ignored: if the DB query fails, the row shows only
+  // "+ Add Focus" so the user can still navigate. No error UI at this surface.
   const { focuses, loading } = useFocuses();
 
   return (
