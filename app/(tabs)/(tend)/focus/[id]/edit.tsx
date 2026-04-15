@@ -215,7 +215,7 @@ export default function EditFocusScreen() {
 
           {historicalLabels.length > 0 && (
             <View style={styles.historicalSection}>
-              <Text style={styles.historicalHeading}>Also seen in entries</Text>
+              <Text style={styles.historicalHeading}>Noticed in past entries</Text>
               <View style={styles.historicalChips}>
                 {historicalLabels.map((l) => (
                   <View
@@ -252,6 +252,8 @@ export default function EditFocusScreen() {
               />
             </View>
           )}
+
+          <View style={styles.archiveSeparator} />
 
           <View style={styles.archiveButton}>
             <Button
@@ -321,7 +323,14 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.elementGap,
   },
-  archiveButton: {
+  archiveSeparator: {
+    height: 1,
+    backgroundColor: colors.chrome,
+    opacity: 0.2,
     marginTop: spacing.sectionGap,
+    marginBottom: spacing.sectionGap,
+  },
+  archiveButton: {
+    marginTop: 0,
   },
 });

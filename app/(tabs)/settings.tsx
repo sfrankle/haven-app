@@ -46,10 +46,14 @@ function SettingsFocusSection() {
       const db = (await getDb()) as unknown as Db;
       await setFocusArchived(db, focus.id, false);
       setLocallyUnarchived((prev) => new Set([...prev, focus.id]));
+    } catch {
+      // unarchive failed — row remains visible; user can retry
     } finally {
       setUnarchiving(null);
     }
   }
+
+  if (allFocuses.length === 0) return null;
 
   return (
     <View style={styles.section}>
