@@ -5,15 +5,17 @@ import { colors, typeScale, spacing, lineHeight } from '@/constants/theme';
 interface FocusPillProps {
   label: string;
   onPress: () => void;
+  onLongPress?: () => void;
   testID?: string;
   selected?: boolean;
 }
 
-export function FocusPill({ label, onPress, testID, selected = false }: FocusPillProps) {
+export function FocusPill({ label, onPress, onLongPress, testID, selected = false }: FocusPillProps) {
   return (
     <Pressable
       style={[styles.pill, selected && styles.pillSelected]}
       onPress={onPress}
+      onLongPress={onLongPress}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected }}

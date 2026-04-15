@@ -1,0 +1,54 @@
+appId: com.haven.app
+---
+- launchApp
+
+# Ensure Tend tab is visible
+- assertVisible:
+    id: "tile-food"
+
+# Create a focus to archive
+- tapOn:
+    id: "add-focus-pill"
+- assertVisible:
+    id: "focus-name-input"
+- tapOn:
+    id: "focus-name-input"
+- inputText: "Archive Me"
+- tapOn:
+    id: "focus-save-button"
+- assertVisible:
+    text: "Archive Me"
+
+# Long-press to open edit screen
+- longPressOn:
+    text: "Archive Me"
+- assertVisible:
+    id: "focus-edit-archive-button"
+
+# Tap archive button
+- tapOn:
+    id: "focus-edit-archive-button"
+
+# Assert returned to Tend and focus pill is gone
+- assertVisible:
+    id: "add-focus-pill"
+- assertNotVisible:
+    text: "Archive Me"
+
+# Navigate to Settings tab
+- tapOn:
+    id: "tab-settings"
+
+# Assert archived focus row is visible
+- assertVisible:
+    id: "settings-focus-archived-row-*"
+
+# Tap Unarchive
+- tapOn:
+    text: "Unarchive"
+
+# Navigate back to Tend and assert focus pill is visible again
+- tapOn:
+    id: "tab-tend"
+- assertVisible:
+    text: "Archive Me"

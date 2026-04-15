@@ -1,0 +1,45 @@
+appId: com.haven.app
+---
+- launchApp
+
+# Ensure Tend tab is visible
+- assertVisible:
+    id: "tile-food"
+
+# Create a focus first so we have something to edit
+- tapOn:
+    id: "add-focus-pill"
+- assertVisible:
+    id: "focus-name-input"
+- tapOn:
+    id: "focus-name-input"
+- inputText: "Edit Me"
+- tapOn:
+    id: "focus-save-button"
+- assertVisible:
+    text: "Edit Me"
+
+# Long-press the focus pill to open edit screen
+- longPressOn:
+    text: "Edit Me"
+
+# Assert edit screen is shown
+- assertVisible:
+    id: "focus-edit-name-input"
+
+# Clear name and type a new one
+- clearText:
+    id: "focus-edit-name-input"
+- tapOn:
+    id: "focus-edit-name-input"
+- inputText: "Renamed Focus"
+
+# Tap save
+- tapOn:
+    id: "focus-edit-save-button"
+
+# Assert returned to Tend with new name visible
+- assertVisible:
+    id: "add-focus-pill"
+- assertVisible:
+    text: "Renamed Focus"
