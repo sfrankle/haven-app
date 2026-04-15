@@ -127,6 +127,56 @@ describe('FocusDropdown', () => {
     expect(queryByTestId('focus-new-modal')).toBeNull();
   });
 
+  it('shows duplicate-name error when createFocus rejects with UNIQUE constraint', async () => {
+    mockCreateFocus.mockRejectedValue(new Error('UNIQUE constraint failed: focus.name'));
+    const { getByTestId } = render(
+      <FocusDropdown selectedId={undefined} onSelect={jest.fn()} />
+    );
+    fireEvent.press(getByTestId('focus-toggle'));
+    fireEvent.press(getByTestId('focus-new'));
+    fireEvent.changeText(getByTestId('focus-new-name-input'), 'Gut health');
+    await act(async () => {
+      fireEvent.press(getByTestId('focus-new-submit'));
+    });
+    expect(getByTestId('focus-error-message').props.children).toBe(
+      'A focus with that name already exists.'
+    );
+    // Modal stays open
+    expect(getByTestId('focus-new-name-input')).toBeTruthy();
+  });
+
+  it('shows generic error when createFocus rejects with unknown error', async () => {
+    mockCreateFocus.mockRejectedValue(new Error('disk full'));
+    const { getByTestId } = render(
+      <FocusDropdown selectedId={undefined} onSelect={jest.fn()} />
+    );
+    fireEvent.press(getByTestId('focus-toggle'));
+    fireEvent.press(getByTestId('focus-new'));
+    fireEvent.changeText(getByTestId('focus-new-name-input'), 'Some focus');
+    await act(async () => {
+      fireEvent.press(getByTestId('focus-new-submit'));
+    });
+    expect(getByTestId('focus-error-message').props.children).toBe(
+      'Something went wrong. Please try again.'
+    );
+  });
+
+  it('clears error when user edits the input after an error', async () => {
+    mockCreateFocus.mockRejectedValue(new Error('UNIQUE constraint failed: focus.name'));
+    const { getByTestId, queryByTestId } = render(
+      <FocusDropdown selectedId={undefined} onSelect={jest.fn()} />
+    );
+    fireEvent.press(getByTestId('focus-toggle'));
+    fireEvent.press(getByTestId('focus-new'));
+    fireEvent.changeText(getByTestId('focus-new-name-input'), 'Gut health');
+    await act(async () => {
+      fireEvent.press(getByTestId('focus-new-submit'));
+    });
+    expect(getByTestId('focus-error-message')).toBeTruthy();
+    fireEvent.changeText(getByTestId('focus-new-name-input'), 'Gut health 2');
+    expect(queryByTestId('focus-error-message')).toBeNull();
+  });
+
   it('modal input clears after close', async () => {
     mockCreateFocus.mockResolvedValue({
       id: 100, name: 'Temp', description: null, archived: false, sortOrder: 0, createdAt: '',
