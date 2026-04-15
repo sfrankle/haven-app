@@ -35,6 +35,7 @@ function FocusRow() {
           label={focus.name}
           // Route is intentionally dead until #135 (Focus quick-log) ships
           onPress={() => router.push(`/focus/${focus.id}`)}
+          onLongPress={() => router.push(`/focus/${focus.id}/edit`)}
           testID={`focus-pill-${focus.id}`}
         />
       ))}
