@@ -5,14 +5,15 @@ import { messages } from '@/constants/messages';
 
 interface SaveErrorMessageProps {
   visible: boolean;
+  message?: string;
   testID?: string;
 }
 
-export function SaveErrorMessage({ visible, testID }: SaveErrorMessageProps) {
+export function SaveErrorMessage({ visible, message, testID }: SaveErrorMessageProps) {
   if (!visible) return null;
   return (
     <Text style={logScreenStyles.saveErrorText} testID={testID}>
-      {messages.saveError}
+      {message ?? messages.saveError}
     </Text>
   );
 }

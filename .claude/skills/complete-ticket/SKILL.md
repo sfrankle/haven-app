@@ -19,9 +19,15 @@ Write state to `docs/plans/ticket-in-progress.json` after every step. Write the 
 Make a todo list of the following steps. Mark each in_progress when starting, completed when done, before moving to the next.
 
 ### 1. Determine next task
-- Dispatch the `next-task` skill
-- If the result is ambiguous (multiple candidates, unclear priority) → escalate to Sarah
-- Write state: `step: "start"`, `issue: <number>`
+- If a `next_issue` is already populated in the state file (set by a prior wrap-up), use that issue number directly — skip `next-task`
+- Otherwise, dispatch the `next-task` skill; it returns a ranked table of open technical tasks
+  - If the result is ambiguous (multiple candidates, unclear priority) → escalate to Sarah
+  - Record the **2nd** issue in the table (if one exists) as `next_issue` — we already have this, no extra call needed
+- Fetch and cache the milestone:
+  ```bash
+  gh issue view <ISSUE_NUMBER> --json milestone --jq '.milestone.title'
+  ```
+- Write state: `step: "start"`, `issue: <number>`, `milestone: "<title>"`, `next_issue: <number or null>`
 
 ### 2. Plan
 - Dispatch `haven-technical-planner` subagent with the issue number
@@ -56,10 +62,9 @@ Make a todo list of the following steps. Mark each in_progress when starting, co
   ```bash
   gh pr ready <PR_NUMBER>
   ```
-- Assign the milestone from the issue:
+- Assign the milestone using the cached value from state (no GH lookup needed):
   ```bash
-  milestone=$(gh issue view <ISSUE_NUMBER> --json milestone --jq '.milestone.title')
-  gh pr edit <PR_NUMBER> --milestone "$milestone"
+  gh pr edit <PR_NUMBER> --milestone "<state.milestone>"
   ```
 - Write state: `step: "pr-created"`, `pr_number: <number>`
 
@@ -98,9 +103,15 @@ Apply `escalation-policy.md`:
 - Write state: `step: "pushed"`
 
 ### 12. Wrap up
+- Capture `state.next_issue` before invoking wrap-up (the file will be deleted)
 - Invoke `/wrap-up-pr`
-- It runs `haven-pr-readiness`, checks the CI box, and deletes `docs/plans/ticket-in-progress.json`
-- Write state: `step: "wrap-up-complete"` (then the file is deleted)
+  - It runs `haven-pr-readiness`, checks the CI box, and deletes `docs/plans/ticket-in-progress.json`
+- If `next_issue` was set, immediately write a fresh minimal state file:
+  ```json
+  { "next_issue": <NUMBER>, "step": "start" }
+  ```
+  Tell Sarah: "Next up: #N — <title>. Run /complete-ticket to start."
+- If `next_issue` was null, tell Sarah the milestone is complete (or no queued task). Do not write a state file.
 
 ### 13. Stop
 Hand to Sarah for merge. Do not merge.

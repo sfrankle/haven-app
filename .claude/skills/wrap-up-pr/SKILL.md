@@ -10,7 +10,7 @@ Make a todo list of the following items. When starting a step, mark it as in-pro
 - Delete the local plan file from `docs/plans/` if one exists
 - Delete `docs/plans/ticket-in-progress.json` if it exists:
   ```bash
-  rm -f .claude/local/ticket-in-progress.json
+  rm -f docs/plans/ticket-in-progress.json
   ```
 
 Then stop. Human merges the PR.

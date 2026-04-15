@@ -11,6 +11,8 @@ import { useFocuses } from '@/hooks/useFocuses';
 import { createFocus } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { colors, spacing, typeScale, lineHeight } from '@/constants/theme';
+import { messages } from '@/constants/messages';
+import { SaveErrorMessage } from '@/components/SaveErrorMessage';
 import type { Db } from '@/lib/db/queries';
 
 interface FocusDropdownProps {
@@ -31,6 +33,7 @@ export function FocusDropdown({
   const [modalVisible, setModalVisible] = useState(false);
   const [newName, setNewName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   function handleToggle() {
     setExpanded((prev) => !prev);
@@ -46,11 +49,18 @@ export function FocusDropdown({
 
   function handleOpenModal() {
     setNewName('');
+    setErrorMessage('');
     setModalVisible(true);
   }
 
   function handleCancel() {
+    setErrorMessage('');
     setModalVisible(false);
+  }
+
+  function handleNameChange(text: string) {
+    setNewName(text);
+    setErrorMessage('');
   }
 
   async function handleSubmit() {
@@ -63,6 +73,13 @@ export function FocusDropdown({
       onSelect(focus.id);
       setModalVisible(false);
       setNewName('');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('UNIQUE')) {
+        setErrorMessage(messages.focusDuplicateName);
+      } else {
+        setErrorMessage(messages.focusCreateError);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -130,10 +147,15 @@ export function FocusDropdown({
               testID="focus-new-name-input"
               style={styles.modalInput}
               value={newName}
-              onChangeText={setNewName}
+              onChangeText={handleNameChange}
               placeholder="Focus name"
               placeholderTextColor={colors.chrome}
               autoFocus
+            />
+            <SaveErrorMessage
+              visible={errorMessage !== ''}
+              message={errorMessage}
+              testID="focus-error-message"
             />
             <View style={styles.modalButtons}>
               <Pressable
