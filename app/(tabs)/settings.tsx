@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Surface } from '@/components';
 import { useFocuses } from '@/hooks/useFocuses';
@@ -52,13 +52,13 @@ function SettingsFocusSection() {
   }
 
   return (
-    <View style={{ paddingHorizontal: spacing.pagePadding, paddingTop: spacing.sectionGap }}>
+    <View style={styles.section}>
       <Text style={sectionLabelStyle}>Focus</Text>
 
       {activeFocuses.map((focus) => (
         <Surface
           key={focus.id}
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.elementGap }}
+          style={styles.focusRow}
           testID={`settings-focus-row-${focus.id}`}
         >
           <Text style={focusNameStyle}>{focus.name}</Text>
@@ -69,18 +69,18 @@ function SettingsFocusSection() {
             testID={`settings-focus-edit-${focus.id}`}
             hitSlop={8}
           >
-            <Text style={{ fontSize: 18, color: colors.chrome }}>⚙</Text>
+            <Text style={styles.settingsIcon}>⚙</Text>
           </Pressable>
         </Surface>
       ))}
 
       {archivedFocuses.length > 0 && (
-        <View style={{ marginTop: spacing.elementGap }}>
-          <Text style={[sectionLabelStyle, { marginTop: spacing.elementGap }]}>Archived</Text>
+        <View style={styles.archivedGroup}>
+          <Text style={[sectionLabelStyle, styles.archivedHeading]}>Archived</Text>
           {archivedFocuses.map((focus) => (
             <Surface
               key={focus.id}
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.elementGap }}
+              style={styles.focusRow}
               testID={`settings-focus-archived-row-${focus.id}`}
             >
               <Text style={focusNameStyle}>{focus.name}</Text>
@@ -92,16 +92,7 @@ function SettingsFocusSection() {
                 testID={`settings-focus-unarchive-${focus.id}`}
                 hitSlop={8}
               >
-                <Text
-                  style={{
-                    fontFamily: typeScale.labelMedium.family,
-                    fontSize: typeScale.labelMedium.size,
-                    lineHeight: lineHeight(typeScale.labelMedium),
-                    color: colors.interactive,
-                  }}
-                >
-                  Unarchive
-                </Text>
+                <Text style={styles.unarchiveText}>Unarchive</Text>
               </Pressable>
             </Surface>
           ))}
@@ -114,24 +105,17 @@ function SettingsFocusSection() {
 export default function SettingsScreen() {
   return (
     <Screen>
-      <View style={{ paddingHorizontal: spacing.pagePadding, paddingTop: spacing.sectionGap }}>
+      <View style={styles.section}>
         <Text style={sectionLabelStyle}>Privacy</Text>
-        <Surface style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Surface style={styles.focusRow}>
           <Text
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
-            style={{ fontSize: typeScale.bodyMedium.size }}
+            style={styles.lockIcon}
           >🔒</Text>
           <Text
             testID="privacy-notice"
-            style={{
-              flex: 1,
-              fontFamily: typeScale.bodyMedium.family,
-              fontWeight: typeScale.bodyMedium.weight,
-              fontSize: typeScale.bodyMedium.size,
-              lineHeight: lineHeight(typeScale.bodyMedium),
-              color: colors.ink,
-            }}
+            style={focusNameStyle}
           >
             Your data is stored only on this device.
           </Text>
@@ -142,3 +126,34 @@ export default function SettingsScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  section: {
+    paddingHorizontal: spacing.pagePadding,
+    paddingTop: spacing.sectionGap,
+  },
+  focusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.elementGap,
+  },
+  settingsIcon: {
+    fontSize: 18,
+    color: colors.chrome,
+  },
+  archivedGroup: {
+    marginTop: spacing.elementGap,
+  },
+  archivedHeading: {
+    marginTop: spacing.elementGap,
+  },
+  unarchiveText: {
+    fontFamily: typeScale.labelMedium.family,
+    fontSize: typeScale.labelMedium.size,
+    lineHeight: lineHeight(typeScale.labelMedium),
+    color: colors.interactive,
+  },
+  lockIcon: {
+    fontSize: typeScale.bodyMedium.size,
+  },
+});

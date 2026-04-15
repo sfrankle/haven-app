@@ -44,8 +44,8 @@ export default function EditFocusScreen() {
 
   const fetchSeq = useRef(0);
 
-  // Load focus data on mount
   useEffect(() => {
+    let isMounted = true;
     async function load() {
       try {
         const db = (await getDb()) as unknown as Db;
@@ -53,6 +53,7 @@ export default function EditFocusScreen() {
           getFocuses(db, { includeArchived: true }),
           getFocusItems(db, focusId),
         ]);
+        if (!isMounted) return;
 
         const focus = focuses.find((f) => f.id === focusId);
         if (focus) {
@@ -86,10 +87,11 @@ export default function EditFocusScreen() {
           }))
         );
       } catch {
-        // silently ignore load errors for now
+        // load errors are non-fatal; screen stays empty
       }
     }
     void load();
+    return () => { isMounted = false; };
   }, [focusId]);
 
   const fetchSuggestions = useCallback(async () => {
@@ -193,11 +195,11 @@ export default function EditFocusScreen() {
               {suggestions.map((label) => (
                 <Pressable
                   key={label.id}
-                  style={styles.suggestionChip}
+                  style={styles.outlineChip}
                   onPress={() => handleSelect(label)}
                   testID={`focus-edit-suggestion-${label.id}`}
                 >
-                  <Text style={styles.suggestionChipText}>{label.name}</Text>
+                  <Text style={styles.outlineChipText}>{label.name}</Text>
                 </Pressable>
               ))}
             </View>
@@ -218,10 +220,10 @@ export default function EditFocusScreen() {
                 {historicalLabels.map((l) => (
                   <View
                     key={l.id}
-                    style={styles.historicalChip}
+                    style={[styles.outlineChip, styles.outlineChipMuted]}
                     testID={`focus-edit-historical-label-${l.id}`}
                   >
-                    <Text style={styles.historicalChipText}>{l.name}</Text>
+                    <Text style={styles.outlineChipText}>{l.name}</Text>
                   </View>
                 ))}
               </View>
@@ -286,7 +288,7 @@ const styles = StyleSheet.create({
     gap: spacing.elementGap,
     marginTop: spacing.elementGap,
   },
-  suggestionChip: {
+  outlineChip: {
     paddingHorizontal: spacing.elementGap,
     paddingVertical: 8,
     borderRadius: 20,
@@ -294,7 +296,10 @@ const styles = StyleSheet.create({
     borderColor: colors.chrome,
     backgroundColor: colors.surface,
   },
-  suggestionChipText: {
+  outlineChipMuted: {
+    opacity: 0.5,
+  },
+  outlineChipText: {
     fontFamily: typeScale.bodyLarge.family,
     fontSize: typeScale.bodyLarge.size,
     lineHeight: lineHeight(typeScale.bodyLarge),
@@ -315,21 +320,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.elementGap,
-  },
-  historicalChip: {
-    paddingHorizontal: spacing.elementGap,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.chrome,
-    backgroundColor: colors.surface,
-    opacity: 0.5,
-  },
-  historicalChipText: {
-    fontFamily: typeScale.bodyLarge.family,
-    fontSize: typeScale.bodyLarge.size,
-    lineHeight: lineHeight(typeScale.bodyLarge),
-    color: colors.ink,
   },
   archiveButton: {
     marginTop: spacing.sectionGap,

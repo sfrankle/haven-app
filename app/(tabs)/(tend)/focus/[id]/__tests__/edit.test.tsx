@@ -1,9 +1,3 @@
-/**
- * Component tests for the Edit Focus screen.
- *
- * Mocks expo-router, the DB module, and query functions so the screen can
- * be rendered in Jest/Node without a device or expo-sqlite.
- */
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import type { Label } from '@/lib/db/query-types';
