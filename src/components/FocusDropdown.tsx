@@ -12,6 +12,7 @@ import { createFocus } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { colors, spacing, typeScale, lineHeight } from '@/constants/theme';
 import { messages } from '@/constants/messages';
+import { SaveErrorMessage } from '@/components/SaveErrorMessage';
 import type { Db } from '@/lib/db/queries';
 
 interface FocusDropdownProps {
@@ -57,6 +58,11 @@ export function FocusDropdown({
     setModalVisible(false);
   }
 
+  function handleNameChange(text: string) {
+    setNewName(text);
+    setErrorMessage('');
+  }
+
   async function handleSubmit() {
     const trimmed = newName.trim();
     if (!trimmed || submitting) return;
@@ -69,7 +75,7 @@ export function FocusDropdown({
       setNewName('');
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
-      if (msg.toUpperCase().includes('UNIQUE')) {
+      if (msg.includes('UNIQUE')) {
         setErrorMessage(messages.focusDuplicateName);
       } else {
         setErrorMessage(messages.focusCreateError);
@@ -141,16 +147,16 @@ export function FocusDropdown({
               testID="focus-new-name-input"
               style={styles.modalInput}
               value={newName}
-              onChangeText={(text) => { setNewName(text); setErrorMessage(''); }}
+              onChangeText={handleNameChange}
               placeholder="Focus name"
               placeholderTextColor={colors.chrome}
               autoFocus
             />
-            {errorMessage !== '' && (
-              <Text testID="focus-error-message" style={styles.errorText}>
-                {errorMessage}
-              </Text>
-            )}
+            <SaveErrorMessage
+              visible={errorMessage !== ''}
+              message={errorMessage}
+              testID="focus-error-message"
+            />
             <View style={styles.modalButtons}>
               <Pressable
                 testID="focus-new-cancel"
@@ -234,13 +240,6 @@ const styles = StyleSheet.create({
     borderColor: colors.chrome,
     paddingVertical: spacing.elementGap / 2,
     marginBottom: spacing.sectionGap,
-  },
-  errorText: {
-    fontFamily: typeScale.bodyLarge.family,
-    fontSize: typeScale.bodyLarge.size,
-    lineHeight: lineHeight(typeScale.bodyLarge),
-    color: colors.error,
-    marginBottom: spacing.elementGap,
   },
   modalButtons: {
     flexDirection: 'row',
