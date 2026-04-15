@@ -28,3 +28,8 @@ appId: com.haven.app
     id: "add-focus-pill"
 - assertVisible:
     text: "Morning Routine"
+
+# Note: duplicate-name error flow (issue #149) is not tested here because each
+# Maestro run launches a fresh app state — there is no prior focus to collide
+# with. The duplicate-name error path is fully covered by the Jest unit tests
+# in src/components/__tests__/FocusDropdown.test.tsx.
