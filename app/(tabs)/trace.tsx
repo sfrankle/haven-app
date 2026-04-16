@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { SectionList, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen, ChipTray } from '@/components';
@@ -164,16 +164,13 @@ export default function TraceScreen() {
   useFocusEffect(
     useCallback(() => {
       setExpandedIds(new Set());
+      setContextMap(new Map());
     }, [])
   );
 
-  // Clear context entries whenever the focus filter changes
-  useEffect(() => {
-    setContextMap(new Map());
-  }, [selectedFocusId]);
-
   const handleFocusPillPress = useCallback((id: number) => {
     setSelectedFocusId((prev) => (prev === id ? undefined : id));
+    setContextMap(new Map());
   }, []);
 
   const handleToggle = useCallback((id: number) => {
@@ -189,6 +186,7 @@ export default function TraceScreen() {
   }, []);
 
   const handleShowContext = useCallback(async (entry: EntryWithLabels) => {
+    if (contextMap.has(entry.id)) return;
     try {
       const db = (await getDb()) as unknown as Db;
       const afterIso = dayjs(entry.timestamp).subtract(120, 'minute').format('YYYY-MM-DDTHH:mm:ssZ');
@@ -206,7 +204,7 @@ export default function TraceScreen() {
     } catch {
       // Silent fallback — context fetch failed, no-op
     }
-  }, []);
+  }, [contextMap]);
 
   const handleHideContext = useCallback((entryId: number) => {
     setContextMap((prev) => {
