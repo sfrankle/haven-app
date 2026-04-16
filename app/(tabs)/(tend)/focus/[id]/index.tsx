@@ -15,13 +15,13 @@
  * honoured (the Submit button renders only when at least one item is checked).
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/components/Screen';
 import { Button } from '@/components/Button';
 import { SaveErrorMessage } from '@/components/SaveErrorMessage';
-import { getFocuses, getFocusItems, saveEntryBatch } from '@/lib/db/queries';
+import { getFocusById, getFocusItems, saveEntryBatch } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
@@ -64,13 +64,12 @@ export default function QuickLogScreen() {
     async function load() {
       try {
         const db = (await getDb()) as unknown as Db;
-        const [focuses, focusItems] = await Promise.all([
-          getFocuses(db, { includeArchived: true }),
+        const [focus, focusItems] = await Promise.all([
+          getFocusById(db, focusId),
           getFocusItems(db, focusId),
         ]);
         if (!isMounted) return;
 
-        const focus = focuses.find((f) => f.id === focusId);
         if (focus) setFocusName(focus.name);
 
         setItems(focusItems);
@@ -113,6 +112,8 @@ export default function QuickLogScreen() {
     });
   }
 
+  const pinnedItems = useMemo(() => items.filter((i) => i.source === 'pinned'), [items]);
+  const historicalItems = useMemo(() => items.filter((i) => i.source === 'historical'), [items]);
   const checkedItems = items.filter((item) => itemState.get(item.labelId)?.checked === true);
   const canSubmit = checkedItems.length > 0;
 
@@ -141,9 +142,6 @@ export default function QuickLogScreen() {
     }
   }
 
-  const pinnedItems = items.filter((i) => i.source === 'pinned');
-  const historicalItems = items.filter((i) => i.source === 'historical');
-
   if (loading) {
     return <Screen showBack />;
   }
@@ -151,7 +149,7 @@ export default function QuickLogScreen() {
   return (
     <Screen showBack>
       <ScrollView contentContainerStyle={styles.content}>
-        {focusName ? <Text style={styles.heading}>{focusName}</Text> : null}
+        {focusName ? <Text style={logScreenStyles.prompt}>{focusName}</Text> : null}
 
         {items.length === 0 ? (
           <View testID="empty-state">
@@ -277,14 +275,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.pagePadding,
     paddingTop: spacing.sectionGap,
     paddingBottom: spacing.sectionGap,
-  },
-  heading: {
-    fontFamily: typeScale.titleLarge.family,
-    fontWeight: typeScale.titleLarge.weight,
-    fontSize: typeScale.titleLarge.size,
-    lineHeight: lineHeight(typeScale.titleLarge),
-    color: colors.ink,
-    marginBottom: spacing.sectionGap,
   },
   sectionHeading: {
     fontFamily: typeScale.labelMedium.family,

@@ -15,11 +15,11 @@ jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn().mockResolvedValue({}),
 }));
 
-const mockGetFocuses = jest.fn();
+const mockGetFocusById = jest.fn();
 const mockGetFocusItems = jest.fn();
 const mockSaveEntryBatch = jest.fn();
 jest.mock('@/lib/db/queries', () => ({
-  getFocuses: (...args: unknown[]) => mockGetFocuses(...args),
+  getFocusById: (...args: unknown[]) => mockGetFocusById(...args),
   getFocusItems: (...args: unknown[]) => mockGetFocusItems(...args),
   saveEntryBatch: (...args: unknown[]) => mockSaveEntryBatch(...args),
 }));
@@ -48,7 +48,7 @@ import QuickLogScreen from '../index';
 describe('QuickLogScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetFocuses.mockResolvedValue([FOCUS]);
+    mockGetFocusById.mockResolvedValue(FOCUS);
     mockGetFocusItems.mockResolvedValue([PINNED_FOOD, PINNED_PHYSICAL]);
     mockSaveEntryBatch.mockResolvedValue([10, 11]);
   });

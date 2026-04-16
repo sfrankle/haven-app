@@ -628,6 +628,17 @@ export async function updateFocus(
 }
 
 /**
+ * Returns a single focus by ID, or null if not found.
+ */
+export async function getFocusById(db: Db, id: number): Promise<Focus | null> {
+  const raw = await db.getFirstAsync<FocusRaw>(
+    `SELECT id, name, description, archived, sort_order, created_at FROM focus WHERE id = ?`,
+    [id]
+  );
+  return raw ? mapFocus(raw) : null;
+}
+
+/**
  * Archives or unarchives a focus. Archived focuses are hidden from the
  * default getFocuses result but not deleted.
  */
