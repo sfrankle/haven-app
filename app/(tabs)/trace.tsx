@@ -137,6 +137,12 @@ function EntryRow({ entry, expanded, onToggle, filterActive, contextEntries, onS
         </View>
       )}
 
+      {contextEntries !== undefined && contextEntries.length === 0 && (
+        <Text style={styles.contextEmpty} testID={`context-empty-${entry.id}`}>
+          Nothing else logged around this time.
+        </Text>
+      )}
+
       {contextEntries !== undefined && (
         <Pressable
           onPress={() => onHideContext?.(entry.id)}
@@ -186,7 +192,6 @@ export default function TraceScreen() {
   }, []);
 
   const handleShowContext = useCallback(async (entry: EntryWithLabels) => {
-    if (contextMap.has(entry.id)) return;
     try {
       const db = (await getDb()) as unknown as Db;
       const afterIso = dayjs(entry.timestamp).subtract(120, 'minute').format('YYYY-MM-DDTHH:mm:ssZ');
@@ -197,6 +202,9 @@ export default function TraceScreen() {
         beforeIso,
       });
       setContextMap((prev) => {
+        // Guard against re-fetch: if context was already loaded while this async
+        // call was in flight, keep the existing result rather than overwriting it.
+        if (prev.has(entry.id)) return prev;
         const next = new Map(prev);
         next.set(entry.id, context);
         return next;
@@ -204,7 +212,7 @@ export default function TraceScreen() {
     } catch {
       // Silent fallback — context fetch failed, no-op
     }
-  }, [contextMap]);
+  }, []);
 
   const handleHideContext = useCallback((entryId: number) => {
     setContextMap((prev) => {
@@ -385,6 +393,13 @@ const styles = StyleSheet.create({
     fontSize: typeScale.bodyMedium.size,
     lineHeight: lineHeight(typeScale.bodyMedium),
     color: colors.error,
+  },
+  contextEmpty: {
+    fontFamily: typeScale.bodySmall.family,
+    fontSize: typeScale.bodySmall.size,
+    color: colors.chrome,
+    paddingHorizontal: spacing.pagePadding,
+    paddingVertical: 6,
   },
   contextButton: {
     paddingHorizontal: spacing.pagePadding,
