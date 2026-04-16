@@ -39,9 +39,8 @@ interface ItemState {
  *
  * We use entryTypeName === 'Physical' (the stable internal name from the
  * entry_type seed) rather than looking up measurementType. This is consistent
- * with how the Physical log screen identifies itself. If the entry type name
- * were ever renamed, severity rows would silently disappear — this coupling is
- * documented here and in docs/decisions.md (2026-04-10 plan note, risk #1).
+ * with how the Physical log screen identifies itself. See docs/decisions.md
+ * (2026-04-16, isPhysical coupling) for the accepted risk and guidance.
  */
 function isPhysical(item: FocusItem): boolean {
   return item.entryTypeName === 'Physical';
@@ -114,7 +113,10 @@ export default function QuickLogScreen() {
 
   const pinnedItems = useMemo(() => items.filter((i) => i.source === 'pinned'), [items]);
   const historicalItems = useMemo(() => items.filter((i) => i.source === 'historical'), [items]);
-  const checkedItems = items.filter((item) => itemState.get(item.labelId)?.checked === true);
+  const checkedItems = useMemo(
+    () => items.filter((item) => itemState.get(item.labelId)?.checked === true),
+    [items, itemState]
+  );
   const canSubmit = checkedItems.length > 0;
 
   async function handleSubmit() {
@@ -154,7 +156,7 @@ export default function QuickLogScreen() {
         {items.length === 0 ? (
           <View testID="empty-state">
             <Text style={styles.emptyText}>
-              No items tracked yet — add labels to this Focus to quick-log them.
+              Nothing pinned to this Focus yet.
             </Text>
             <Pressable
               onPress={() => router.replace(`/focus/${focusId}/edit` as never)}
@@ -246,7 +248,7 @@ function ItemRow({ item, state, onToggle, onSeverity }: ItemRowProps) {
         </Text>
       </Pressable>
 
-      {isPhysical(item) && (
+      {isPhysical(item) && state.checked && (
         <View style={styles.severityRow}>
           {[1, 2, 3, 4, 5].map((v) => (
             <Pressable
