@@ -14,6 +14,7 @@ import {
   setFocusArchived,
   getFocusItems,
   saveEntry,
+  saveEntryBatch,
 } from '../../lib/db/queries';
 
 const TEST_TS = '2026-04-10T09:00:00-07:00';
@@ -345,6 +346,99 @@ describe('focus query layer', () => {
           focusId: invalidFocusId,
         })
       ).rejects.toThrow();
+
+      const countAfter = (
+        raw.prepare(`SELECT COUNT(*) AS n FROM entry`).get() as { n: number }
+      ).n;
+      expect(countAfter).toBe(countBefore);
+    });
+  });
+
+  // ── saveEntryBatch ───────────────────────────────────────────────────────────
+
+  describe('saveEntryBatch', () => {
+    test('inserts all entries in one call — returns correct IDs', async () => {
+      const foodTypeId = entryTypeId(raw, 'Food');
+      const labelId = anyLabelId(raw, 'Food');
+      const focus = await createFocus(db, { name: 'Batch Focus 1' });
+
+      const ids = await saveEntryBatch(db, [
+        { entryTypeId: foodTypeId, timestamp: TEST_TS, labelIds: [labelId], focusId: focus.id },
+        { entryTypeId: foodTypeId, timestamp: TEST_TS, labelIds: [labelId], focusId: focus.id },
+        { entryTypeId: foodTypeId, timestamp: TEST_TS, labelIds: [labelId], focusId: focus.id },
+      ]);
+
+      expect(ids).toHaveLength(3);
+      for (const id of ids) {
+        const row = raw.prepare(`SELECT id FROM entry WHERE id = ?`).get(id);
+        expect(row).toBeDefined();
+      }
+
+      // Cleanup
+      for (const id of ids) {
+        raw.prepare(`DELETE FROM entry_focus WHERE entry_id = ?`).run(id);
+        raw.prepare(`DELETE FROM entry_label WHERE entry_id = ?`).run(id);
+        raw.prepare(`DELETE FROM entry WHERE id = ?`).run(id);
+      }
+      raw.prepare(`DELETE FROM focus WHERE id = ?`).run(focus.id);
+    });
+
+    test('inserts entry_focus rows for all entries in the batch', async () => {
+      const foodTypeId = entryTypeId(raw, 'Food');
+      const focus = await createFocus(db, { name: 'Batch Focus 2' });
+
+      const ids = await saveEntryBatch(db, [
+        { entryTypeId: foodTypeId, timestamp: TEST_TS, focusId: focus.id },
+        { entryTypeId: foodTypeId, timestamp: TEST_TS, focusId: focus.id },
+      ]);
+
+      for (const id of ids) {
+        const row = raw
+          .prepare(`SELECT * FROM entry_focus WHERE entry_id = ? AND focus_id = ?`)
+          .get(id, focus.id);
+        expect(row).toBeDefined();
+      }
+
+      // Cleanup
+      for (const id of ids) {
+        raw.prepare(`DELETE FROM entry_focus WHERE entry_id = ?`).run(id);
+        raw.prepare(`DELETE FROM entry WHERE id = ?`).run(id);
+      }
+      raw.prepare(`DELETE FROM focus WHERE id = ?`).run(focus.id);
+    });
+
+    test('is atomic — rolls back all entries when one insert fails', async () => {
+      const foodTypeId = entryTypeId(raw, 'Food');
+      const focus = await createFocus(db, { name: 'Batch Focus Rollback' });
+      const invalidLabelId = 999999; // does not exist — FK violation
+
+      const countBefore = (
+        raw.prepare(`SELECT COUNT(*) AS n FROM entry`).get() as { n: number }
+      ).n;
+
+      await expect(
+        saveEntryBatch(db, [
+          { entryTypeId: foodTypeId, timestamp: TEST_TS, focusId: focus.id },
+          // This entry has a label ID that violates FK — causes rollback
+          { entryTypeId: foodTypeId, timestamp: TEST_TS, labelIds: [invalidLabelId], focusId: focus.id },
+        ])
+      ).rejects.toThrow();
+
+      const countAfter = (
+        raw.prepare(`SELECT COUNT(*) AS n FROM entry`).get() as { n: number }
+      ).n;
+      expect(countAfter).toBe(countBefore);
+
+      raw.prepare(`DELETE FROM focus WHERE id = ?`).run(focus.id);
+    });
+
+    test('with empty array returns empty array and inserts nothing', async () => {
+      const countBefore = (
+        raw.prepare(`SELECT COUNT(*) AS n FROM entry`).get() as { n: number }
+      ).n;
+
+      const ids = await saveEntryBatch(db, []);
+      expect(ids).toEqual([]);
 
       const countAfter = (
         raw.prepare(`SELECT COUNT(*) AS n FROM entry`).get() as { n: number }
