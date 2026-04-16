@@ -636,6 +636,53 @@ export async function setFocusArchived(db: Db, id: number, archived: boolean): P
 }
 
 /**
+ * Saves multiple entries in a single transaction. Returns the new entry IDs
+ * in the same order as the inputs.
+ *
+ * This function intentionally inlines the insert logic from saveEntry rather
+ * than calling saveEntry for each input. saveEntry wraps each call in its own
+ * withTransactionAsync; nesting withTransactionAsync calls would throw
+ * "cannot start a transaction within a transaction" in both expo-sqlite and
+ * the BetterSqliteAdapter used in tests. If you add a new column to the entry
+ * INSERT in saveEntry, make sure to mirror that change here.
+ *
+ * Each input follows the same logic as saveEntry:
+ *   entry row → entry_label rows → entry_focus row (if focusId provided).
+ */
+export async function saveEntryBatch(db: Db, inputs: SaveEntryInput[]): Promise<number[]> {
+  const ids: number[] = [];
+  await db.withTransactionAsync(async () => {
+    for (const input of inputs) {
+      const result = await db.runAsync(
+        `INSERT INTO entry (entry_type_id, source_type, timestamp, created_at, numeric_value, notes)
+         VALUES (?, 'log', ?, ?, ?, ?)`,
+        [input.entryTypeId, input.timestamp, input.timestamp, input.numericValue ?? null, input.notes ?? null]
+      );
+      const newId = result.lastInsertRowId;
+      ids.push(newId);
+
+      if (input.labelIds?.length) {
+        const placeholders = input.labelIds.map(() => '(?, ?)').join(', ');
+        await db.runAsync(
+          `INSERT INTO entry_label (entry_id, label_id) VALUES ${placeholders}`,
+          input.labelIds.flatMap((lid) => [newId, lid])
+        );
+      }
+
+      // Associate with a focus if provided. If focusId references a non-existent
+      // focus, the FK constraint will throw here and roll back the entire transaction.
+      if (input.focusId != null) {
+        await db.runAsync(
+          `INSERT INTO entry_focus (entry_id, focus_id) VALUES (?, ?)`,
+          [newId, input.focusId]
+        );
+      }
+    }
+  });
+  return ids;
+}
+
+/**
  * Returns the items (labels) associated with a focus.
  *
  * Each item has a `source` of:
