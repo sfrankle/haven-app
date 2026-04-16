@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#153](https://github.com/sfrankle/haven-app/pull/153) | Focus quick-log screen: tap a Focus pill on Tend to log all tracked items in one submission | 2026-04-16 |
 | [#151](https://github.com/sfrankle/haven-app/pull/151) | Edit and archive Focus: rename, add/remove pinned labels, archive from Tend or Settings; archived Focuses can be unarchived from Settings | 2026-04-15 |
 | [#150](https://github.com/sfrankle/haven-app/pull/150) | `FocusDropdown` now shows an inline error when focus creation fails (e.g. duplicate name) instead of silently leaving the modal open | 2026-04-15 |
 | [#148](https://github.com/sfrankle/haven-app/pull/148) | Focus field added to all six log screens via `LogFormShell`; new `FocusDropdown` and `ChipTray` components extracted | 2026-04-14 |
