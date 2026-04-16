@@ -12,6 +12,9 @@ import type { TraceSection } from '@/lib/utils/traceUtils';
 import { messages } from '@/constants/messages';
 import { useFocuses } from '@/hooks/useFocuses';
 import { FocusPill } from '@/components/FocusPill';
+import { getDb } from '@/lib/db/database';
+import { getContextEntries, type Db } from '@/lib/db/queries';
+import dayjs from 'dayjs';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -21,15 +24,48 @@ function formatTraceChipLabel(label: EntryWithLabels['labels'][number], entry: E
   return entry.numericValue != null ? `${base} (${entry.numericValue}/5)` : base;
 }
 
+// ─── Context Row ──────────────────────────────────────────────────────────────
+
+interface ContextEntryRowProps {
+  entry: EntryWithLabels;
+}
+
+function ContextEntryRow({ entry }: ContextEntryRowProps) {
+  const summary = summariseEntry(entry);
+  const time = formatEntryTime(entry.timestamp);
+
+  return (
+    <View style={styles.contextRow} testID={`context-row-${entry.id}`}>
+      {entry.entryTypeIcon ? (
+        <MaterialCommunityIcons
+          name={entry.entryTypeIcon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+          size={18}
+          color={colors.chrome}
+        />
+      ) : (
+        <View style={styles.contextIconPlaceholder} />
+      )}
+      <Text style={styles.contextSummary} numberOfLines={1}>
+        {summary}
+      </Text>
+      <Text style={styles.contextTime}>{time}</Text>
+    </View>
+  );
+}
+
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 interface EntryRowProps {
   entry: EntryWithLabels;
   expanded: boolean;
   onToggle: (id: number) => void;
+  filterActive?: boolean;
+  contextEntries?: EntryWithLabels[];
+  onShowContext?: (entry: EntryWithLabels) => void;
+  onHideContext?: (entryId: number) => void;
 }
 
-function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
+function EntryRow({ entry, expanded, onToggle, filterActive, contextEntries, onShowContext, onHideContext }: EntryRowProps) {
   const summary = summariseEntry(entry);
   const time = formatEntryTime(entry.timestamp);
 
@@ -80,6 +116,44 @@ function EntryRow({ entry, expanded, onToggle }: EntryRowProps) {
           )}
         </View>
       )}
+
+      {filterActive && contextEntries === undefined && (
+        <Pressable
+          onPress={() => onShowContext?.(entry)}
+          testID={`show-context-${entry.id}`}
+          accessibilityRole="button"
+          accessibilityLabel="Show context"
+          style={styles.contextButton}
+        >
+          <Text style={styles.contextButtonText}>Show context</Text>
+        </Pressable>
+      )}
+
+      {contextEntries !== undefined && contextEntries.length > 0 && (
+        <View testID={`context-entries-${entry.id}`}>
+          {contextEntries.map((ctx) => (
+            <ContextEntryRow key={ctx.id} entry={ctx} />
+          ))}
+        </View>
+      )}
+
+      {contextEntries !== undefined && contextEntries.length === 0 && (
+        <Text style={styles.contextEmpty} testID={`context-empty-${entry.id}`}>
+          Nothing else logged around this time.
+        </Text>
+      )}
+
+      {contextEntries !== undefined && (
+        <Pressable
+          onPress={() => onHideContext?.(entry.id)}
+          testID={`hide-context-${entry.id}`}
+          accessibilityRole="button"
+          accessibilityLabel="Hide context"
+          style={styles.contextButton}
+        >
+          <Text style={styles.contextButtonText}>Hide context</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -91,15 +165,18 @@ export default function TraceScreen() {
   const { focuses } = useFocuses({ includeArchived: true });
   const { sections, loading, error } = useTraceEntries(selectedFocusId);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [contextMap, setContextMap] = useState<Map<number, EntryWithLabels[]>>(new Map());
 
   useFocusEffect(
     useCallback(() => {
       setExpandedIds(new Set());
+      setContextMap(new Map());
     }, [])
   );
 
   const handleFocusPillPress = useCallback((id: number) => {
     setSelectedFocusId((prev) => (prev === id ? undefined : id));
+    setContextMap(new Map());
   }, []);
 
   const handleToggle = useCallback((id: number) => {
@@ -110,6 +187,37 @@ export default function TraceScreen() {
       } else {
         next.add(id);
       }
+      return next;
+    });
+  }, []);
+
+  const handleShowContext = useCallback(async (entry: EntryWithLabels) => {
+    try {
+      const db = (await getDb()) as unknown as Db;
+      const afterIso = dayjs(entry.timestamp).subtract(120, 'minute').format('YYYY-MM-DDTHH:mm:ssZ');
+      const beforeIso = dayjs(entry.timestamp).add(120, 'minute').format('YYYY-MM-DDTHH:mm:ssZ');
+      const context = await getContextEntries(db, {
+        excludeEntryId: entry.id,
+        afterIso,
+        beforeIso,
+      });
+      setContextMap((prev) => {
+        // Guard against re-fetch: if context was already loaded while this async
+        // call was in flight, keep the existing result rather than overwriting it.
+        if (prev.has(entry.id)) return prev;
+        const next = new Map(prev);
+        next.set(entry.id, context);
+        return next;
+      });
+    } catch {
+      // Silent fallback — context fetch failed, no-op
+    }
+  }, []);
+
+  const handleHideContext = useCallback((entryId: number) => {
+    setContextMap((prev) => {
+      const next = new Map(prev);
+      next.delete(entryId);
       return next;
     });
   }, []);
@@ -127,9 +235,13 @@ export default function TraceScreen() {
         entry={item}
         expanded={expandedIds.has(item.id)}
         onToggle={handleToggle}
+        filterActive={selectedFocusId != null}
+        contextEntries={contextMap.get(item.id)}
+        onShowContext={handleShowContext}
+        onHideContext={handleHideContext}
       />
     ),
-    [expandedIds, handleToggle],
+    [expandedIds, handleToggle, selectedFocusId, contextMap, handleShowContext, handleHideContext],
   );
 
   if (loading) {
@@ -281,5 +393,48 @@ const styles = StyleSheet.create({
     fontSize: typeScale.bodyMedium.size,
     lineHeight: lineHeight(typeScale.bodyMedium),
     color: colors.error,
+  },
+  contextEmpty: {
+    fontFamily: typeScale.bodySmall.family,
+    fontSize: typeScale.bodySmall.size,
+    color: colors.chrome,
+    paddingHorizontal: spacing.pagePadding,
+    paddingVertical: 6,
+  },
+  contextButton: {
+    paddingHorizontal: spacing.pagePadding,
+    paddingVertical: 6,
+    alignSelf: 'flex-start',
+  },
+  contextButtonText: {
+    fontFamily: typeScale.bodySmall.family,
+    fontSize: typeScale.bodySmall.size,
+    color: colors.interactive,
+  },
+  contextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.elementGap,
+    paddingHorizontal: spacing.pagePadding,
+    paddingVertical: 10,
+    backgroundColor: colors.surfaceVariant,
+    marginHorizontal: spacing.pagePadding,
+    marginBottom: 2,
+    opacity: 0.7,
+  },
+  contextIconPlaceholder: {
+    width: 18,
+    height: 18,
+  },
+  contextSummary: {
+    flex: 1,
+    fontFamily: typeScale.bodyMedium.family,
+    fontSize: typeScale.bodyMedium.size,
+    color: colors.chrome,
+  },
+  contextTime: {
+    fontFamily: typeScale.bodySmall.family,
+    fontSize: typeScale.bodySmall.size,
+    color: colors.chrome,
   },
 });

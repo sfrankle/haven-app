@@ -315,7 +315,17 @@ export async function getEntriesForTrace(
     ? db.getAllAsync<EntryTraceRaw>(FILTERED_SQL, [options.focusId])
     : db.getAllAsync<EntryTraceRaw>(UNFILTERED_SQL));
 
-  // Collapse flat rows into structured entries, preserving timestamp DESC order.
+  return collapseTraceRows(rows);
+}
+
+/**
+ * Collapses an array of flat EntryTraceRaw rows (one row per entry+label join)
+ * into an array of EntryWithLabels, preserving the original row order for the
+ * first occurrence of each entry ID.
+ *
+ * This helper is shared by getEntriesForTrace and getContextEntries.
+ */
+function collapseTraceRows(rows: EntryTraceRaw[]): EntryWithLabels[] {
   const entryMap = new Map<number, EntryWithLabels>();
   const orderedIds: number[] = [];
 
@@ -355,6 +365,43 @@ export async function getEntriesForTrace(
   }
 
   return orderedIds.map((id) => entryMap.get(id)!);
+}
+
+/**
+ * Returns entries within a time window around a focal entry, ordered ASC by
+ * timestamp. The focal entry itself is excluded.
+ *
+ * The caller is responsible for computing afterIso and beforeIso (e.g. using
+ * dayjs) so that this function stays free of time arithmetic and is easy to test.
+ *
+ * No focus filter is applied — context entries are all entries in the window
+ * regardless of focus association.
+ */
+export async function getContextEntries(
+  db: Db,
+  params: { excludeEntryId: number; afterIso: string; beforeIso: string }
+): Promise<EntryWithLabels[]> {
+  const { excludeEntryId, afterIso, beforeIso } = params;
+
+  const rows = await db.getAllAsync<EntryTraceRaw>(
+    `SELECT
+       e.id, e.entry_type_id, e.source_type, e.timestamp, e.numeric_value, e.notes,
+       et.name AS entry_type_name, et.title AS entry_type_title, et.icon AS entry_type_icon,
+       l.id AS label_id, l.name AS label_name, l.parent_id AS label_parent_id,
+       lp.name AS label_parent_name,
+       l.category_id AS label_category_id, c.name AS label_category_name, l.sort_order AS label_sort_order
+     FROM entry e
+     JOIN entry_type et ON et.id = e.entry_type_id
+     LEFT JOIN entry_label el ON el.entry_id = e.id
+     LEFT JOIN label l ON l.id = el.label_id
+     LEFT JOIN label lp ON lp.id = l.parent_id
+     LEFT JOIN category c ON c.id = l.category_id
+     WHERE e.timestamp >= ? AND e.timestamp <= ? AND e.id != ?
+     ORDER BY e.timestamp ASC`,
+    [afterIso, beforeIso, excludeEntryId]
+  );
+
+  return collapseTraceRows(rows);
 }
 
 /**

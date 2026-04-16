@@ -1,0 +1,80 @@
+appId: com.haven.app
+name: Trace — focus filter show context
+---
+# Pre-condition: create a focus, log a food entry linked to it, and log a
+# sleep entry in the same time window (to appear as context). Then verify
+# the Show context / Hide context flow works.
+- launchApp:
+    clearState: true
+
+# Create a Focus via Settings
+- tapOn:
+    id: "tab-settings"
+- scrollTo:
+    text: "Focuses"
+- tapOn:
+    text: "Focuses"
+- tapOn:
+    text: "New Focus"
+- tapOn:
+    id: "focus-name-input"
+- inputText: "Context Test Focus"
+- tapOn:
+    text: "Save"
+- assertVisible: "Context Test Focus"
+
+# Navigate to Tend and log a Food entry linked to the focus
+- tapOn:
+    id: "tab-tend"
+- tapOn:
+    text: "Food"
+- tapOn:
+    text: "Oats"
+- tapOn:
+    id: "focus-dropdown"
+- tapOn:
+    text: "Context Test Focus"
+- tapOn:
+    text: "Log Food"
+
+# Log a second entry (Sleep) in the same hour — this will appear as context
+- tapOn:
+    text: "Sleep"
+- tapOn:
+    id: "sleep-hours-input"
+- inputText: "7"
+- tapOn:
+    text: "Log Sleep"
+
+# Navigate to Trace
+- tapOn:
+    id: "tab-trace"
+
+# Activate the Focus filter pill
+- scrollTo:
+    id: "focus-filter-row"
+- tapOn:
+    text: "Context Test Focus"
+
+# The food entry should be visible; the sleep entry should be filtered out
+- assertVisible: "Ate Oats"
+
+# Tap Show context on the food entry
+- tapOn:
+    id: "show-context-1"
+
+# Context entries container is visible
+- assertVisible:
+    id: "context-entries-1"
+
+# Hide context button is visible
+- assertVisible:
+    id: "hide-context-1"
+
+# Tap Hide context
+- tapOn:
+    id: "hide-context-1"
+
+# Context entries container is no longer visible
+- assertNotVisible:
+    id: "context-entries-1"
