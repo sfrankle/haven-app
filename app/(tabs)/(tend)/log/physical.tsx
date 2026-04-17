@@ -24,48 +24,15 @@ import {
 } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
+import { formatChipLabel } from '@/lib/utils/physicalChipLabel';
+import type { EnergyChip, StateChip, PhysicalChip } from '@/lib/utils/physicalChipLabel';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { colorForPhysicalLabel } from '@/constants/chipColors';
 import { logScreenStyles } from '@/constants/sharedStyles';
 import type { Db } from '@/lib/db/queries';
 import type { PhysicalStateLabel } from '@/lib/db/query-types';
 
-// ─── Types ─────────────────────────────────────────────────────────────────
-
-type EnergyChip = {
-  kind: 'energy';
-  id: 'energy';
-  value: number; // 1-5
-};
-
-type StateChip = {
-  kind: 'state';
-  id: number; // labelId
-  labelName: string;
-  parentName: string | null;
-  severity: number | null; // 1-5 or null
-};
-
-type PhysicalChip = EnergyChip | StateChip;
-
 // ─── Helpers ───────────────────────────────────────────────────────────────
-
-const WHOLE_BODY_NAMES = ['whole body', 'body'];
-
-function formatChipLabel(chip: PhysicalChip): string {
-  if (chip.kind === 'energy') {
-    return `Energy: ${chip.value}/5`;
-  }
-  const parentName = chip.parentName;
-  const showPrefix =
-    parentName !== null &&
-    !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
-  const base = showPrefix ? `${parentName}: ${chip.labelName}` : chip.labelName;
-  if (chip.severity !== null) {
-    return `${base} (${chip.severity}/5)`;
-  }
-  return base;
-}
 
 const SUGGESTION_LIMIT = 5;
 const SEVERITY_AUTO_DISMISS_MS = 2000;
