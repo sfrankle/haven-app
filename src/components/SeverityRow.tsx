@@ -9,35 +9,45 @@ interface SeverityRowProps {
   testID?: string;
 }
 
-const SEVERITY_VALUES = [1, 2, 3, 4, 5] as const;
+const SEVERITY_VALUES = [0, 1, 2, 3, 4, 5] as const;
 
 export function SeverityRow({ value, onChange, onDismiss, testID }: SeverityRowProps) {
   return (
     <View style={styles.container} testID={testID}>
       <Text style={styles.label}>Severity</Text>
       <View style={styles.buttons}>
-        {SEVERITY_VALUES.map((sev) => (
-          <Pressable
-            key={sev}
-            style={[styles.button, value === sev && styles.buttonSelected]}
-            onPress={() => {
-              onChange(sev);
-              onDismiss();
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={`Severity ${sev} of 5`}
-            accessibilityState={{ selected: value === sev }}
-          >
-            <Text
+        {SEVERITY_VALUES.map((sev) => {
+          const isZero = sev === 0;
+          const isSelected = value === sev;
+          return (
+            <Pressable
+              key={sev}
               style={[
-                styles.buttonText,
-                value === sev && styles.buttonTextSelected,
+                styles.button,
+                isZero && !isSelected && styles.buttonZero,
+                isSelected && styles.buttonSelected,
               ]}
+              onPress={() => {
+                onChange(sev);
+                onDismiss();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isZero ? 'Severity 0 — symptom absent' : `Severity ${sev} of 5`
+              }
+              accessibilityState={{ selected: isSelected }}
             >
-              {sev}
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                style={[
+                  styles.buttonText,
+                  isSelected && styles.buttonTextSelected,
+                ]}
+              >
+                {sev}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -67,6 +77,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceVariant,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  buttonZero: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.chrome,
   },
   buttonSelected: {
     backgroundColor: colors.interactive,
