@@ -63,7 +63,9 @@ export function summariseEntry(entry: EntryWithLabels): string {
       const parentName = label.parentName;
       const stateName = shouldShowAreaPrefix(parentName) ? `${parentName}: ${label.name}` : label.name;
       if (numericValue === 0) return `Felt ${stateName} (absent)`;
-      return numericValue != null ? `Felt ${stateName} (${numericValue}/5)` : `Felt ${stateName}`;
+      return numericValue !== null && numericValue !== 0
+        ? `Felt ${stateName} (${numericValue}/5)`
+        : `Felt ${stateName}`;
     }
 
     default:

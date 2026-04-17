@@ -1,4 +1,4 @@
-// ─── Types ──────────────────────────────────────────────────────────────────
+import { shouldShowAreaPrefix } from '@/lib/utils/traceUtils';
 
 export type EnergyChip = {
   kind: 'energy';
@@ -16,29 +16,14 @@ export type StateChip = {
 
 export type PhysicalChip = EnergyChip | StateChip;
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const WHOLE_BODY_NAMES = ['whole body', 'body'];
-
-// ─── Helper ──────────────────────────────────────────────────────────────────
-
-/**
- * Returns a formatted display label for a physical chip.
- *
- * - Energy chip: "Energy: N/5"
- * - State chip with no severity: label name (with optional area prefix)
- * - State chip with severity 1-5: "name (N/5)"
- * - State chip with severity 0: "name (absent)" — confirmed symptom-absent today
- */
+// severity 0 means "symptom absent today" — rendered as "(absent)" not "(0/5)"
 export function formatChipLabel(chip: PhysicalChip): string {
   if (chip.kind === 'energy') {
     return `Energy: ${chip.value}/5`;
   }
-  const parentName = chip.parentName;
-  const showPrefix =
-    parentName !== null &&
-    !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
-  const base = showPrefix ? `${parentName}: ${chip.labelName}` : chip.labelName;
+  const base = shouldShowAreaPrefix(chip.parentName)
+    ? `${chip.parentName}: ${chip.labelName}`
+    : chip.labelName;
   if (chip.severity === 0) {
     return `${base} (absent)`;
   }
