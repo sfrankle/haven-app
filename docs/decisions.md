@@ -2,6 +2,7 @@
 
 Significant technical decisions made during development.
 
+<!-- APPEND ONLY: new rows go at the bottom of this table, never inserted mid-table -->
 | Date | Decision | Context | Rationale | Consequences |
 |------|----------|---------|-----------|--------------|
 | 2026-03-04 | Tags live on Labels, not Entries | Needed correlations to work retroactively without re-tagging history | Tag a label "dairy" once; all past and future entries using it are included in correlation queries automatically | Correlation queries join through labels; entries themselves carry no tags |
