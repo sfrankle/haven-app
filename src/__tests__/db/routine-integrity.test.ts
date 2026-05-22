@@ -88,17 +88,13 @@ describe('routine schema integrity', () => {
     }
   );
 
-  test('entry table has routine_id column', () => {
-    const rows = db.prepare(`PRAGMA table_info(entry)`).all() as { name: string }[];
-    const colNames = rows.map((r) => r.name);
-    expect(colNames).toContain('routine_id');
-  });
-
-  test('entry table has routine_completion_id column', () => {
-    const rows = db.prepare(`PRAGMA table_info(entry)`).all() as { name: string }[];
-    const colNames = rows.map((r) => r.name);
-    expect(colNames).toContain('routine_completion_id');
-  });
+  test.each(['routine_id', 'routine_completion_id'])(
+    'entry table has %s column',
+    (columnName) => {
+      const rows = db.prepare(`PRAGMA table_info(entry)`).all() as { name: string }[];
+      expect(rows.map((r) => r.name)).toContain(columnName);
+    }
+  );
 
   // ── Existing entry data preserved (data safety) ─────────────────────────
 
@@ -124,17 +120,13 @@ describe('routine schema integrity', () => {
 
   // ── Indexes present ─────────────────────────────────────────────────────
 
-  test('index on entry.routine_completion_id exists', () => {
+  test.each([
+    'idx_entry_routine_completion_id',
+    'idx_routine_completion_routine_id',
+  ])('index %s exists', (indexName) => {
     const rows = db
-      .prepare(`SELECT name FROM sqlite_master WHERE type='index' AND name='idx_entry_routine_completion_id'`)
-      .all() as { name: string }[];
-    expect(rows).toHaveLength(1);
-  });
-
-  test('index on routine_completion.routine_id exists', () => {
-    const rows = db
-      .prepare(`SELECT name FROM sqlite_master WHERE type='index' AND name='idx_routine_completion_routine_id'`)
-      .all() as { name: string }[];
+      .prepare(`SELECT name FROM sqlite_master WHERE type='index' AND name=?`)
+      .all(indexName) as { name: string }[];
     expect(rows).toHaveLength(1);
   });
 
