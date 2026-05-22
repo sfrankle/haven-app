@@ -34,6 +34,14 @@ export function formatEntryTime(isoString: string): string {
 
 export type TimeBlock = 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night';
 
+/** The four time blocks that can be scheduled in a Routine (Night is not scheduleable). */
+export type ScheduleableBlock = Exclude<TimeBlock, 'Night'>;
+
+/** Returns the ordered list of scheduleable time blocks. */
+export function getScheduleableBlocks(): ScheduleableBlock[] {
+  return ['Morning', 'Midday', 'Afternoon', 'Evening'];
+}
+
 /**
  * Returns the general time-of-day block for a given time.
  *
