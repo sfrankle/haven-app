@@ -32,6 +32,22 @@ export function formatEntryTime(isoString: string): string {
   return `${displayHour}:${String(mm).padStart(2, '0')} ${period}`;
 }
 
+// ---------------------------------------------------------------------------
+// Two overlapping time-of-day systems live in this file. They serve different
+// purposes and must stay separate:
+//
+//   getMealContext  — food/meal vocabulary (Breakfast / Lunch / Snack / Dinner)
+//                     used only on the Food logging screen for display labels.
+//
+//   getTimeBlock    — general scheduling vocabulary (Morning / Midday /
+//                     Afternoon / Evening) used for Routine scheduling and
+//                     time-block-aware label suggestions across all entry types.
+//
+// Do not conflate them. In particular, getMealContext's "Snack" window covers
+// 14:00–17:59 (Afternoon in block terms) plus 22:00–04:59 (Evening in block
+// terms) — these map differently in each system by design.
+// ---------------------------------------------------------------------------
+
 export type MealContext = 'Breakfast' | 'Lunch' | 'Snack' | 'Dinner';
 
 /**
@@ -56,6 +72,34 @@ export function getMealContext(isoString?: string): MealContext {
   if (hour >= 11 && hour < 14) return 'Lunch';
   if (hour >= 18 && hour < 22) return 'Dinner';
   return 'Snack';
+}
+
+export type TimeBlock = 'Morning' | 'Midday' | 'Afternoon' | 'Evening';
+
+/**
+ * Returns the general time-of-day block for a given time.
+ *
+ * Pass an ISO string to derive the hour from the wall-clock time baked into
+ * the string (immune to timezone re-interpretation). When no argument is
+ * provided, falls back to the device's current local hour.
+ *
+ * Used for Routine scheduling and time-block-aware label suggestions.
+ * See getMealContext for food-specific meal vocabulary.
+ *
+ * Time blocks:
+ *   05:00–11:59 → Morning
+ *   12:00–13:59 → Midday
+ *   14:00–17:59 → Afternoon
+ *   18:00–04:59 → Evening (includes late night)
+ */
+export function getTimeBlock(isoString?: string): TimeBlock {
+  const hour = isoString
+    ? parseInt(isoString.slice(11, 13), 10)
+    : new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Morning';
+  if (hour >= 12 && hour < 14) return 'Midday';
+  if (hour >= 14 && hour < 18) return 'Afternoon';
+  return 'Evening';
 }
 
 /**
