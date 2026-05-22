@@ -33,8 +33,8 @@ describe('SettingsScreen — visual hierarchy', () => {
     jest.clearAllMocks();
   });
 
-  it('shows a section divider between Privacy and Focus when focuses exist', async () => {
-    mockGetFocuses.mockResolvedValue([ACTIVE_FOCUS]);
+  it('shows a section divider between Privacy and Focus (always rendered)', async () => {
+    mockGetFocuses.mockResolvedValue([]);
     const { getByTestId } = render(<SettingsScreen />);
     await waitFor(() => {
       expect(getByTestId('settings-section-divider')).toBeTruthy();
