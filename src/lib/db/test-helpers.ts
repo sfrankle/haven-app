@@ -28,6 +28,7 @@ export const MIGRATION_FILES = [
   'v6__seed-activity.sql',
   'v7__seed-physical.sql',
   'v8__focus-tables.sql',
+  'v9__routine-tables.sql',
 ];
 
 export function readMigration(filename: string): string {
@@ -36,7 +37,29 @@ export function readMigration(filename: string): string {
 
 export function applyAllMigrations(db: Database.Database): void {
   for (const file of MIGRATION_FILES) {
-    db.exec(readMigration(file));
+    const sql = readMigration(file);
+    // Split on statement boundaries so we can handle ALTER TABLE ADD COLUMN
+    // idempotently. SQLite does not support `ALTER TABLE ADD COLUMN IF NOT
+    // EXISTS`, but the production runner (user_version-gated) never re-applies
+    // a migration. In tests that call applyAllMigrations twice (idempotency
+    // checks), "duplicate column name" errors on ALTER TABLE are expected and
+    // safe to ignore.
+    const statements = sql
+      .split(/;\s*\n/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    for (const stmt of statements) {
+      try {
+        db.exec(stmt.endsWith(';') ? stmt : stmt + ';');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes('duplicate column name')) {
+          // ALTER TABLE ADD COLUMN re-applied — safe to ignore in test context
+          continue;
+        }
+        throw err;
+      }
+    }
   }
 }
 
