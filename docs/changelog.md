@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#158](https://github.com/sfrankle/haven-app/pull/158) | Focus polish: keyboard avoidance on FocusDropdown and Notes fields, severity 0 in Quick-Log, long-press Focus pill to edit/archive, Attune scroll fix, Trace filter reset on tab re-tap, Show Context view mode, and Settings visual hierarchy | 2026-05-22 |
 | [#155](https://github.com/sfrankle/haven-app/pull/155) | Physical severity scale extended to include 0 ("absent"), so users can log zero-symptom check-ins and Trace displays "(absent)" for those chips | 2026-04-17 |
 | [#153](https://github.com/sfrankle/haven-app/pull/153) | Focus quick-log screen: tap a Focus pill on Tend to log all tracked items in one submission | 2026-04-16 |
 | [#151](https://github.com/sfrankle/haven-app/pull/151) | Edit and archive Focus: rename, add/remove pinned labels, archive from Tend or Settings; archived Focuses can be unarchived from Settings | 2026-04-15 |
