@@ -295,7 +295,7 @@ Grouping is deterministic: entries share a `routine_id` and a `routine_completio
 
 | Question | Status |
 |----------|--------|
-| Time block naming: is "Midday" vs "Afternoon" a naming issue or a real distinction? Worth revisiting before implementation. | Open |
+| Time block naming: is "Midday" vs "Afternoon" a naming issue or a real distinction? Worth revisiting before implementation. | Resolved — four blocks are kept. Agreed windows: Morning 05:00–11:59, Midday 12:00–13:59, Afternoon 14:00–17:59, Evening 18:00–04:59 (late night included). `getTimeBlock()` utility added to `src/lib/utils/timestamp.ts`. `getMealContext` (food display only) unchanged. See issue #120. |
 | Can an entry be associated with more than one Focus? MVP says no (one Focus per entry). Revisit when multi-condition users push the limit. | Deferred |
 | Notes during Routine completion: each item's `entry.notes` is pre-populated with the prescribed detail and editable before submit. No whole-Routine note for MVP. | Resolved |
 | Notifications / reminders per Routine (e.g. "remind me at 2pm to do afternoon PT") — explicitly deferred to Notifications milestone. | Deferred |
