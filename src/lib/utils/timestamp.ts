@@ -32,30 +32,51 @@ export function formatEntryTime(isoString: string): string {
   return `${displayHour}:${String(mm).padStart(2, '0')} ${period}`;
 }
 
-export type MealContext = 'Breakfast' | 'Lunch' | 'Snack' | 'Dinner';
+export type TimeBlock = 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night';
 
 /**
- * Returns the meal context label for a given time.
+ * Returns the general time-of-day block for a given time.
  *
  * Pass an ISO string to derive the hour from the wall-clock time baked into
  * the string (immune to timezone re-interpretation). When no argument is
  * provided, falls back to the device's current local hour.
  *
+ * Used for Routine scheduling and time-block-aware label suggestions across
+ * all entry types. See getMealContext for food-specific display labels.
+ *
  * Time blocks:
- *   05:00–10:59 → Breakfast
- *   11:00–13:59 → Lunch
- *   14:00–17:59 → Snack
- *   18:00–21:59 → Dinner
- *   22:00–04:59 → Snack
+ *   05:00–11:59 → Morning
+ *   12:00–13:59 → Midday
+ *   14:00–17:59 → Afternoon
+ *   18:00–21:59 → Evening
+ *   22:00–04:59 → Night
  */
-export function getMealContext(isoString?: string): MealContext {
+export function getTimeBlock(isoString?: string): TimeBlock {
   const hour = isoString
     ? parseInt(isoString.slice(11, 13), 10)
     : new Date().getHours();
-  if (hour >= 5 && hour < 11) return 'Breakfast';
-  if (hour >= 11 && hour < 14) return 'Lunch';
-  if (hour >= 18 && hour < 22) return 'Dinner';
-  return 'Snack';
+  if (hour >= 5 && hour < 12) return 'Morning';
+  if (hour >= 12 && hour < 14) return 'Midday';
+  if (hour >= 14 && hour < 18) return 'Afternoon';
+  if (hour >= 18 && hour < 22) return 'Evening';
+  return 'Night';
+}
+
+export type MealContext = 'Breakfast' | 'Lunch' | 'Snack' | 'Dinner' | 'Late Night Snack';
+
+/**
+ * Returns the meal context label for a given time. Thin wrapper over
+ * getTimeBlock — all time window logic lives there.
+ */
+export function getMealContext(isoString?: string): MealContext {
+  const block = getTimeBlock(isoString);
+  switch (block) {
+    case 'Morning':   return 'Breakfast';
+    case 'Midday':    return 'Lunch';
+    case 'Afternoon': return 'Snack';
+    case 'Evening':   return 'Dinner';
+    case 'Night':     return 'Late Night Snack';
+  }
 }
 
 /**
