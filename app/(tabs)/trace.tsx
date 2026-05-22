@@ -107,14 +107,15 @@ function EntryRow({ entry, expanded, onToggle, filterActive, onShowContext }: En
 interface ContextViewProps {
   focalEntry: EntryWithLabels;
   contextEntries: EntryWithLabels[];
-  focusId: number | undefined;
   focusName: string;
   onDismiss: () => void;
 }
 
-function ContextView({ focalEntry, contextEntries, focusId, focusName, onDismiss }: ContextViewProps) {
-  // Build the flat list: all context entries sorted by timestamp, with the
-  // focal entry included. Merge and sort.
+function ContextView({ focalEntry, contextEntries, focusName, onDismiss }: ContextViewProps) {
+  // Build the flat list: focal entry + all context entries, sorted by timestamp.
+  // Context entries are all other entries in the ±2h window — they render muted
+  // since they were not part of the active focus filter. The focal entry gets a
+  // glow left border as a position marker.
   const allEntries = [...contextEntries, focalEntry].sort(
     (a, b) => (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)
   );
@@ -138,10 +139,9 @@ function ContextView({ focalEntry, contextEntries, focusId, focusName, onDismiss
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => {
           const isFocal = item.id === focalEntry.id;
-          // A focus-matching entry is one that belongs to the active focus.
-          // focusId being undefined means no filter — treat all as non-muted.
-          const isFocusMatch = focusId === undefined || item.focusId === focusId;
-          const isMuted = !isFocal && !isFocusMatch;
+          // Non-focal entries are context — they were filtered out of the focus
+          // view, so they render muted to distinguish them from the focal entry.
+          const isMuted = !isFocal;
 
           return (
             <ContextViewRow
@@ -344,7 +344,6 @@ export default function TraceScreen() {
         <ContextView
           focalEntry={contextFocalEntry}
           contextEntries={contextEntries}
-          focusId={selectedFocusId}
           focusName={selectedFocusName}
           onDismiss={handleDismissContext}
         />
