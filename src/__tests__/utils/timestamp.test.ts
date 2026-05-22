@@ -143,28 +143,16 @@ describe('getTimeBlock', () => {
 });
 
 describe('getMealContext', () => {
-  // All tests pass an ISO string with the hour baked in — no Date mocking needed.
+  // Thin wrapper over getTimeBlock — tests verify the mapping, not the windows.
 
   it.each([
-    // Boundaries
-    ['2026-01-01T05:00:00+00:00', 'Breakfast'],
-    ['2026-01-01T10:00:00+00:00', 'Breakfast'],
-    ['2026-01-01T11:00:00+00:00', 'Lunch'],
-    ['2026-01-01T13:00:00+00:00', 'Lunch'],
-    ['2026-01-01T14:00:00+00:00', 'Snack'],
-    ['2026-01-01T17:00:00+00:00', 'Snack'],
-    ['2026-01-01T18:00:00+00:00', 'Dinner'],
-    ['2026-01-01T21:00:00+00:00', 'Dinner'],
-    ['2026-01-01T22:00:00+00:00', 'Snack'],
-    ['2026-01-01T00:00:00+00:00', 'Snack'],
-    ['2026-01-01T04:00:00+00:00', 'Snack'],
-    // Mid-window (guards against off-by-one at block centres)
-    ['2026-01-01T07:30:00+00:00', 'Breakfast'],
-    ['2026-01-01T12:00:00+00:00', 'Lunch'],
-    ['2026-01-01T15:30:00+00:00', 'Snack'],
-    ['2026-01-01T19:30:00+00:00', 'Dinner'],
-    ['2026-01-01T02:00:00+00:00', 'Snack'],
-  ])('returns %s for ISO string with hour %s', (isoString, expected) => {
+    ['2026-01-01T08:00:00+00:00', 'Breakfast'],       // Morning → Breakfast
+    ['2026-01-01T12:30:00+00:00', 'Lunch'],            // Midday → Lunch
+    ['2026-01-01T15:00:00+00:00', 'Snack'],            // Afternoon → Snack
+    ['2026-01-01T20:00:00+00:00', 'Dinner'],           // Evening → Dinner
+    ['2026-01-01T23:00:00+00:00', 'Late Night Snack'], // Night → Late Night Snack
+    ['2026-01-01T02:00:00+00:00', 'Late Night Snack'], // early morning → Late Night Snack
+  ])('returns %s for %s', (isoString, expected) => {
     expect(getMealContext(isoString)).toBe(expected);
   });
 });
