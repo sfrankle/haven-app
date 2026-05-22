@@ -5,6 +5,16 @@ import { useFocuses } from '@/hooks/useFocuses';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
 
+const mockRouterPush = jest.fn();
+
+// Shared refs for tabPress listener wiring (item 6)
+let tabPressCallback: (() => void) | undefined;
+const mockIsFocused = jest.fn(() => true);
+const mockAddListener = jest.fn((event: string, cb: () => void) => {
+  if (event === 'tabPress') tabPressCallback = cb;
+  return jest.fn(); // returns unsubscribe fn
+});
+
 jest.mock('@/hooks/useTraceEntries');
 jest.mock('@/hooks/useFocuses', () => ({
   useFocuses: jest.fn().mockReturnValue({ focuses: [], loading: false, error: null }),
@@ -17,7 +27,13 @@ jest.mock('@/lib/db/queries', () => ({
 }));
 jest.mock('expo-router', () => ({
   useFocusEffect: jest.fn(),
-  useRouter: () => ({ back: jest.fn() }),
+  useRouter: () => ({ back: jest.fn(), push: mockRouterPush }),
+}));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    addListener: mockAddListener,
+    isFocused: mockIsFocused,
+  }),
 }));
 
 const mockUseTraceEntries = useTraceEntries as jest.MockedFunction<typeof useTraceEntries>;
@@ -199,6 +215,74 @@ describe('TraceScreen', () => {
     expect(getByText('Oats')).toBeTruthy();
     fireEvent.press(getByText('Ate Oats'));
     expect(queryByText('Oats')).toBeNull();
+  });
+
+  describe('Focus pill long-press (item 3)', () => {
+    it('long-pressing a focus pill navigates to the edit screen', async () => {
+      const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
+      mockUseTraceEntries.mockReturnValue({ sections: [], loading: false, error: null });
+      const { getByTestId } = render(<TraceScreen />);
+      fireEvent(getByTestId('focus-pill-9'), 'longPress');
+      expect(mockRouterPush).toHaveBeenCalledWith('/focus/9/edit');
+    });
+  });
+
+  describe('Tab re-tap resets filter (item 6)', () => {
+    beforeEach(() => {
+      tabPressCallback = undefined;
+      mockIsFocused.mockReturnValue(true);
+    });
+
+    it('tabPress while focused resets selectedFocusId', async () => {
+      const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
+
+      const entry = makeEntry({ id: 1 });
+      mockUseTraceEntries.mockReturnValue({
+        sections: [makeSection('Today', [entry])],
+        loading: false,
+        error: null,
+      });
+      const { getByTestId, queryByTestId } = render(<TraceScreen />);
+      await act(async () => {
+        fireEvent.press(getByTestId('focus-pill-9'));
+      });
+      // Filter is active — show-context button should be visible
+      expect(getByTestId('show-context-1')).toBeTruthy();
+
+      // Simulate tabPress
+      act(() => { tabPressCallback?.(); });
+
+      // After tabPress reset, show-context button should be gone (no filter active)
+      await waitFor(() => {
+        expect(queryByTestId('show-context-1')).toBeNull();
+      });
+    });
+
+    it('tabPress while NOT focused does not reset the filter', async () => {
+      mockIsFocused.mockReturnValue(false);
+      const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
+
+      const entry = makeEntry({ id: 1 });
+      mockUseTraceEntries.mockReturnValue({
+        sections: [makeSection('Today', [entry])],
+        loading: false,
+        error: null,
+      });
+      const { getByTestId } = render(<TraceScreen />);
+      await act(async () => {
+        fireEvent.press(getByTestId('focus-pill-9'));
+      });
+      expect(getByTestId('show-context-1')).toBeTruthy();
+
+      // Simulate tabPress while NOT focused (first-visit navigation from another tab)
+      act(() => { tabPressCallback?.(); });
+
+      // Filter should remain active
+      expect(getByTestId('show-context-1')).toBeTruthy();
+    });
   });
 
   describe('Show context', () => {

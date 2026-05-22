@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { SectionList, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen, ChipTray } from '@/components';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { useTraceEntries } from '@/hooks/useTraceEntries';
 import { summariseEntry, shouldShowAreaPrefix } from '@/lib/utils/traceUtils';
 import { formatEntryTime } from '@/lib/utils/timestamp';
@@ -161,6 +162,7 @@ function EntryRow({ entry, expanded, onToggle, filterActive, contextEntries, onS
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function TraceScreen() {
+  const router = useRouter();
   const [selectedFocusId, setSelectedFocusId] = useState<number | undefined>(undefined);
   const { focuses } = useFocuses({ includeArchived: true });
   const { sections, loading, error } = useTraceEntries(selectedFocusId);
@@ -174,10 +176,29 @@ export default function TraceScreen() {
     }, [])
   );
 
+  const navigation = useNavigation();
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unsubscribe = navigation.addListener('tabPress' as any, () => {
+      // Only reset if this screen is already focused (guards against first-visit
+      // navigation from another tab also triggering a reset).
+      if (navigation.isFocused()) {
+        setSelectedFocusId(undefined);
+        setExpandedIds(new Set());
+        setContextMap(new Map());
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const handleFocusPillPress = useCallback((id: number) => {
     setSelectedFocusId((prev) => (prev === id ? undefined : id));
     setContextMap(new Map());
   }, []);
+
+  const handleFocusPillLongPress = useCallback((id: number) => {
+    router.push(`/focus/${id}/edit`);
+  }, [router]);
 
   const handleToggle = useCallback((id: number) => {
     setExpandedIds((prev) => {
@@ -278,6 +299,7 @@ export default function TraceScreen() {
               label={focus.name}
               selected={selectedFocusId === focus.id}
               onPress={() => handleFocusPillPress(focus.id)}
+              onLongPress={() => handleFocusPillLongPress(focus.id)}
               testID={`focus-pill-${focus.id}`}
             />
           ))}
