@@ -3,6 +3,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -218,7 +219,10 @@ export default function LogPhysicalScreen() {
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={logScreenStyles.screenContent}>
+        <ScrollView
+          contentContainerStyle={logScreenStyles.screenContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text style={logScreenStyles.prompt}>
             {physicalEntryType?.prompt ?? physicalEntryType?.name}
           </Text>
@@ -301,7 +305,7 @@ export default function LogPhysicalScreen() {
             errorTestID="physical-save-error"
             confirmationTestID="physical-save-confirmation"
           />
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   );
