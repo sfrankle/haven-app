@@ -25,6 +25,23 @@ function formatTraceChipLabel(label: EntryWithLabels['labels'][number], entry: E
   return entry.numericValue != null ? `${base} (${entry.numericValue}/5)` : base;
 }
 
+// ─── Shared icon ──────────────────────────────────────────────────────────────
+
+function EntryIcon({ icon, testID }: { icon: string | null | undefined; testID?: string }) {
+  if (icon) {
+    return (
+      <MaterialCommunityIcons
+        // icon names come from seeded DB values; safe to assert
+        name={icon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+        size={20}
+        color={colors.chrome}
+        testID={testID}
+      />
+    );
+  }
+  return <View style={styles.iconPlaceholder} testID={testID} />;
+}
+
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 interface EntryRowProps {
@@ -47,17 +64,7 @@ function EntryRow({ entry, expanded, onToggle, filterActive, onShowContext }: En
         accessibilityRole="button"
         accessibilityLabel={`${summary}, ${time}`}
       >
-        {entry.entryTypeIcon ? (
-          <MaterialCommunityIcons
-            // icon names come from seeded DB values; safe to assert
-            name={entry.entryTypeIcon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
-            size={20}
-            color={colors.chrome}
-            testID={`trace-row-icon-${entry.id}`}
-          />
-        ) : (
-          <View testID={`trace-row-icon-${entry.id}`} style={styles.iconPlaceholder} />
-        )}
+        <EntryIcon icon={entry.entryTypeIcon} testID={`trace-row-icon-${entry.id}`} />
         <Text style={styles.summary} numberOfLines={1}>
           {summary}
         </Text>
@@ -120,6 +127,14 @@ function ContextView({ focalEntry, contextEntries, focusName, onDismiss }: Conte
     (a, b) => (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)
   );
 
+  const focalId = focalEntry.id;
+  const renderContextItem = useCallback(
+    ({ item }: { item: EntryWithLabels }) => (
+      <ContextViewRow entry={item} isFocal={item.id === focalId} isMuted={item.id !== focalId} />
+    ),
+    [focalId],
+  );
+
   return (
     <View style={styles.contextViewContainer} testID="context-view">
       <Pressable
@@ -137,20 +152,7 @@ function ContextView({ focalEntry, contextEntries, focusName, onDismiss }: Conte
         data={allEntries}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => {
-          const isFocal = item.id === focalEntry.id;
-          // Non-focal entries are context — they were filtered out of the focus
-          // view, so they render muted to distinguish them from the focal entry.
-          const isMuted = !isFocal;
-
-          return (
-            <ContextViewRow
-              entry={item}
-              isFocal={isFocal}
-              isMuted={isMuted}
-            />
-          );
-        }}
+        renderItem={renderContextItem}
       />
     </View>
   );
@@ -175,15 +177,7 @@ function ContextViewRow({ entry, isFocal, isMuted }: ContextViewRowProps) {
       ]}
       testID={isFocal ? `context-view-focal-${entry.id}` : `context-view-muted-${entry.id}`}
     >
-      {entry.entryTypeIcon ? (
-        <MaterialCommunityIcons
-          name={entry.entryTypeIcon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
-          size={20}
-          color={colors.chrome}
-        />
-      ) : (
-        <View style={styles.iconPlaceholder} />
-      )}
+      <EntryIcon icon={entry.entryTypeIcon} />
       <Text style={styles.summary} numberOfLines={1}>
         {summary}
       </Text>
@@ -203,14 +197,15 @@ export default function TraceScreen() {
 
   // Context view mode: when set, the filtered SectionList is replaced by a
   // flat context view showing all entries around the focal entry.
-  const [contextFocalEntry, setContextFocalEntry] = useState<EntryWithLabels | undefined>(undefined);
-  const [contextEntries, setContextEntries] = useState<EntryWithLabels[]>([]);
+  const [contextState, setContextState] = useState<{
+    focalEntry: EntryWithLabels;
+    entries: EntryWithLabels[];
+  } | undefined>(undefined);
 
   useFocusEffect(
     useCallback(() => {
       setExpandedIds(new Set());
-      setContextFocalEntry(undefined);
-      setContextEntries([]);
+      setContextState(undefined);
     }, [])
   );
 
@@ -223,8 +218,7 @@ export default function TraceScreen() {
       if (navigation.isFocused()) {
         setSelectedFocusId(undefined);
         setExpandedIds(new Set());
-        setContextFocalEntry(undefined);
-        setContextEntries([]);
+        setContextState(undefined);
       }
     });
     return unsubscribe;
@@ -232,8 +226,7 @@ export default function TraceScreen() {
 
   const handleFocusPillPress = useCallback((id: number) => {
     setSelectedFocusId((prev) => (prev === id ? undefined : id));
-    setContextFocalEntry(undefined);
-    setContextEntries([]);
+    setContextState(undefined);
   }, []);
 
   const handleFocusPillLongPress = useCallback((id: number) => {
@@ -255,8 +248,7 @@ export default function TraceScreen() {
   const handleShowContext = useCallback(async (entry: EntryWithLabels) => {
     // Switch to context view immediately so the user sees a response, then
     // populate the context entries when the fetch resolves.
-    setContextFocalEntry(entry);
-    setContextEntries([]);
+    setContextState({ focalEntry: entry, entries: [] });
     try {
       const db = (await getDb()) as unknown as Db;
       const afterIso = dayjs(entry.timestamp).subtract(120, 'minute').format('YYYY-MM-DDTHH:mm:ssZ');
@@ -266,15 +258,14 @@ export default function TraceScreen() {
         afterIso,
         beforeIso,
       });
-      setContextEntries(entries);
+      setContextState((prev) => prev ? { ...prev, entries } : prev);
     } catch {
       // Silent fallback — context fetch failed; focal entry still shown alone
     }
   }, []);
 
   const handleDismissContext = useCallback(() => {
-    setContextFocalEntry(undefined);
-    setContextEntries([]);
+    setContextState(undefined);
   }, []);
 
   const renderSectionHeader = useCallback(
@@ -340,10 +331,10 @@ export default function TraceScreen() {
       )}
 
       {/* Context view mode: replaces the filtered SectionList entirely */}
-      {contextFocalEntry != null ? (
+      {contextState != null ? (
         <ContextView
-          focalEntry={contextFocalEntry}
-          contextEntries={contextEntries}
+          focalEntry={contextState.focalEntry}
+          contextEntries={contextState.entries}
           focusName={selectedFocusName}
           onDismiss={handleDismissContext}
         />
