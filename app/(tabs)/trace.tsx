@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
-import { SectionList, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { FlatList, SectionList, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen, ChipTray } from '@/components';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { useTraceEntries } from '@/hooks/useTraceEntries';
 import { summariseEntry, shouldShowAreaPrefix } from '@/lib/utils/traceUtils';
 import { formatEntryTime } from '@/lib/utils/timestamp';
@@ -24,33 +25,21 @@ function formatTraceChipLabel(label: EntryWithLabels['labels'][number], entry: E
   return entry.numericValue != null ? `${base} (${entry.numericValue}/5)` : base;
 }
 
-// ─── Context Row ──────────────────────────────────────────────────────────────
+// ─── Shared icon ──────────────────────────────────────────────────────────────
 
-interface ContextEntryRowProps {
-  entry: EntryWithLabels;
-}
-
-function ContextEntryRow({ entry }: ContextEntryRowProps) {
-  const summary = summariseEntry(entry);
-  const time = formatEntryTime(entry.timestamp);
-
-  return (
-    <View style={styles.contextRow} testID={`context-row-${entry.id}`}>
-      {entry.entryTypeIcon ? (
-        <MaterialCommunityIcons
-          name={entry.entryTypeIcon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
-          size={18}
-          color={colors.chrome}
-        />
-      ) : (
-        <View style={styles.contextIconPlaceholder} />
-      )}
-      <Text style={styles.contextSummary} numberOfLines={1}>
-        {summary}
-      </Text>
-      <Text style={styles.contextTime}>{time}</Text>
-    </View>
-  );
+function EntryIcon({ icon, testID }: { icon: string | null | undefined; testID?: string }) {
+  if (icon) {
+    return (
+      <MaterialCommunityIcons
+        // icon names come from seeded DB values; safe to assert
+        name={icon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+        size={20}
+        color={colors.chrome}
+        testID={testID}
+      />
+    );
+  }
+  return <View style={styles.iconPlaceholder} testID={testID} />;
 }
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
@@ -60,12 +49,10 @@ interface EntryRowProps {
   expanded: boolean;
   onToggle: (id: number) => void;
   filterActive?: boolean;
-  contextEntries?: EntryWithLabels[];
   onShowContext?: (entry: EntryWithLabels) => void;
-  onHideContext?: (entryId: number) => void;
 }
 
-function EntryRow({ entry, expanded, onToggle, filterActive, contextEntries, onShowContext, onHideContext }: EntryRowProps) {
+function EntryRow({ entry, expanded, onToggle, filterActive, onShowContext }: EntryRowProps) {
   const summary = summariseEntry(entry);
   const time = formatEntryTime(entry.timestamp);
 
@@ -77,17 +64,7 @@ function EntryRow({ entry, expanded, onToggle, filterActive, contextEntries, onS
         accessibilityRole="button"
         accessibilityLabel={`${summary}, ${time}`}
       >
-        {entry.entryTypeIcon ? (
-          <MaterialCommunityIcons
-            // icon names come from seeded DB values; safe to assert
-            name={entry.entryTypeIcon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
-            size={20}
-            color={colors.chrome}
-            testID={`trace-row-icon-${entry.id}`}
-          />
-        ) : (
-          <View testID={`trace-row-icon-${entry.id}`} style={styles.iconPlaceholder} />
-        )}
+        <EntryIcon icon={entry.entryTypeIcon} testID={`trace-row-icon-${entry.id}`} />
         <Text style={styles.summary} numberOfLines={1}>
           {summary}
         </Text>
@@ -117,7 +94,7 @@ function EntryRow({ entry, expanded, onToggle, filterActive, contextEntries, onS
         </View>
       )}
 
-      {filterActive && contextEntries === undefined && (
+      {filterActive && (
         <Pressable
           onPress={() => onShowContext?.(entry)}
           testID={`show-context-${entry.id}`}
@@ -128,32 +105,83 @@ function EntryRow({ entry, expanded, onToggle, filterActive, contextEntries, onS
           <Text style={styles.contextButtonText}>Show context</Text>
         </Pressable>
       )}
+    </View>
+  );
+}
 
-      {contextEntries !== undefined && contextEntries.length > 0 && (
-        <View testID={`context-entries-${entry.id}`}>
-          {contextEntries.map((ctx) => (
-            <ContextEntryRow key={ctx.id} entry={ctx} />
-          ))}
-        </View>
-      )}
+// ─── Context View ─────────────────────────────────────────────────────────────
 
-      {contextEntries !== undefined && contextEntries.length === 0 && (
-        <Text style={styles.contextEmpty} testID={`context-empty-${entry.id}`}>
-          Nothing else logged around this time.
+interface ContextViewProps {
+  focalEntry: EntryWithLabels;
+  contextEntries: EntryWithLabels[];
+  focusName: string;
+  onDismiss: () => void;
+}
+
+function ContextView({ focalEntry, contextEntries, focusName, onDismiss }: ContextViewProps) {
+  // Build the flat list: focal entry + all context entries, sorted by timestamp.
+  // Context entries are all other entries in the ±2h window — they render muted
+  // since they were not part of the active focus filter. The focal entry gets a
+  // glow left border as a position marker.
+  const allEntries = [...contextEntries, focalEntry].sort(
+    (a, b) => (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)
+  );
+
+  const focalId = focalEntry.id;
+  const renderContextItem = useCallback(
+    ({ item }: { item: EntryWithLabels }) => (
+      <ContextViewRow entry={item} isFocal={item.id === focalId} isMuted={item.id !== focalId} />
+    ),
+    [focalId],
+  );
+
+  return (
+    <View style={styles.contextViewContainer} testID="context-view">
+      <Pressable
+        onPress={onDismiss}
+        testID="context-view-dismiss"
+        accessibilityRole="button"
+        style={styles.contextViewDismiss}
+      >
+        <Text style={styles.contextViewDismissText}>
+          {`← Back to ${focusName} filter`}
         </Text>
-      )}
+      </Pressable>
 
-      {contextEntries !== undefined && (
-        <Pressable
-          onPress={() => onHideContext?.(entry.id)}
-          testID={`hide-context-${entry.id}`}
-          accessibilityRole="button"
-          accessibilityLabel="Hide context"
-          style={styles.contextButton}
-        >
-          <Text style={styles.contextButtonText}>Hide context</Text>
-        </Pressable>
-      )}
+      <FlatList
+        data={allEntries}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.listContent}
+        renderItem={renderContextItem}
+      />
+    </View>
+  );
+}
+
+interface ContextViewRowProps {
+  entry: EntryWithLabels;
+  isFocal: boolean;
+  isMuted: boolean;
+}
+
+function ContextViewRow({ entry, isFocal, isMuted }: ContextViewRowProps) {
+  const summary = summariseEntry(entry);
+  const time = formatEntryTime(entry.timestamp);
+
+  return (
+    <View
+      style={[
+        styles.row,
+        isFocal && styles.rowFocal,
+        isMuted && styles.rowMuted,
+      ]}
+      testID={isFocal ? `context-view-focal-${entry.id}` : `context-view-muted-${entry.id}`}
+    >
+      <EntryIcon icon={entry.entryTypeIcon} />
+      <Text style={styles.summary} numberOfLines={1}>
+        {summary}
+      </Text>
+      <Text style={styles.time}>{time}</Text>
     </View>
   );
 }
@@ -161,23 +189,49 @@ function EntryRow({ entry, expanded, onToggle, filterActive, contextEntries, onS
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function TraceScreen() {
+  const router = useRouter();
   const [selectedFocusId, setSelectedFocusId] = useState<number | undefined>(undefined);
   const { focuses } = useFocuses({ includeArchived: true });
   const { sections, loading, error } = useTraceEntries(selectedFocusId);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
-  const [contextMap, setContextMap] = useState<Map<number, EntryWithLabels[]>>(new Map());
+
+  // Context view mode: when set, the filtered SectionList is replaced by a
+  // flat context view showing all entries around the focal entry.
+  const [contextState, setContextState] = useState<{
+    focalEntry: EntryWithLabels;
+    entries: EntryWithLabels[];
+  } | undefined>(undefined);
 
   useFocusEffect(
     useCallback(() => {
       setExpandedIds(new Set());
-      setContextMap(new Map());
+      setContextState(undefined);
     }, [])
   );
 
+  const navigation = useNavigation();
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unsubscribe = navigation.addListener('tabPress' as any, () => {
+      // Only reset if this screen is already focused (guards against first-visit
+      // navigation from another tab also triggering a reset).
+      if (navigation.isFocused()) {
+        setSelectedFocusId(undefined);
+        setExpandedIds(new Set());
+        setContextState(undefined);
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const handleFocusPillPress = useCallback((id: number) => {
     setSelectedFocusId((prev) => (prev === id ? undefined : id));
-    setContextMap(new Map());
+    setContextState(undefined);
   }, []);
+
+  const handleFocusPillLongPress = useCallback((id: number) => {
+    router.push(`/focus/${id}/edit`);
+  }, [router]);
 
   const handleToggle = useCallback((id: number) => {
     setExpandedIds((prev) => {
@@ -192,34 +246,26 @@ export default function TraceScreen() {
   }, []);
 
   const handleShowContext = useCallback(async (entry: EntryWithLabels) => {
+    // Switch to context view immediately so the user sees a response, then
+    // populate the context entries when the fetch resolves.
+    setContextState({ focalEntry: entry, entries: [] });
     try {
       const db = (await getDb()) as unknown as Db;
       const afterIso = dayjs(entry.timestamp).subtract(120, 'minute').format('YYYY-MM-DDTHH:mm:ssZ');
       const beforeIso = dayjs(entry.timestamp).add(120, 'minute').format('YYYY-MM-DDTHH:mm:ssZ');
-      const context = await getContextEntries(db, {
+      const entries = await getContextEntries(db, {
         excludeEntryId: entry.id,
         afterIso,
         beforeIso,
       });
-      setContextMap((prev) => {
-        // Guard against re-fetch: if context was already loaded while this async
-        // call was in flight, keep the existing result rather than overwriting it.
-        if (prev.has(entry.id)) return prev;
-        const next = new Map(prev);
-        next.set(entry.id, context);
-        return next;
-      });
+      setContextState((prev) => prev ? { ...prev, entries } : prev);
     } catch {
-      // Silent fallback — context fetch failed, no-op
+      // Silent fallback — context fetch failed; focal entry still shown alone
     }
   }, []);
 
-  const handleHideContext = useCallback((entryId: number) => {
-    setContextMap((prev) => {
-      const next = new Map(prev);
-      next.delete(entryId);
-      return next;
-    });
+  const handleDismissContext = useCallback(() => {
+    setContextState(undefined);
   }, []);
 
   const renderSectionHeader = useCallback(
@@ -236,12 +282,10 @@ export default function TraceScreen() {
         expanded={expandedIds.has(item.id)}
         onToggle={handleToggle}
         filterActive={selectedFocusId != null}
-        contextEntries={contextMap.get(item.id)}
         onShowContext={handleShowContext}
-        onHideContext={handleHideContext}
       />
     ),
-    [expandedIds, handleToggle, selectedFocusId, contextMap, handleShowContext, handleHideContext],
+    [expandedIds, handleToggle, selectedFocusId, handleShowContext],
   );
 
   if (loading) {
@@ -261,6 +305,7 @@ export default function TraceScreen() {
   }
 
   const isEmpty = sections.length === 0;
+  const selectedFocusName = focuses.find((f) => f.id === selectedFocusId)?.name ?? 'Focus';
 
   return (
     <Screen>
@@ -278,12 +323,22 @@ export default function TraceScreen() {
               label={focus.name}
               selected={selectedFocusId === focus.id}
               onPress={() => handleFocusPillPress(focus.id)}
+              onLongPress={() => handleFocusPillLongPress(focus.id)}
               testID={`focus-pill-${focus.id}`}
             />
           ))}
         </ScrollView>
       )}
-      {isEmpty ? (
+
+      {/* Context view mode: replaces the filtered SectionList entirely */}
+      {contextState != null ? (
+        <ContextView
+          focalEntry={contextState.focalEntry}
+          contextEntries={contextState.entries}
+          focusName={selectedFocusName}
+          onDismiss={handleDismissContext}
+        />
+      ) : isEmpty ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
             {selectedFocusId != null
@@ -343,6 +398,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     minHeight: 48,
   },
+  rowFocal: {
+    borderLeftWidth: 2,
+    borderLeftColor: colors.glow,
+  },
+  rowMuted: {
+    opacity: 0.45,
+  },
   iconPlaceholder: {
     width: 20,
     height: 20,
@@ -394,13 +456,6 @@ const styles = StyleSheet.create({
     lineHeight: lineHeight(typeScale.bodyMedium),
     color: colors.error,
   },
-  contextEmpty: {
-    fontFamily: typeScale.bodySmall.family,
-    fontSize: typeScale.bodySmall.size,
-    color: colors.chrome,
-    paddingHorizontal: spacing.pagePadding,
-    paddingVertical: 6,
-  },
   contextButton: {
     paddingHorizontal: spacing.pagePadding,
     paddingVertical: 6,
@@ -411,30 +466,16 @@ const styles = StyleSheet.create({
     fontSize: typeScale.bodySmall.size,
     color: colors.interactive,
   },
-  contextRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.elementGap,
-    paddingHorizontal: spacing.pagePadding,
-    paddingVertical: 10,
-    backgroundColor: colors.surfaceVariant,
-    marginHorizontal: spacing.pagePadding,
-    marginBottom: 2,
-    opacity: 0.7,
-  },
-  contextIconPlaceholder: {
-    width: 18,
-    height: 18,
-  },
-  contextSummary: {
+  contextViewContainer: {
     flex: 1,
-    fontFamily: typeScale.bodyMedium.family,
-    fontSize: typeScale.bodyMedium.size,
-    color: colors.chrome,
   },
-  contextTime: {
+  contextViewDismiss: {
+    paddingHorizontal: spacing.pagePadding,
+    paddingVertical: spacing.elementGap,
+  },
+  contextViewDismissText: {
     fontFamily: typeScale.bodySmall.family,
     fontSize: typeScale.bodySmall.size,
-    color: colors.chrome,
+    color: colors.interactive,
   },
 });

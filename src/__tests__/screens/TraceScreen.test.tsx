@@ -5,6 +5,16 @@ import { useFocuses } from '@/hooks/useFocuses';
 import type { EntryWithLabels } from '@/lib/db/query-types';
 import type { TraceSection } from '@/lib/utils/traceUtils';
 
+const mockRouterPush = jest.fn();
+
+// Shared refs for tabPress listener wiring (item 6)
+let tabPressCallback: (() => void) | undefined;
+const mockIsFocused = jest.fn(() => true);
+const mockAddListener = jest.fn((event: string, cb: () => void) => {
+  if (event === 'tabPress') tabPressCallback = cb;
+  return jest.fn(); // returns unsubscribe fn
+});
+
 jest.mock('@/hooks/useTraceEntries');
 jest.mock('@/hooks/useFocuses', () => ({
   useFocuses: jest.fn().mockReturnValue({ focuses: [], loading: false, error: null }),
@@ -17,7 +27,13 @@ jest.mock('@/lib/db/queries', () => ({
 }));
 jest.mock('expo-router', () => ({
   useFocusEffect: jest.fn(),
-  useRouter: () => ({ back: jest.fn() }),
+  useRouter: () => ({ back: jest.fn(), push: mockRouterPush }),
+}));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    addListener: mockAddListener,
+    isFocused: mockIsFocused,
+  }),
 }));
 
 const mockUseTraceEntries = useTraceEntries as jest.MockedFunction<typeof useTraceEntries>;
@@ -201,7 +217,75 @@ describe('TraceScreen', () => {
     expect(queryByText('Oats')).toBeNull();
   });
 
-  describe('Show context', () => {
+  describe('Focus pill long-press (item 3)', () => {
+    it('long-pressing a focus pill navigates to the edit screen', async () => {
+      const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
+      mockUseTraceEntries.mockReturnValue({ sections: [], loading: false, error: null });
+      const { getByTestId } = render(<TraceScreen />);
+      fireEvent(getByTestId('focus-pill-9'), 'longPress');
+      expect(mockRouterPush).toHaveBeenCalledWith('/focus/9/edit');
+    });
+  });
+
+  describe('Tab re-tap resets filter (item 6)', () => {
+    beforeEach(() => {
+      tabPressCallback = undefined;
+      mockIsFocused.mockReturnValue(true);
+    });
+
+    it('tabPress while focused resets selectedFocusId', async () => {
+      const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
+
+      const entry = makeEntry({ id: 1 });
+      mockUseTraceEntries.mockReturnValue({
+        sections: [makeSection('Today', [entry])],
+        loading: false,
+        error: null,
+      });
+      const { getByTestId, queryByTestId } = render(<TraceScreen />);
+      await act(async () => {
+        fireEvent.press(getByTestId('focus-pill-9'));
+      });
+      // Filter is active — show-context button should be visible
+      expect(getByTestId('show-context-1')).toBeTruthy();
+
+      // Simulate tabPress
+      act(() => { tabPressCallback?.(); });
+
+      // After tabPress reset, show-context button should be gone (no filter active)
+      await waitFor(() => {
+        expect(queryByTestId('show-context-1')).toBeNull();
+      });
+    });
+
+    it('tabPress while NOT focused does not reset the filter', async () => {
+      mockIsFocused.mockReturnValue(false);
+      const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
+
+      const entry = makeEntry({ id: 1 });
+      mockUseTraceEntries.mockReturnValue({
+        sections: [makeSection('Today', [entry])],
+        loading: false,
+        error: null,
+      });
+      const { getByTestId } = render(<TraceScreen />);
+      await act(async () => {
+        fireEvent.press(getByTestId('focus-pill-9'));
+      });
+      expect(getByTestId('show-context-1')).toBeTruthy();
+
+      // Simulate tabPress while NOT focused (first-visit navigation from another tab)
+      act(() => { tabPressCallback?.(); });
+
+      // Filter should remain active
+      expect(getByTestId('show-context-1')).toBeTruthy();
+    });
+  });
+
+  describe('Show context (context view mode)', () => {
     const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
 
     function setupWithFocus(entries: EntryWithLabels[]) {
@@ -254,81 +338,75 @@ describe('TraceScreen', () => {
       expect(getContextEntries).toHaveBeenCalled();
     });
 
-    it('context entries render in muted container after tapping "Show context"', async () => {
-      const contextEntry = makeEntry({ id: 99, entryTypeName: 'Food', entryTypeTitle: 'Food', timestamp: '2026-04-14T09:30:00-07:00', numericValue: null });
+    it('tapping "Show context" switches to context view (context-view testID appears)', async () => {
+      const contextEntry = makeEntry({ id: 99, entryTypeName: 'Food', entryTypeTitle: 'Food', timestamp: '2026-04-14T09:30:00-07:00', numericValue: null, labels: [] });
       const { getContextEntries } = require('@/lib/db/queries');
       (getContextEntries as jest.Mock).mockResolvedValue([contextEntry]);
       const entry = makeEntry({ id: 1, timestamp: '2026-04-14T10:00:00-07:00' });
       setupWithFocus([entry]);
       const { getByTestId } = render(<TraceScreen />);
-      await act(async () => {
-        fireEvent.press(getByTestId('focus-pill-9'));
-      });
-      await act(async () => {
-        fireEvent.press(getByTestId('show-context-1'));
-      });
-      await waitFor(() => expect(getByTestId('context-entries-1')).toBeTruthy());
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('show-context-1')); });
+      await waitFor(() => expect(getByTestId('context-view')).toBeTruthy());
     });
 
-    it('context entry rows have muted style (opacity 0.7)', async () => {
-      const contextEntry = makeEntry({ id: 99, entryTypeName: 'Food', entryTypeTitle: 'Food', timestamp: '2026-04-14T09:30:00-07:00', numericValue: null });
+    it('context view shows the focal entry with glow border', async () => {
       const { getContextEntries } = require('@/lib/db/queries');
-      (getContextEntries as jest.Mock).mockResolvedValue([contextEntry]);
+      (getContextEntries as jest.Mock).mockResolvedValue([]);
       const entry = makeEntry({ id: 1, timestamp: '2026-04-14T10:00:00-07:00' });
       setupWithFocus([entry]);
       const { getByTestId } = render(<TraceScreen />);
-      await act(async () => {
-        fireEvent.press(getByTestId('focus-pill-9'));
-      });
-      await act(async () => {
-        fireEvent.press(getByTestId('show-context-1'));
-      });
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('show-context-1')); });
       await waitFor(() => {
-        const contextRow = getByTestId('context-row-99');
-        const style = contextRow.props.style;
+        const focalRow = getByTestId('context-view-focal-1');
+        const style = focalRow.props.style;
         const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
-        expect(flatStyle.opacity).toBe(0.7);
+        expect(flatStyle.borderLeftWidth).toBe(2);
       });
     });
 
-    it('"Hide context" button appears after context is shown', async () => {
+    it('non-focus context entries are muted (opacity ~0.45)', async () => {
+      const contextEntry = makeEntry({ id: 99, entryTypeName: 'Food', entryTypeTitle: 'Food', timestamp: '2026-04-14T09:30:00-07:00', numericValue: null, labels: [] });
+      const { getContextEntries } = require('@/lib/db/queries');
+      (getContextEntries as jest.Mock).mockResolvedValue([contextEntry]);
       const entry = makeEntry({ id: 1, timestamp: '2026-04-14T10:00:00-07:00' });
       setupWithFocus([entry]);
       const { getByTestId } = render(<TraceScreen />);
-      await act(async () => {
-        fireEvent.press(getByTestId('focus-pill-9'));
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('show-context-1')); });
+      await waitFor(() => {
+        const mutedRow = getByTestId('context-view-muted-99');
+        const style = mutedRow.props.style;
+        const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
+        expect(flatStyle.opacity).toBe(0.45);
       });
-      await act(async () => {
-        fireEvent.press(getByTestId('show-context-1'));
-      });
-      await waitFor(() => expect(getByTestId('hide-context-1')).toBeTruthy());
     });
 
-    it('tapping "Hide context" removes context entries', async () => {
-      const contextEntry = makeEntry({ id: 99, entryTypeName: 'Food', entryTypeTitle: 'Food', timestamp: '2026-04-14T09:30:00-07:00', numericValue: null });
-      const { getContextEntries } = require('@/lib/db/queries');
-      (getContextEntries as jest.Mock).mockResolvedValue([contextEntry]);
+    it('"Back to filter" dismiss button appears in context view', async () => {
+      const entry = makeEntry({ id: 1, timestamp: '2026-04-14T10:00:00-07:00' });
+      setupWithFocus([entry]);
+      const { getByTestId } = render(<TraceScreen />);
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('show-context-1')); });
+      await waitFor(() => expect(getByTestId('context-view-dismiss')).toBeTruthy());
+    });
+
+    it('tapping "Back to filter" restores the filtered SectionList', async () => {
       const entry = makeEntry({ id: 1, timestamp: '2026-04-14T10:00:00-07:00' });
       setupWithFocus([entry]);
       const { getByTestId, queryByTestId } = render(<TraceScreen />);
-      await act(async () => {
-        fireEvent.press(getByTestId('focus-pill-9'));
-      });
-      await act(async () => {
-        fireEvent.press(getByTestId('show-context-1'));
-      });
-      await waitFor(() => expect(getByTestId('context-entries-1')).toBeTruthy());
-      await act(async () => {
-        fireEvent.press(getByTestId('hide-context-1'));
-      });
-      expect(queryByTestId('context-entries-1')).toBeNull();
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('show-context-1')); });
+      await waitFor(() => expect(getByTestId('context-view')).toBeTruthy());
+      fireEvent.press(getByTestId('context-view-dismiss'));
+      expect(queryByTestId('context-view')).toBeNull();
+      // The filter is still active — show-context button should reappear
+      expect(getByTestId('show-context-1')).toBeTruthy();
     });
 
-    it('changing focus pill clears all context entries', async () => {
+    it('changing focus pill exits context view', async () => {
       const FOCUS2 = { id: 10, name: 'Other Focus', description: null, archived: false, sortOrder: 1, createdAt: '2026-01-01T00:00:00-07:00' };
-      const contextEntry = makeEntry({ id: 99, entryTypeName: 'Food', entryTypeTitle: 'Food', timestamp: '2026-04-14T09:30:00-07:00', numericValue: null });
-      const { getContextEntries } = require('@/lib/db/queries');
-      (getContextEntries as jest.Mock).mockResolvedValue([contextEntry]);
       const entry = makeEntry({ id: 1, timestamp: '2026-04-14T10:00:00-07:00' });
       mockUseFocuses.mockReturnValue({ focuses: [FOCUS, FOCUS2], loading: false, error: null });
       mockUseTraceEntries.mockReturnValue({
@@ -337,18 +415,11 @@ describe('TraceScreen', () => {
         error: null,
       });
       const { getByTestId, queryByTestId } = render(<TraceScreen />);
-      await act(async () => {
-        fireEvent.press(getByTestId('focus-pill-9'));
-      });
-      await act(async () => {
-        fireEvent.press(getByTestId('show-context-1'));
-      });
-      await waitFor(() => expect(getByTestId('context-entries-1')).toBeTruthy());
-      // Switch to a different focus pill — context should be cleared
-      await act(async () => {
-        fireEvent.press(getByTestId('focus-pill-10'));
-      });
-      expect(queryByTestId('context-entries-1')).toBeNull();
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('show-context-1')); });
+      await waitFor(() => expect(getByTestId('context-view')).toBeTruthy());
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-10')); });
+      expect(queryByTestId('context-view')).toBeNull();
     });
   });
 });

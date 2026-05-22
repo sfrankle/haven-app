@@ -33,3 +33,16 @@ appId: com.haven.app
 # Assert the pill is still present (unfiltered view restored)
 - assertVisible:
     id: "focus-pill-1"
+
+# --- Tab re-tap resets filter (item 6) ---
+# Activate the filter again
+- tapOn:
+    id: "focus-pill-1"
+
+# Tap the Trace tab again while already on Trace — filter should reset
+- tapOn:
+    id: "tab-trace"
+
+# The pill should be present but no longer selected (filter reset)
+- assertVisible:
+    id: "focus-pill-1"

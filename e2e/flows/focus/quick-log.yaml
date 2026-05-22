@@ -25,11 +25,11 @@ appId: com.haven.app
 - assertVisible:
     text: "Quick Log Test"
 
-# Step 2: Long-press the pill to open the edit screen and pin a label
+# Step 2: Long-press the pill to open the edit screen and pin labels
 - longPressOn:
     text: "Quick Log Test"
 
-# Search for and pin a label (e.g. "Apple")
+# Search for and pin a Food label (e.g. "Apple")
 - tapOn:
     id: "focus-edit-label-search"
 - inputText: "Apple"
@@ -38,6 +38,17 @@ appId: com.haven.app
 - tapOn:
     index: 0
     text: "Apple"
+
+# Also pin a Physical label so we can test severity 0 in quick-log
+- clearText:
+    id: "focus-edit-label-search"
+- tapOn:
+    id: "focus-edit-label-search"
+- inputText: "Cramp"
+
+- tapOn:
+    index: 0
+    text: "Cramp"
 
 - tapOn:
     id: "focus-edit-save-button"
@@ -52,6 +63,11 @@ appId: com.haven.app
 
 - assertVisible:
     id: "submit-button"
+
+# The Physical item (Cramp) should show a severity row including button 0
+# SeverityRow renders with accessibility labels — assert the "0 — absent" button
+- assertVisible:
+    text: "0"
 
 # Tap Submit to log all items
 - tapOn:

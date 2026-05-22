@@ -1,12 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { useFocuses } from '@/hooks/useFocuses';
 import { createFocus } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
@@ -20,6 +23,9 @@ interface FocusDropdownProps {
   onSelect: (id: number | undefined) => void;
   defaultExpanded?: boolean;
   testID?: string;
+  /** Optional style applied to the root View. Use to add padding on screens
+   *  that don't provide their own horizontal padding (e.g. emotion tier2/3). */
+  style?: ViewStyle;
 }
 
 export function FocusDropdown({
@@ -27,6 +33,7 @@ export function FocusDropdown({
   onSelect,
   defaultExpanded,
   testID,
+  style,
 }: FocusDropdownProps) {
   const { focuses } = useFocuses();
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
@@ -93,7 +100,7 @@ export function FocusDropdown({
   );
 
   return (
-    <View testID={testID}>
+    <View testID={testID} style={style}>
       <Pressable
         testID="focus-toggle"
         onPress={handleToggle}
@@ -142,41 +149,52 @@ export function FocusDropdown({
         testID="focus-new-modal"
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <TextInput
-              testID="focus-new-name-input"
-              style={styles.modalInput}
-              value={newName}
-              onChangeText={handleNameChange}
-              placeholder="Focus name"
-              placeholderTextColor={colors.chrome}
-              autoFocus
-            />
-            <SaveErrorMessage
-              visible={errorMessage !== ''}
-              message={errorMessage}
-              testID="focus-error-message"
-            />
-            <View style={styles.modalButtons}>
-              <Pressable
-                testID="focus-new-cancel"
-                onPress={handleCancel}
-                style={styles.modalBtn}
-                accessibilityRole="button"
-              >
-                <Text style={styles.cancelText}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                testID="focus-new-submit"
-                onPress={() => { void handleSubmit(); }}
-                style={styles.modalBtn}
-                accessibilityRole="button"
-                disabled={submitting}
-              >
-                <Text style={styles.submitText}>Add</Text>
-              </Pressable>
+          {/* KeyboardAvoidingView prevents the keyboard from covering the
+              name input on iOS. Android modals handle this automatically. */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            testID="focus-modal-kav"
+          >
+            <View style={styles.modalSheet}>
+              {/* NOTE: This modal is intentionally name-only — it creates a bare
+                  Focus and immediately selects it. Associating labels here was
+                  aspirational (issue #114) but the current name-only flow is the
+                  accepted design. Labels are associated on the Focus edit screen. */}
+              <TextInput
+                testID="focus-new-name-input"
+                style={styles.modalInput}
+                value={newName}
+                onChangeText={handleNameChange}
+                placeholder="Focus name"
+                placeholderTextColor={colors.chrome}
+                autoFocus
+              />
+              <SaveErrorMessage
+                visible={errorMessage !== ''}
+                message={errorMessage}
+                testID="focus-error-message"
+              />
+              <View style={styles.modalButtons}>
+                <Pressable
+                  testID="focus-new-cancel"
+                  onPress={handleCancel}
+                  style={styles.modalBtn}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  testID="focus-new-submit"
+                  onPress={() => { void handleSubmit(); }}
+                  style={styles.modalBtn}
+                  accessibilityRole="button"
+                  disabled={submitting}
+                >
+                  <Text style={styles.submitText}>Add</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>

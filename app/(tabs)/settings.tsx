@@ -10,11 +10,11 @@ import type { Db } from '@/lib/db/queries';
 import type { Focus } from '@/lib/db/query-types';
 
 const sectionLabelStyle = {
-  fontFamily: typeScale.labelMedium.family,
-  fontWeight: typeScale.labelMedium.weight,
-  fontSize: typeScale.labelMedium.size,
-  lineHeight: lineHeight(typeScale.labelMedium),
-  color: colors.chrome,
+  fontFamily: typeScale.titleMedium.family,
+  fontWeight: typeScale.titleMedium.weight,
+  fontSize: typeScale.titleMedium.size,
+  lineHeight: lineHeight(typeScale.titleMedium),
+  color: colors.ink,
   marginBottom: spacing.elementGap,
 } as const;
 
@@ -110,7 +110,7 @@ export default function SettingsScreen() {
   return (
     <Screen>
       <View style={styles.section}>
-        <Text style={sectionLabelStyle}>Privacy</Text>
+        <Text style={sectionLabelStyle} testID="settings-section-privacy">Privacy</Text>
         <Surface style={styles.focusRow}>
           <Text
             accessibilityElementsHidden
@@ -126,6 +126,8 @@ export default function SettingsScreen() {
         </Surface>
       </View>
 
+      <View style={styles.sectionDivider} testID="settings-section-divider" />
+
       <SettingsFocusSection />
     </Screen>
   );
@@ -135,6 +137,13 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: spacing.pagePadding,
     paddingTop: spacing.sectionGap,
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: colors.chrome,
+    opacity: 0.15,
+    marginHorizontal: spacing.pagePadding,
+    marginTop: spacing.sectionGap,
   },
   focusRow: {
     flexDirection: 'row',

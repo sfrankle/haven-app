@@ -28,6 +28,28 @@ const ARCHIVED_FOCUS = { id: 2, name: 'Old Focus', description: null, archived: 
 // eslint-disable-next-line import/first
 import SettingsScreen from '../settings';
 
+describe('SettingsScreen — visual hierarchy', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('shows a section divider between Privacy and Focus (always rendered)', async () => {
+    mockGetFocuses.mockResolvedValue([]);
+    const { getByTestId } = render(<SettingsScreen />);
+    await waitFor(() => {
+      expect(getByTestId('settings-section-divider')).toBeTruthy();
+    });
+  });
+
+  it('Privacy section heading renders', async () => {
+    mockGetFocuses.mockResolvedValue([]);
+    const { getByTestId } = render(<SettingsScreen />);
+    await waitFor(() => {
+      expect(getByTestId('settings-section-privacy')).toBeTruthy();
+    });
+  });
+});
+
 describe('SettingsScreen — Focus section', () => {
   beforeEach(() => {
     jest.clearAllMocks();

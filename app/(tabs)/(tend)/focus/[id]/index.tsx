@@ -21,6 +21,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/components/Screen';
 import { Button } from '@/components/Button';
 import { SaveErrorMessage } from '@/components/SaveErrorMessage';
+import { SeverityRow } from '@/components/SeverityRow';
 import { getFocusById, getFocusItems, saveEntryBatch } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { nowLocalIso } from '@/lib/utils/timestamp';
@@ -250,20 +251,16 @@ function ItemRow({ item, state, onToggle, onSeverity }: ItemRowProps) {
 
       {isPhysical(item) && state.checked && (
         <View style={styles.severityRow}>
-          {[1, 2, 3, 4, 5].map((v) => (
-            <Pressable
-              key={v}
-              style={[styles.severityButton, state.severity === v && styles.severityButtonActive]}
-              onPress={() => onSeverity(v)}
-              testID={`severity-${item.labelId}-${v}`}
-              accessibilityRole="button"
-              accessibilityLabel={`Severity ${v}`}
-            >
-              <Text style={[styles.severityText, state.severity === v && styles.severityTextActive]}>
-                {v}
-              </Text>
-            </Pressable>
-          ))}
+          {/* SeverityRow includes 0 (absent) through 5. onDismiss is a no-op
+              because severity stays visible while the item is checked — there
+              is no auto-dismiss concept on this screen. The toggle-clear logic
+              lives in setSeverity above. */}
+          <SeverityRow
+            value={state.severity}
+            onChange={(v) => onSeverity(v)}
+            onDismiss={() => { /* no-op */ }}
+            testID={`severity-row-${item.labelId}`}
+          />
         </View>
       )}
     </View>
@@ -328,32 +325,8 @@ const styles = StyleSheet.create({
     color: colors.chrome,
   },
   severityRow: {
-    flexDirection: 'row',
-    gap: spacing.tight,
     marginTop: spacing.micro,
     marginLeft: 22 + spacing.elementGap,
-  },
-  severityButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.chrome,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  severityButtonActive: {
-    backgroundColor: colors.interactive,
-    borderColor: colors.interactive,
-  },
-  severityText: {
-    fontFamily: typeScale.labelMedium.family,
-    fontWeight: typeScale.labelMedium.weight,
-    fontSize: typeScale.labelMedium.size,
-    color: colors.ink,
-  },
-  severityTextActive: {
-    color: colors.background,
   },
   emptyText: {
     fontFamily: typeScale.bodyLarge.family,

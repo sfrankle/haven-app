@@ -80,7 +80,7 @@ export default function LogEmotionScreen3() {
   }
 
   return (
-    <Screen showBack>
+    <Screen showBack avoidKeyboard>
       <View style={styles.container} testID="emotion-screen-3">
         <Text style={[logScreenStyles.prompt, logScreenStyles.promptPadded]}>
           {emotionEntryType?.prompt ?? emotionEntryType?.name}
@@ -132,6 +132,7 @@ export default function LogEmotionScreen3() {
           notesTestID="emotion-notes-input"
           errorTestID="emotion-save-error"
           confirmationTestID="emotion-save-confirmation"
+          focusDropdownStyle={{ paddingHorizontal: spacing.pagePadding }}
         />
       </View>
     </Screen>

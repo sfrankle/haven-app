@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, ViewProps, Pressable } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, ViewProps, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -23,13 +23,23 @@ function BackButton() {
 interface ScreenProps extends ViewProps {
   children?: React.ReactNode;
   showBack?: boolean;
+  avoidKeyboard?: boolean;
 }
 
-export function Screen({ children, style, showBack, ...props }: ScreenProps) {
+export function Screen({ children, style, showBack, avoidKeyboard, ...props }: ScreenProps) {
   return (
     <SafeAreaView style={[styles.safeArea, style]} {...props}>
       {showBack && <BackButton />}
-      {children}
+      {avoidKeyboard ? (
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          {children}
+        </KeyboardAvoidingView>
+      ) : (
+        children
+      )}
     </SafeAreaView>
   );
 }
@@ -44,5 +54,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.pagePadding,
     paddingTop: spacing.tight,
     paddingBottom: spacing.micro,
+  },
+  keyboardAvoid: {
+    flex: 1,
   },
 });
