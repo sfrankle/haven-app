@@ -881,7 +881,8 @@ export async function getRoutines(
         timeBlocks: [],
       });
     }
-    if (row.time_block !== null) {
+    const SCHEDULEABLE: readonly string[] = ['Morning', 'Midday', 'Afternoon', 'Evening'];
+    if (row.time_block !== null && SCHEDULEABLE.includes(row.time_block)) {
       routineMap.get(row.id)!.timeBlocks.push(row.time_block as ScheduleableBlock);
     }
   }
@@ -965,17 +966,17 @@ export async function updateRoutine(
       );
     }
 
-    if ('associatedFocusId' in patch) {
+    if (patch.associatedFocusId !== undefined) {
       await db.runAsync(
         `UPDATE routine SET associated_focus_id = ?, updated_at = ? WHERE id = ?`,
-        [patch.associatedFocusId ?? null, now, id]
+        [patch.associatedFocusId, now, id]
       );
     }
 
-    if ('frequencyNote' in patch) {
+    if (patch.frequencyNote !== undefined) {
       await db.runAsync(
         `UPDATE routine SET frequency_note = ?, updated_at = ? WHERE id = ?`,
-        [patch.frequencyNote ?? null, now, id]
+        [patch.frequencyNote, now, id]
       );
     }
 

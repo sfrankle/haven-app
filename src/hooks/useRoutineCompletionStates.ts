@@ -34,7 +34,7 @@ export function useRoutineCompletionStates(
   today: string
 ): UseRoutineCompletionStatesResult {
   const [states, setStates] = useState<RoutineCompletionStateMap>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   // Stable dep: stringify the routine IDs to avoid re-running the effect on
