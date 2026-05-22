@@ -122,20 +122,29 @@ describe('QuickLogScreen', () => {
     });
   });
 
-  // 7. Physical row renders severity selector
-  test('Physical row renders 5 severity buttons', async () => {
-    const { getByTestId } = render(<QuickLogScreen />);
+  // 7. Physical row renders severity selector including 0
+  test('Physical row renders severity buttons 0–5', async () => {
+    const { getByTestId, getAllByRole } = render(<QuickLogScreen />);
     await waitFor(() => getByTestId('item-row-2'));
-    // Physical item (labelId 2) has severity buttons
-    expect(getByTestId('severity-2-1')).toBeTruthy();
-    expect(getByTestId('severity-2-5')).toBeTruthy();
+    // The severity container should be present for the physical item (labelId 2)
+    const severityContainer = getByTestId('severity-row-2');
+    expect(severityContainer).toBeTruthy();
+    // SeverityRow renders 6 buttons (0-5)
+    const buttons = getAllByRole('button');
+    // Find buttons within the severity row by accessibility label
+    const zeroBtn = buttons.find(
+      (b) => b.props.accessibilityLabel === 'Severity 0 — symptom absent'
+    );
+    expect(zeroBtn).toBeTruthy();
   });
 
-  // 8. Severity value is included in save input
+  // 8. Severity value is included in save input (including 0)
   test('selected severity value is passed in numericValue', async () => {
-    const { getByTestId } = render(<QuickLogScreen />);
-    await waitFor(() => getByTestId('severity-2-3'));
-    fireEvent.press(getByTestId('severity-2-3'));
+    const { getByTestId, getAllByRole } = render(<QuickLogScreen />);
+    await waitFor(() => getByTestId('severity-row-2'));
+    const buttons = getAllByRole('button');
+    const btn3 = buttons.find((b) => b.props.accessibilityLabel === 'Severity 3 of 5');
+    fireEvent.press(btn3!);
     fireEvent.press(getByTestId('submit-button'));
 
     await waitFor(() => {
@@ -143,6 +152,21 @@ describe('QuickLogScreen', () => {
       const [, inputs] = mockSaveEntryBatch.mock.calls[0] as [unknown, { labelIds?: number[]; numericValue?: number }[]];
       const physicalInput = inputs.find((i) => i.labelIds?.[0] === 2);
       expect(physicalInput?.numericValue).toBe(3);
+    });
+  });
+
+  // 8b. Severity 0 value is passed in numericValue
+  test('severity 0 is passed in numericValue when selected', async () => {
+    const { getByTestId, getByLabelText } = render(<QuickLogScreen />);
+    await waitFor(() => getByTestId('severity-row-2'));
+    fireEvent.press(getByLabelText('Severity 0 — symptom absent'));
+    fireEvent.press(getByTestId('submit-button'));
+
+    await waitFor(() => {
+      expect(mockSaveEntryBatch).toHaveBeenCalledTimes(1);
+      const [, inputs] = mockSaveEntryBatch.mock.calls[0] as [unknown, { labelIds?: number[]; numericValue?: number }[]];
+      const physicalInput = inputs.find((i) => i.labelIds?.[0] === 2);
+      expect(physicalInput?.numericValue).toBe(0);
     });
   });
 
