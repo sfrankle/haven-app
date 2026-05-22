@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TextInput, View } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from './Button';
 import { SaveConfirmation } from './SaveConfirmation';
@@ -16,6 +17,9 @@ interface LogFormShellProps {
   errorTestID?: string;
   saveButtonTestID?: string;
   notesTestID?: string;
+  /** Optional style forwarded to the FocusDropdown root View. Use to add
+   *  horizontal padding on screens that don't provide their own. */
+  focusDropdownStyle?: ViewStyle;
 }
 
 export function LogFormShell({
@@ -26,6 +30,7 @@ export function LogFormShell({
   errorTestID,
   saveButtonTestID,
   notesTestID,
+  focusDropdownStyle,
 }: LogFormShellProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -61,6 +66,7 @@ export function LogFormShell({
         onSelect={setFocusId}
         defaultExpanded={initialFocusId !== undefined}
         testID="focus-dropdown"
+        style={focusDropdownStyle}
       />
 
       <TextInput

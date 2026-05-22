@@ -177,6 +177,32 @@ describe('FocusDropdown', () => {
     expect(queryByTestId('focus-error-message')).toBeNull();
   });
 
+  it('New Focus modal renders KeyboardAvoidingView', () => {
+    const { getByTestId } = render(
+      <FocusDropdown selectedId={undefined} onSelect={jest.fn()} />
+    );
+    fireEvent.press(getByTestId('focus-toggle'));
+    fireEvent.press(getByTestId('focus-new'));
+    // The modal sheet should be wrapped in a KeyboardAvoidingView (testID="focus-modal-kav")
+    expect(getByTestId('focus-modal-kav')).toBeTruthy();
+  });
+
+  it('FocusDropdown accepts style prop and applies it to root View', () => {
+    const { getByTestId } = render(
+      <FocusDropdown
+        selectedId={undefined}
+        onSelect={jest.fn()}
+        testID="my-focus-dropdown"
+        style={{ paddingHorizontal: 16 }}
+      />
+    );
+    const root = getByTestId('my-focus-dropdown');
+    const flatStyle = Array.isArray(root.props.style)
+      ? Object.assign({}, ...root.props.style)
+      : root.props.style;
+    expect(flatStyle.paddingHorizontal).toBe(16);
+  });
+
   it('modal input clears after close', async () => {
     mockCreateFocus.mockResolvedValue({
       id: 100, name: 'Temp', description: null, archived: false, sortOrder: 0, createdAt: '',

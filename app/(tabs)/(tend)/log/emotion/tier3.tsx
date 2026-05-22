@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Screen, SplitPane, SplitPaneRow, Chip, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
@@ -81,6 +81,10 @@ export default function LogEmotionScreen3() {
 
   return (
     <Screen showBack>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       <View style={styles.container} testID="emotion-screen-3">
         <Text style={[logScreenStyles.prompt, logScreenStyles.promptPadded]}>
           {emotionEntryType?.prompt ?? emotionEntryType?.name}
@@ -132,8 +136,10 @@ export default function LogEmotionScreen3() {
           notesTestID="emotion-notes-input"
           errorTestID="emotion-save-error"
           confirmationTestID="emotion-save-confirmation"
+          focusDropdownStyle={{ paddingHorizontal: spacing.pagePadding }}
         />
       </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
