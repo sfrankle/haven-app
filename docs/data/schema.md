@@ -60,6 +60,8 @@ erDiagram
         TEXT created_at
         REAL numeric_value
         TEXT notes
+        INTEGER routine_id FK
+        INTEGER routine_completion_id FK
     }
 
     entry_label {
@@ -101,6 +103,55 @@ erDiagram
     label ||--o{ focus_label : "pinned in"
     entry ||--o{ entry_focus : "linked to"
     focus ||--o{ entry_focus : "linked from"
+
+    routine {
+        INTEGER id PK
+        TEXT name
+        INTEGER associated_focus_id FK
+        TEXT frequency_note
+        INTEGER sort_order
+        INTEGER archived
+        TEXT created_at
+        TEXT updated_at
+    }
+
+    routine_entry_type {
+        INTEGER id PK
+        INTEGER routine_id FK
+        TEXT name
+        INTEGER entry_type_id FK
+        TEXT prescribed_detail
+        TEXT instruction_note
+        INTEGER sort_order
+        TEXT created_at
+        TEXT updated_at
+    }
+
+    routine_entry_type_label {
+        INTEGER routine_entry_type_id FK
+        INTEGER label_id FK
+    }
+
+    routine_time_block {
+        INTEGER routine_id FK
+        TEXT time_block
+    }
+
+    routine_completion {
+        INTEGER id PK
+        INTEGER routine_id FK
+        TEXT created_at
+    }
+
+    focus ||--o{ routine : "associated with"
+    entry_type ||--o{ routine_entry_type : "used by"
+    routine ||--o{ routine_entry_type : "has"
+    routine ||--o{ routine_time_block : "scheduled for"
+    routine ||--o{ routine_completion : "completed via"
+    routine_entry_type ||--o{ routine_entry_type_label : "pre-selects"
+    label ||--o{ routine_entry_type_label : "pre-selected in"
+    routine_completion ||--o{ entry : "groups"
+    routine ||--o{ entry : "source of"
 ```
 
 ## Planned tables (not yet implemented)
@@ -125,3 +176,11 @@ erDiagram
 **focus.archived** — `0` = active, `1` = archived. Archived focuses are hidden from the logging UI but preserved for historical correlation queries.
 
 **entry_focus** — MVP enforces one Focus per entry at the app layer. The schema uses a composite PK `(entry_id, focus_id)` to remain forward-compatible if multi-focus is introduced later. App-layer code should use a delete-then-insert transaction when changing a focus association (not `INSERT OR REPLACE`).
+
+**entry.routine_id** — nullable FK to `routine`. Set when an entry was created as part of a routine completion. `ON DELETE SET NULL` so historical entries survive if a routine is deleted.
+
+**entry.routine_completion_id** — nullable FK to `routine_completion`. Groups all entries created in a single routine completion event. `ON DELETE SET NULL` for the same reason. Completion state per time block is derived at query time by joining `entry.routine_completion_id → routine_completion.created_at` filtered by `routine_time_block.time_block`.
+
+**routine.updated_at** and **routine_entry_type.updated_at** — application code is responsible for keeping these current on any mutation. Mutations to child join tables (`routine_entry_type_label`, `routine_time_block`) should also update the parent `updated_at` if the change is user-visible.
+
+**routine_completion** — intentionally has no `updated_at`; it is immutable once inserted. The `created_at` text stores the ISO wall-clock timestamp of the completion event. Application code must insert `routine_completion` first and use the returned row ID when building the entry batch.

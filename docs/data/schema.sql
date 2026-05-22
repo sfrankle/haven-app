@@ -4,13 +4,15 @@ CREATE TABLE category (
 );
 
 CREATE TABLE entry (
-  id            INTEGER PRIMARY KEY,
-  entry_type_id INTEGER NOT NULL REFERENCES entry_type(id),
-  source_type   TEXT NOT NULL DEFAULT 'log',
-  timestamp     TEXT NOT NULL,
-  created_at    TEXT NOT NULL,
-  numeric_value REAL,
-  notes         TEXT
+  id                    INTEGER PRIMARY KEY,
+  entry_type_id         INTEGER NOT NULL REFERENCES entry_type(id),
+  source_type           TEXT NOT NULL DEFAULT 'log',
+  timestamp             TEXT NOT NULL,
+  created_at            TEXT NOT NULL,
+  numeric_value         REAL,
+  notes                 TEXT,
+  routine_id            INTEGER REFERENCES routine(id) ON DELETE SET NULL,
+  routine_completion_id INTEGER REFERENCES routine_completion(id) ON DELETE SET NULL
 );
 
 CREATE TABLE entry_focus (
@@ -87,3 +89,48 @@ CREATE TABLE tag (
   tag_group    TEXT,
   seed_version INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE routine (
+  id                  INTEGER PRIMARY KEY,
+  name                TEXT NOT NULL,
+  associated_focus_id INTEGER REFERENCES focus(id) ON DELETE SET NULL,
+  frequency_note      TEXT,
+  sort_order          INTEGER NOT NULL DEFAULT 0,
+  archived            INTEGER NOT NULL DEFAULT 0,
+  created_at          TEXT NOT NULL,
+  updated_at          TEXT NOT NULL
+);
+
+CREATE TABLE routine_entry_type (
+  id                INTEGER PRIMARY KEY,
+  routine_id        INTEGER NOT NULL REFERENCES routine(id) ON DELETE CASCADE,
+  name              TEXT NOT NULL,
+  entry_type_id     INTEGER NOT NULL REFERENCES entry_type(id) ON DELETE RESTRICT,
+  prescribed_detail TEXT,
+  instruction_note  TEXT,
+  sort_order        INTEGER NOT NULL DEFAULT 0,
+  created_at        TEXT NOT NULL,
+  updated_at        TEXT NOT NULL
+);
+
+CREATE TABLE routine_entry_type_label (
+  routine_entry_type_id INTEGER NOT NULL REFERENCES routine_entry_type(id) ON DELETE CASCADE,
+  label_id              INTEGER NOT NULL REFERENCES label(id) ON DELETE RESTRICT,
+  PRIMARY KEY (routine_entry_type_id, label_id)
+);
+
+CREATE TABLE routine_time_block (
+  routine_id INTEGER NOT NULL REFERENCES routine(id) ON DELETE CASCADE,
+  time_block TEXT NOT NULL CHECK (time_block IN ('Morning','Midday','Afternoon','Evening')),
+  PRIMARY KEY (routine_id, time_block)
+);
+
+CREATE TABLE routine_completion (
+  id         INTEGER PRIMARY KEY,
+  routine_id INTEGER NOT NULL REFERENCES routine(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_routine_completion_routine_id ON routine_completion(routine_id);
+
+CREATE INDEX IF NOT EXISTS idx_entry_routine_completion_id ON entry(routine_completion_id);
