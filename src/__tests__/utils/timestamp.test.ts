@@ -108,33 +108,37 @@ describe('formatEntryDate', () => {
 
 describe('getTimeBlock', () => {
   // All tests pass an ISO string with the hour baked in — no Date mocking needed.
-  // Windows: Morning 05:00–11:59, Midday 12:00–13:59, Afternoon 14:00–17:59, Evening 18:00–04:59
+  // Windows: Morning 05:00–11:59, Midday 12:00–13:59, Afternoon 14:00–17:59,
+  //          Evening 18:00–21:59, Night 22:00–04:59
 
   it.each([
     // Boundary hours — lower bounds
-    ['2026-01-01T05:00:00+00:00', 'Morning'],  // first Morning hour
-    ['2026-01-01T12:00:00+00:00', 'Midday'],   // first Midday hour
+    ['2026-01-01T05:00:00+00:00', 'Morning'],   // first Morning hour
+    ['2026-01-01T12:00:00+00:00', 'Midday'],    // first Midday hour
     ['2026-01-01T14:00:00+00:00', 'Afternoon'], // first Afternoon hour
     ['2026-01-01T18:00:00+00:00', 'Evening'],   // first Evening hour
+    ['2026-01-01T22:00:00+00:00', 'Night'],     // first Night hour
     // Boundary hours — upper bounds
     ['2026-01-01T11:59:00+00:00', 'Morning'],   // last Morning minute
     ['2026-01-01T13:59:00+00:00', 'Midday'],    // last Midday minute
     ['2026-01-01T17:59:00+00:00', 'Afternoon'], // last Afternoon minute
-    ['2026-01-01T04:59:00+00:00', 'Evening'],   // last Evening minute (late night)
+    ['2026-01-01T21:59:00+00:00', 'Evening'],   // last Evening minute
+    ['2026-01-01T04:59:00+00:00', 'Night'],     // last Night minute
     // Mid-window representatives
     ['2026-01-01T08:00:00+00:00', 'Morning'],   // mid-morning
     ['2026-01-01T13:00:00+00:00', 'Midday'],    // midday centre
     ['2026-01-01T16:00:00+00:00', 'Afternoon'], // mid-afternoon
-    ['2026-01-01T21:00:00+00:00', 'Evening'],   // evening
-    ['2026-01-01T02:00:00+00:00', 'Evening'],   // late night rolls into Evening
-    ['2026-01-01T00:00:00+00:00', 'Evening'],   // midnight is Evening
+    ['2026-01-01T20:00:00+00:00', 'Evening'],   // evening
+    ['2026-01-01T23:00:00+00:00', 'Night'],     // late night
+    ['2026-01-01T02:00:00+00:00', 'Night'],     // early morning is Night
+    ['2026-01-01T00:00:00+00:00', 'Night'],     // midnight is Night
   ])('returns %s for %s', (isoString, expected) => {
     expect(getTimeBlock(isoString)).toBe(expected);
   });
 
   it('returns a valid TimeBlock when called with no argument', () => {
     const result = getTimeBlock();
-    expect(['Morning', 'Midday', 'Afternoon', 'Evening']).toContain(result);
+    expect(['Morning', 'Midday', 'Afternoon', 'Evening', 'Night']).toContain(result);
   });
 });
 

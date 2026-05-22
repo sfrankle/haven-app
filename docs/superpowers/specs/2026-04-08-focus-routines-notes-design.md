@@ -105,7 +105,7 @@ Routines are **not exercise-specific** and are not a fitness tracker. They are a
 Each Routine has:
 - **Name** (e.g. "Morning Routine", "Knee PT", "Daily check-in")
 - **Associated Focus** (optional) — links the Routine to a Focus; completions auto-associate entries
-- **Time blocks** — multi-select from Morning / Midday / Afternoon / Evening. A Routine can appear in multiple blocks (e.g. PT done 3x daily = Morning + Midday + Afternoon)
+- **Time blocks** — multi-select from Morning / Midday / Afternoon / Evening / Night. A Routine can appear in multiple blocks (e.g. PT done 3x daily = Morning + Midday + Afternoon)
 - **Frequency** — informational reference only (e.g. "3x daily" as prescribed). Time blocks are the source of truth for when the Routine surfaces on the dashboard. Haven does not cross-check frequency against time blocks or produce any warnings if they differ.
 - **Items** — an ordered list of routine_entry_type records (see below)
 - **Sort order** — the user controls the order Routines appear on the dashboard
@@ -295,7 +295,7 @@ Grouping is deterministic: entries share a `routine_id` and a `routine_completio
 
 | Question | Status |
 |----------|--------|
-| Time block naming: is "Midday" vs "Afternoon" a naming issue or a real distinction? Worth revisiting before implementation. | Resolved — four blocks are kept. Agreed windows: Morning 05:00–11:59, Midday 12:00–13:59, Afternoon 14:00–17:59, Evening 18:00–04:59 (late night included). `getTimeBlock()` utility added to `src/lib/utils/timestamp.ts`. `getMealContext` (food display only) unchanged. See issue #120. |
+| Time block naming: is "Midday" vs "Afternoon" a naming issue or a real distinction? Worth revisiting before implementation. | Resolved — five blocks: Morning 05:00–11:59, Midday 12:00–13:59, Afternoon 14:00–17:59, Evening 18:00–21:59, Night 22:00–04:59. `getTimeBlock()` utility added to `src/lib/utils/timestamp.ts`. `getMealContext` (food display only) unchanged. See issue #120. |
 | Can an entry be associated with more than one Focus? MVP says no (one Focus per entry). Revisit when multi-condition users push the limit. | Deferred |
 | Notes during Routine completion: each item's `entry.notes` is pre-populated with the prescribed detail and editable before submit. No whole-Routine note for MVP. | Resolved |
 | Notifications / reminders per Routine (e.g. "remind me at 2pm to do afternoon PT") — explicitly deferred to Notifications milestone. | Deferred |

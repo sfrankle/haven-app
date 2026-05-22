@@ -40,11 +40,11 @@ export function formatEntryTime(isoString: string): string {
 //                     used only on the Food logging screen for display labels.
 //
 //   getTimeBlock    — general scheduling vocabulary (Morning / Midday /
-//                     Afternoon / Evening) used for Routine scheduling and
-//                     time-block-aware label suggestions across all entry types.
+//                     Afternoon / Evening / Night) used for Routine scheduling
+//                     and time-block-aware label suggestions across all entry types.
 //
 // Do not conflate them. In particular, getMealContext's "Snack" window covers
-// 14:00–17:59 (Afternoon in block terms) plus 22:00–04:59 (Evening in block
+// 14:00–17:59 (Afternoon in block terms) plus 22:00–04:59 (Night in block
 // terms) — these map differently in each system by design.
 // ---------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ export function getMealContext(isoString?: string): MealContext {
   return 'Snack';
 }
 
-export type TimeBlock = 'Morning' | 'Midday' | 'Afternoon' | 'Evening';
+export type TimeBlock = 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night';
 
 /**
  * Returns the general time-of-day block for a given time.
@@ -90,7 +90,8 @@ export type TimeBlock = 'Morning' | 'Midday' | 'Afternoon' | 'Evening';
  *   05:00–11:59 → Morning
  *   12:00–13:59 → Midday
  *   14:00–17:59 → Afternoon
- *   18:00–04:59 → Evening (includes late night)
+ *   18:00–21:59 → Evening
+ *   22:00–04:59 → Night
  */
 export function getTimeBlock(isoString?: string): TimeBlock {
   const hour = isoString
@@ -99,7 +100,8 @@ export function getTimeBlock(isoString?: string): TimeBlock {
   if (hour >= 5 && hour < 12) return 'Morning';
   if (hour >= 12 && hour < 14) return 'Midday';
   if (hour >= 14 && hour < 18) return 'Afternoon';
-  return 'Evening';
+  if (hour >= 18 && hour < 22) return 'Evening';
+  return 'Night';
 }
 
 /**
