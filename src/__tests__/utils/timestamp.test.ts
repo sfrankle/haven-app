@@ -1,4 +1,5 @@
-import { nowLocalIso, formatEntryTime, formatEntryDate, getMealContext, getTimeBlock } from '../../lib/utils/timestamp';
+import { nowLocalIso, formatEntryTime, formatEntryDate, getMealContext, getTimeBlock, getScheduleableBlocks } from '../../lib/utils/timestamp';
+import type { ScheduleableBlock } from '../../lib/utils/timestamp';
 
 describe('nowLocalIso', () => {
   it('returns a string matching the ISO 8601 offset format', () => {
@@ -154,5 +155,30 @@ describe('getMealContext', () => {
     ['2026-01-01T02:00:00+00:00', 'Late Night Snack'], // early morning → Late Night Snack
   ])('returns %s for %s', (isoString, expected) => {
     expect(getMealContext(isoString)).toBe(expected);
+  });
+});
+
+describe('ScheduleableBlock + getScheduleableBlocks', () => {
+  it('getScheduleableBlocks returns the four scheduleable blocks in order', () => {
+    expect(getScheduleableBlocks()).toEqual(['Morning', 'Midday', 'Afternoon', 'Evening']);
+  });
+
+  it('Night is excluded from ScheduleableBlock', () => {
+    // Type-level check: ScheduleableBlock should not include 'Night'.
+    // This verifies the array at runtime — the type constraint is checked by tsc.
+    const blocks = getScheduleableBlocks();
+    expect(blocks).not.toContain('Night');
+  });
+
+  it('ScheduleableBlock array has exactly 4 elements', () => {
+    expect(getScheduleableBlocks()).toHaveLength(4);
+  });
+
+  it('each block is assignable to ScheduleableBlock (type-level)', () => {
+    // Runtime version: verify all returned values are valid non-Night TimeBlocks.
+    const valid: ScheduleableBlock[] = ['Morning', 'Midday', 'Afternoon', 'Evening'];
+    for (const b of getScheduleableBlocks()) {
+      expect(valid).toContain(b);
+    }
   });
 });
