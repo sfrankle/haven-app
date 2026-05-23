@@ -6,6 +6,8 @@
  * about column naming conventions.
  */
 
+import type { ScheduleableBlock } from '@/lib/utils/timestamp';
+
 export interface EntryType {
   id: number;
   name: string;
@@ -90,3 +92,40 @@ export interface FocusItem {
   /** "pinned" = explicitly added to focus_label; "historical" = appeared in an associated entry */
   source: 'pinned' | 'historical';
 }
+
+// Re-export ScheduleableBlock so callers can import it from query-types if needed.
+export type { ScheduleableBlock };
+
+export interface Routine {
+  id: number;
+  name: string;
+  associatedFocusId: number | null;
+  frequencyNote: string | null;
+  sortOrder: number;
+  archived: boolean; // stored as INTEGER 0/1 — mapped in query
+  createdAt: string; // ISO-8601
+  updatedAt: string; // ISO-8601
+  timeBlocks: ScheduleableBlock[]; // loaded via JOIN on routine_time_block
+}
+
+/**
+ * A single item within a routine.
+ *
+ * Note on naming: the public type is called RoutineItem for a clean API, but
+ * the underlying SQL table is routine_entry_type (not routine_item). The
+ * getRoutineItems query handles this mapping transparently.
+ */
+export interface RoutineItem {
+  id: number;
+  routineId: number;
+  name: string;
+  entryTypeId: number;
+  entryTypeName: string;
+  entryTypeTitle: string;
+  prescribedDetail: string | null;
+  instructionNote: string | null;
+  sortOrder: number;
+  labelIds: number[]; // from routine_entry_type_label
+}
+
+export type RoutineCompletionState = 'due' | 'completed_this_block' | 'fully_done';

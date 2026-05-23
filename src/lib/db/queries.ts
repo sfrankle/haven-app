@@ -9,8 +9,9 @@
  * No screen should call db.getAllAsync / db.runAsync / db.getFirstAsync directly.
  */
 
-import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem } from './query-types';
+import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem, Routine, RoutineItem, RoutineCompletionState } from './query-types';
 import { nowLocalIso } from '@/lib/utils/timestamp';
+import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 
 // ─── minimal interface ────────────────────────────────────────────────────────
 // We type `db` against the subset of expo-sqlite's SQLiteDatabase that we
@@ -784,4 +785,330 @@ export async function getFocusItems(db: Db, focusId: number): Promise<FocusItem[
     entryTypeTitle: r.entry_type_title,
     source: r.source,
   }));
+}
+
+// ─── Routine query functions ──────────────────────────────────────────────────
+
+// Raw row shapes (internal only)
+
+interface RoutineRaw {
+  id: number;
+  name: string;
+  associated_focus_id: number | null;
+  frequency_note: string | null;
+  sort_order: number;
+  archived: number; // INTEGER 0/1
+  created_at: string;
+  updated_at: string;
+  time_block: string | null; // null when no routine_time_block rows exist for this routine
+}
+
+interface RoutineItemRaw {
+  id: number;
+  routine_id: number;
+  name: string;
+  entry_type_id: number;
+  entry_type_name: string;
+  entry_type_title: string;
+  prescribed_detail: string | null;
+  instruction_note: string | null;
+  sort_order: number;
+  // Mapping note: this column comes from routine_entry_type_label; null when no labels on item.
+  label_id: number | null;
+}
+
+/**
+ * Returns the [startHour, endHour) for a given ScheduleableBlock.
+ * Mirrors the exact boundaries in getTimeBlock (timestamp.ts):
+ *   Morning:   05:00–11:59 → [5, 12)
+ *   Midday:    12:00–13:59 → [12, 14)
+ *   Afternoon: 14:00–17:59 → [14, 18)
+ *   Evening:   18:00–21:59 → [18, 22)
+ *
+ * This function is the canonical source of block hour boundaries for the query
+ * layer. Keep it in sync with getTimeBlock in timestamp.ts.
+ */
+function timeBlockWindow(block: ScheduleableBlock): [number, number] {
+  switch (block) {
+    case 'Morning':   return [5, 12];
+    case 'Midday':    return [12, 14];
+    case 'Afternoon': return [14, 18];
+    case 'Evening':   return [18, 22];
+  }
+}
+
+/**
+ * Returns all routines, ordered by archived ASC, sort_order ASC.
+ * Archived routines are excluded by default; pass `includeArchived: true` to include them.
+ *
+ * timeBlocks are loaded via LEFT JOIN on routine_time_block and collapsed in JS.
+ */
+export async function getRoutines(
+  db: Db,
+  options?: { includeArchived?: boolean }
+): Promise<Routine[]> {
+  const sql = options?.includeArchived
+    ? `SELECT r.id, r.name, r.associated_focus_id, r.frequency_note, r.sort_order,
+              r.archived, r.created_at, r.updated_at, rtb.time_block
+       FROM routine r
+       LEFT JOIN routine_time_block rtb ON rtb.routine_id = r.id
+       ORDER BY r.archived ASC, r.sort_order ASC`
+    : `SELECT r.id, r.name, r.associated_focus_id, r.frequency_note, r.sort_order,
+              r.archived, r.created_at, r.updated_at, rtb.time_block
+       FROM routine r
+       LEFT JOIN routine_time_block rtb ON rtb.routine_id = r.id
+       WHERE r.archived = 0
+       ORDER BY r.sort_order ASC`;
+
+  const rows = await db.getAllAsync<RoutineRaw>(sql);
+
+  // Collapse rows: one row per routine+time_block JOIN; aggregate time_blocks per routine.
+  const SCHEDULEABLE: readonly string[] = ['Morning', 'Midday', 'Afternoon', 'Evening'];
+  const routineMap = new Map<number, Routine>();
+  const orderedIds: number[] = [];
+
+  for (const row of rows) {
+    if (!routineMap.has(row.id)) {
+      orderedIds.push(row.id);
+      routineMap.set(row.id, {
+        id: row.id,
+        name: row.name,
+        associatedFocusId: row.associated_focus_id,
+        frequencyNote: row.frequency_note,
+        sortOrder: row.sort_order,
+        archived: row.archived === 1,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        timeBlocks: [],
+      });
+    }
+    if (row.time_block !== null && SCHEDULEABLE.includes(row.time_block)) {
+      routineMap.get(row.id)!.timeBlocks.push(row.time_block as ScheduleableBlock);
+    }
+  }
+
+  return orderedIds.map((id) => routineMap.get(id)!);
+}
+
+/**
+ * Creates a new routine with optional time blocks.
+ * Returns the newly created Routine.
+ */
+export async function createRoutine(
+  db: Db,
+  input: {
+    name: string;
+    timeBlocks?: ScheduleableBlock[];
+    associatedFocusId?: number;
+    frequencyNote?: string;
+  }
+): Promise<Routine> {
+  let routineId: number | undefined;
+  const now = nowLocalIso();
+
+  await db.withTransactionAsync(async () => {
+    const result = await db.runAsync(
+      `INSERT INTO routine (name, associated_focus_id, frequency_note, sort_order, archived, created_at, updated_at)
+       VALUES (?, ?, ?, 0, 0, ?, ?)`,
+      [
+        input.name,
+        input.associatedFocusId ?? null,
+        input.frequencyNote ?? null,
+        now,
+        now,
+      ]
+    );
+    routineId = result.lastInsertRowId;
+
+    for (const block of input.timeBlocks ?? []) {
+      await db.runAsync(
+        `INSERT INTO routine_time_block (routine_id, time_block) VALUES (?, ?)`,
+        [routineId, block]
+      );
+    }
+  });
+
+  if (routineId === undefined) {
+    throw new Error('createRoutine: transaction completed without setting routineId');
+  }
+
+  const routines = await getRoutines(db, { includeArchived: true });
+  const routine = routines.find((r) => r.id === routineId);
+  if (!routine) throw new Error('createRoutine: could not fetch newly inserted routine');
+  return routine;
+}
+
+/**
+ * Updates a routine's name, time blocks, associatedFocusId, or frequencyNote.
+ *
+ * If timeBlocks is provided (including an empty array), existing routine_time_block
+ * rows are deleted and replaced — passing [] removes all time blocks.
+ *
+ * An empty patch is a no-op.
+ */
+export async function updateRoutine(
+  db: Db,
+  id: number,
+  patch: {
+    name?: string;
+    timeBlocks?: ScheduleableBlock[];
+    associatedFocusId?: number | null;
+    frequencyNote?: string | null;
+  }
+): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    const now = nowLocalIso();
+
+    if (patch.name !== undefined) {
+      await db.runAsync(
+        `UPDATE routine SET name = ?, updated_at = ? WHERE id = ?`,
+        [patch.name, now, id]
+      );
+    }
+
+    if (patch.associatedFocusId !== undefined) {
+      await db.runAsync(
+        `UPDATE routine SET associated_focus_id = ?, updated_at = ? WHERE id = ?`,
+        [patch.associatedFocusId, now, id]
+      );
+    }
+
+    if (patch.frequencyNote !== undefined) {
+      await db.runAsync(
+        `UPDATE routine SET frequency_note = ?, updated_at = ? WHERE id = ?`,
+        [patch.frequencyNote, now, id]
+      );
+    }
+
+    if (patch.timeBlocks !== undefined) {
+      await db.runAsync(`DELETE FROM routine_time_block WHERE routine_id = ?`, [id]);
+      for (const block of patch.timeBlocks) {
+        await db.runAsync(
+          `INSERT INTO routine_time_block (routine_id, time_block) VALUES (?, ?)`,
+          [id, block]
+        );
+      }
+      await db.runAsync(`UPDATE routine SET updated_at = ? WHERE id = ?`, [now, id]);
+    }
+  });
+}
+
+/**
+ * Archives or unarchives a routine. Archived routines are hidden from the
+ * default getRoutines result but not deleted.
+ */
+export async function setRoutineArchived(db: Db, id: number, archived: boolean): Promise<void> {
+  await db.runAsync(
+    `UPDATE routine SET archived = ?, updated_at = ? WHERE id = ?`,
+    [archived ? 1 : 0, nowLocalIso(), id]
+  );
+}
+
+/**
+ * Returns the items (routine_entry_type rows) for a given routine, in sort_order order.
+ *
+ * Note on naming: the public type is RoutineItem for a clean API, but the
+ * underlying SQL table is routine_entry_type (not routine_item).
+ *
+ * labelIds are accumulated in JS from routine_entry_type_label rows via LEFT JOIN.
+ */
+export async function getRoutineItems(db: Db, routineId: number): Promise<RoutineItem[]> {
+  const rows = await db.getAllAsync<RoutineItemRaw>(
+    `SELECT
+       ret.id, ret.routine_id, ret.name,
+       ret.entry_type_id, et.name AS entry_type_name, et.title AS entry_type_title,
+       ret.prescribed_detail, ret.instruction_note, ret.sort_order,
+       retl.label_id
+     FROM routine_entry_type ret
+     JOIN entry_type et ON et.id = ret.entry_type_id
+     LEFT JOIN routine_entry_type_label retl ON retl.routine_entry_type_id = ret.id
+     WHERE ret.routine_id = ?
+     ORDER BY ret.sort_order ASC`,
+    [routineId]
+  );
+
+  // Collapse rows: one row per item+label JOIN; aggregate label_ids per item.
+  const itemMap = new Map<number, RoutineItem>();
+  const orderedIds: number[] = [];
+
+  for (const row of rows) {
+    if (!itemMap.has(row.id)) {
+      orderedIds.push(row.id);
+      itemMap.set(row.id, {
+        id: row.id,
+        routineId: row.routine_id,
+        name: row.name,
+        entryTypeId: row.entry_type_id,
+        entryTypeName: row.entry_type_name,
+        entryTypeTitle: row.entry_type_title,
+        prescribedDetail: row.prescribed_detail,
+        instructionNote: row.instruction_note,
+        sortOrder: row.sort_order,
+        labelIds: [],
+      });
+    }
+    if (row.label_id !== null) {
+      itemMap.get(row.id)!.labelIds.push(row.label_id);
+    }
+  }
+
+  return orderedIds.map((id) => itemMap.get(id)!);
+}
+
+/**
+ * Derives the completion state for a routine at a given time block and date.
+ *
+ * @param db        - DB handle
+ * @param routineId - Routine to check
+ * @param timeBlock - Current ScheduleableBlock
+ * @param today     - YYYY-MM-DD string (injectable for tests — same pattern as formatEntryDate)
+ *
+ * Returns:
+ *   'fully_done'          — total completions today >= total configured blocks
+ *   'completed_this_block' — a completion row exists today within this block's hour window
+ *   'due'                 — none of the above
+ *
+ * Completions are counted from routine_completion rows directly (not via
+ * entry.routine_completion_id join) to avoid N-per-item overcounting.
+ * Hour comparison uses substr(created_at, 12, 2) to read wall-clock hour from
+ * the stored ISO string — consistent with the wall-clock-preservation invariant
+ * throughout Haven (immune to timezone re-interpretation).
+ */
+export async function getRoutineCompletionState(
+  db: Db,
+  routineId: number,
+  timeBlock: ScheduleableBlock,
+  today: string
+): Promise<RoutineCompletionState> {
+  // 1. Count today's completions
+  const todayCompletions = await db.getFirstAsync<{ cnt: number }>(
+    `SELECT COUNT(*) AS cnt FROM routine_completion
+     WHERE routine_id = ? AND substr(created_at, 1, 10) = ?`,
+    [routineId, today]
+  );
+  const completionCount = todayCompletions?.cnt ?? 0;
+
+  // 2. Count configured time blocks
+  const configuredBlocks = await db.getFirstAsync<{ cnt: number }>(
+    `SELECT COUNT(*) AS cnt FROM routine_time_block WHERE routine_id = ?`,
+    [routineId]
+  );
+  const blockCount = configuredBlocks?.cnt ?? 0;
+
+  // 3. fully_done check: completions today >= configured block count (and blocks exist)
+  if (blockCount > 0 && completionCount >= blockCount) return 'fully_done';
+
+  // 4. completed_this_block: did any completion fall within this block's hour window?
+  const [startHour, endHour] = timeBlockWindow(timeBlock);
+  const blockCompletion = await db.getFirstAsync<{ cnt: number }>(
+    `SELECT COUNT(*) AS cnt FROM routine_completion
+     WHERE routine_id = ?
+       AND substr(created_at, 1, 10) = ?
+       AND CAST(substr(created_at, 12, 2) AS INTEGER) >= ?
+       AND CAST(substr(created_at, 12, 2) AS INTEGER) < ?`,
+    [routineId, today, startHour, endHour]
+  );
+  if ((blockCompletion?.cnt ?? 0) > 0) return 'completed_this_block';
+
+  return 'due';
 }
