@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#168](https://github.com/sfrankle/haven-app/pull/168) | Create and edit Routine screens: shared form, reorderable items (name, entry type, labels, prescribed detail), time-block multi-select, and archive option | 2026-05-23 |
 | [#167](https://github.com/sfrankle/haven-app/pull/167) | Routine data layer: `ScheduleableBlock` type, six query functions, `useRoutines` and `useRoutineCompletionStates` hooks, and 37 unit tests covering all completion state logic | 2026-05-22 |
 | [#166](https://github.com/sfrankle/haven-app/pull/166) | Routine schema migration (v9): adds five Routine tables and two nullable FK columns on `entry` with data integrity tests | 2026-05-22 |
 | [#159](https://github.com/sfrankle/haven-app/pull/159) | Added `TimeBlock` type and `getTimeBlock()` utility with confirmed four-block windows (Morning/Midday/Afternoon/Evening); resolved the Midday vs Afternoon open question in the Routines spec | 2026-05-22 |
