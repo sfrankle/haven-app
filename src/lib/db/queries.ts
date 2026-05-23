@@ -863,6 +863,7 @@ export async function getRoutines(
   const rows = await db.getAllAsync<RoutineRaw>(sql);
 
   // Collapse rows: one row per routine+time_block JOIN; aggregate time_blocks per routine.
+  const SCHEDULEABLE: readonly string[] = ['Morning', 'Midday', 'Afternoon', 'Evening'];
   const routineMap = new Map<number, Routine>();
   const orderedIds: number[] = [];
 
@@ -881,7 +882,6 @@ export async function getRoutines(
         timeBlocks: [],
       });
     }
-    const SCHEDULEABLE: readonly string[] = ['Morning', 'Midday', 'Afternoon', 'Evening'];
     if (row.time_block !== null && SCHEDULEABLE.includes(row.time_block)) {
       routineMap.get(row.id)!.timeBlocks.push(row.time_block as ScheduleableBlock);
     }

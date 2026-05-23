@@ -14,7 +14,7 @@
  * in effect deps throughout Haven.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { getDb } from '@/lib/db/database';
 import { getRoutineCompletionState, type Db } from '@/lib/db/queries';
 import type { Routine, RoutineCompletionState } from '@/lib/db/query-types';
@@ -37,15 +37,22 @@ export function useRoutineCompletionStates(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Stable dep: stringify the routine IDs to avoid re-running the effect on
-  // every render when the caller passes a new array with the same contents.
+  // Keep a ref so the effect body always reads the current routines array
+  // without adding it to the dep array (which would re-run on every render
+  // when the caller produces a new array reference with the same contents).
+  const routinesRef = useRef(routines);
+  routinesRef.current = routines;
+
+  // Stable dep: stringify the routine IDs. The effect re-runs only when the
+  // set of routine IDs changes — routinesRef.current is always up-to-date.
   const routineIds = useMemo(
     () => routines.map((r) => r.id).join(','),
     [routines]
   );
 
   useEffect(() => {
-    if (routines.length === 0) {
+    const current = routinesRef.current;
+    if (current.length === 0) {
       setStates({});
       setLoading(false);
       return;
@@ -58,7 +65,7 @@ export function useRoutineCompletionStates(
       try {
         const db = (await getDb()) as unknown as Db;
         const entries = await Promise.all(
-          routines.map(async (r) => {
+          current.map(async (r) => {
             const state = await getRoutineCompletionState(db, r.id, currentTimeBlock, today);
             return [r.id, state] as [number, RoutineCompletionState];
           })
@@ -84,7 +91,6 @@ export function useRoutineCompletionStates(
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routineIds, currentTimeBlock, today]);
 
   return { states, loading, error };
