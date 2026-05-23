@@ -1131,35 +1131,48 @@ export async function createRoutineItems(
   if (items.length === 0) return;
 
   await db.withTransactionAsync(async () => {
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const result = await db.runAsync(
-        `INSERT INTO routine_entry_type
-           (routine_id, name, entry_type_id, prescribed_detail, instruction_note, sort_order, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          routineId,
-          item.name,
-          item.entryTypeId,
-          item.prescribedDetail ?? null,
-          item.instructionNote ?? null,
-          i,
-          nowLocalIso(),
-          nowLocalIso(),
-        ]
-      );
-      const itemId = result.lastInsertRowId;
+    await insertRoutineItems(db, routineId, items);
+  });
+}
 
-      if (item.labelIds?.length) {
-        for (const labelId of item.labelIds) {
-          await db.runAsync(
-            `INSERT INTO routine_entry_type_label (routine_entry_type_id, label_id) VALUES (?, ?)`,
-            [itemId, labelId]
-          );
-        }
+/**
+ * Internal helper: inserts a sequence of routine_entry_type rows and their
+ * routine_entry_type_label rows. Must run inside a transaction.
+ */
+async function insertRoutineItems(
+  db: Db,
+  routineId: number,
+  items: RoutineItemInput[]
+): Promise<void> {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const now = nowLocalIso();
+    const result = await db.runAsync(
+      `INSERT INTO routine_entry_type
+         (routine_id, name, entry_type_id, prescribed_detail, instruction_note, sort_order, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        routineId,
+        item.name,
+        item.entryTypeId,
+        item.prescribedDetail ?? null,
+        item.instructionNote ?? null,
+        i,
+        now,
+        now,
+      ]
+    );
+    const itemId = result.lastInsertRowId;
+
+    if (item.labelIds?.length) {
+      for (const labelId of item.labelIds) {
+        await db.runAsync(
+          `INSERT INTO routine_entry_type_label (routine_entry_type_id, label_id) VALUES (?, ?)`,
+          [itemId, labelId]
+        );
       }
     }
-  });
+  }
 }
 
 /**
@@ -1186,34 +1199,6 @@ export async function replaceRoutineItems(
       `DELETE FROM routine_entry_type WHERE routine_id = ?`,
       [routineId]
     );
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const result = await db.runAsync(
-        `INSERT INTO routine_entry_type
-           (routine_id, name, entry_type_id, prescribed_detail, instruction_note, sort_order, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          routineId,
-          item.name,
-          item.entryTypeId,
-          item.prescribedDetail ?? null,
-          item.instructionNote ?? null,
-          i,
-          nowLocalIso(),
-          nowLocalIso(),
-        ]
-      );
-      const itemId = result.lastInsertRowId;
-
-      if (item.labelIds?.length) {
-        for (const labelId of item.labelIds) {
-          await db.runAsync(
-            `INSERT INTO routine_entry_type_label (routine_entry_type_id, label_id) VALUES (?, ?)`,
-            [itemId, labelId]
-          );
-        }
-      }
-    }
+    await insertRoutineItems(db, routineId, items);
   });
 }

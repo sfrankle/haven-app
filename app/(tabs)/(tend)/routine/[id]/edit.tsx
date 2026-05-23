@@ -22,11 +22,11 @@ import {
   getEntryTypes,
 } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
+import { getScheduleableBlocks } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
 import type { Db } from '@/lib/db/queries';
-import type { EntryType, RoutineItemInput } from '@/lib/db/query-types';
-import type { ScheduleableBlock } from '@/lib/db/query-types';
+import type { EntryType, RoutineItemInput, ScheduleableBlock } from '@/lib/db/query-types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,7 +40,18 @@ interface DraftRoutineItem {
   instructionNote: string;
 }
 
-const SCHEDULEABLE_BLOCKS: ScheduleableBlock[] = ['Morning', 'Midday', 'Afternoon', 'Evening'];
+const SCHEDULEABLE_BLOCKS = getScheduleableBlocks();
+
+function makeDraftItem(): DraftRoutineItem {
+  return {
+    key: Date.now().toString() + Math.random().toString(36).slice(2),
+    name: '',
+    entryTypeId: null,
+    labelIds: [],
+    prescribedDetail: '',
+    instructionNote: '',
+  };
+}
 
 function draftFromRoutineItem(item: {
   id: number;
@@ -122,11 +133,7 @@ export default function EditRoutineScreen() {
   }
 
   function addItem() {
-    const key = Date.now().toString() + Math.random().toString(36).slice(2);
-    setItems((prev) => [
-      ...prev,
-      { key, name: '', entryTypeId: null, labelIds: [], prescribedDetail: '', instructionNote: '' },
-    ]);
+    setItems((prev) => [...prev, makeDraftItem()]);
   }
 
   function removeItem(key: string) {
