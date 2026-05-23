@@ -9,7 +9,7 @@
  * No screen should call db.getAllAsync / db.runAsync / db.getFirstAsync directly.
  */
 
-import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem, Routine, RoutineItem, RoutineCompletionState } from './query-types';
+import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem, Routine, RoutineItem, RoutineItemInput, RoutineCompletionState } from './query-types';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 
@@ -1111,4 +1111,109 @@ export async function getRoutineCompletionState(
   if ((blockCompletion?.cnt ?? 0) > 0) return 'completed_this_block';
 
   return 'due';
+}
+
+/**
+ * Inserts routine_entry_type rows (and their routine_entry_type_label rows)
+ * for a given routine, inside a single transaction.
+ *
+ * sort_order is set to the array index of each item. Editing the prescribed
+ * detail on a future save (via replaceRoutineItems) only affects future
+ * completions — past entry rows are never touched.
+ *
+ * Returns void.
+ */
+export async function createRoutineItems(
+  db: Db,
+  routineId: number,
+  items: RoutineItemInput[]
+): Promise<void> {
+  if (items.length === 0) return;
+
+  await db.withTransactionAsync(async () => {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const result = await db.runAsync(
+        `INSERT INTO routine_entry_type
+           (routine_id, name, entry_type_id, prescribed_detail, instruction_note, sort_order, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          routineId,
+          item.name,
+          item.entryTypeId,
+          item.prescribedDetail ?? null,
+          item.instructionNote ?? null,
+          i,
+          nowLocalIso(),
+          nowLocalIso(),
+        ]
+      );
+      const itemId = result.lastInsertRowId;
+
+      if (item.labelIds?.length) {
+        for (const labelId of item.labelIds) {
+          await db.runAsync(
+            `INSERT INTO routine_entry_type_label (routine_entry_type_id, label_id) VALUES (?, ?)`,
+            [itemId, labelId]
+          );
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Replaces all routine_entry_type rows for a given routine with a new set.
+ *
+ * Deletes all existing routine_entry_type rows (CASCADE deletes
+ * routine_entry_type_label rows automatically), then re-inserts from the
+ * input array. Runs inside a transaction.
+ *
+ * This is a full-replace strategy — item IDs change on every save, which is
+ * acceptable because nothing downstream relies on stable item IDs yet. If
+ * per-item completion tracking is introduced in a future ticket, this will
+ * need to change to a delta approach.
+ *
+ * Returns void.
+ */
+export async function replaceRoutineItems(
+  db: Db,
+  routineId: number,
+  items: RoutineItemInput[]
+): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `DELETE FROM routine_entry_type WHERE routine_id = ?`,
+      [routineId]
+    );
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const result = await db.runAsync(
+        `INSERT INTO routine_entry_type
+           (routine_id, name, entry_type_id, prescribed_detail, instruction_note, sort_order, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          routineId,
+          item.name,
+          item.entryTypeId,
+          item.prescribedDetail ?? null,
+          item.instructionNote ?? null,
+          i,
+          nowLocalIso(),
+          nowLocalIso(),
+        ]
+      );
+      const itemId = result.lastInsertRowId;
+
+      if (item.labelIds?.length) {
+        for (const labelId of item.labelIds) {
+          await db.runAsync(
+            `INSERT INTO routine_entry_type_label (routine_entry_type_id, label_id) VALUES (?, ?)`,
+            [itemId, labelId]
+          );
+        }
+      }
+    }
+  });
 }
