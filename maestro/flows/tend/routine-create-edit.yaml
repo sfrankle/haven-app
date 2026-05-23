@@ -1,0 +1,81 @@
+# Routine create/edit E2E flow
+#
+# TODO: The navigation entry points for the Routine create and edit screens
+# ("+Add Routine" button on the Tend tab and "Routines" in Settings) are wired
+# in a separate issue. Until that work lands, this flow cannot be launched from
+# a natural in-app tap. The assertions below describe the intended behavior and
+# will be activated once the calling screens exist.
+#
+# To validate in the meantime you can deep-link directly to the create screen:
+#   appId: com.haven.app
+#   launchArguments: { initialUrl: "haven://routine/create" }
+
+appId: com.haven.app
+
+---
+
+# STUB — update navigation steps once Tend +Add Routine button is wired
+
+- launchApp
+
+# Navigate to Tend tab (home)
+- tapOn:
+    id: "tend-tab"
+
+# --- Create a new Routine ---
+# TODO: tap the "+ Add Routine" button once it exists on Tend
+# - tapOn:
+#     text: "+ Add Routine"
+
+# Fill in the routine name
+# - tapOn:
+#     id: "routine-name-input"
+# - inputText: "Morning Flow"
+
+# Select a time block
+# - tapOn:
+#     id: "routine-time-block-Morning"
+
+# Add first item
+# - tapOn:
+#     id: "routine-add-item-button"
+# - tapOn:
+#     id: "routine-item-0-name-input"
+# - inputText: "Breakfast"
+# - tapOn:
+#     id: "routine-item-0-entry-type-1"   # Food
+
+# Add second item
+# - tapOn:
+#     id: "routine-add-item-button"
+# - tapOn:
+#     id: "routine-item-1-name-input"
+# - inputText: "Morning walk"
+# - tapOn:
+#     id: "routine-item-1-entry-type-6"   # Activity
+
+# Save
+# - tapOn:
+#     id: "routine-save-button"
+
+# Verify routine appears in Tend (once Tend integration is complete)
+# - assertVisible:
+#     text: "Morning Flow"
+
+# --- Edit the Routine ---
+# TODO: tap the routine card on Tend to navigate to edit screen
+# - tapOn:
+#     text: "Morning Flow"
+
+# Change the name
+# - clearText:
+#     id: "routine-edit-name-input"
+# - inputText: "Updated Morning Flow"
+
+# Save
+# - tapOn:
+#     id: "routine-edit-save-button"
+
+# Verify updated name appears in Tend
+# - assertVisible:
+#     text: "Updated Morning Flow"
