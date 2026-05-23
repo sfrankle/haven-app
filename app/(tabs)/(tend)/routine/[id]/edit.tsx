@@ -83,8 +83,10 @@ export default function EditRoutineScreen() {
   const [associatedFocusId, setAssociatedFocusId] = useState<number | undefined>(undefined);
   const [items, setItems] = useState<DraftRoutineItem[]>([]);
   const [entryTypes, setEntryTypes] = useState<EntryType[]>([]);
+  const [frequencyNote, setFrequencyNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [archiving, setArchiving] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
 
@@ -105,6 +107,7 @@ export default function EditRoutineScreen() {
         if (routine) {
           setName(routine.name);
           setSelectedBlocks(new Set(routine.timeBlocks));
+          setFrequencyNote(routine.frequencyNote ?? '');
           if (routine.associatedFocusId != null) {
             setAssociatedFocusId(routine.associatedFocusId);
           }
@@ -113,7 +116,7 @@ export default function EditRoutineScreen() {
         setItems(routineItems.map(draftFromRoutineItem));
         setEntryTypes(types);
       } catch {
-        // load errors are non-fatal; screen stays empty
+        if (isMounted) setLoadError("Couldn't load routine. Go back and try again.");
       }
     }
     void load();
@@ -175,6 +178,7 @@ export default function EditRoutineScreen() {
         name: trimmedName,
         timeBlocks: Array.from(selectedBlocks),
         associatedFocusId: associatedFocusId ?? null,
+        frequencyNote: frequencyNote.trim() || null,
       });
 
       const itemInputs: RoutineItemInput[] = items.map((item) => ({
@@ -232,6 +236,24 @@ export default function EditRoutineScreen() {
             onSelect={(id) => setAssociatedFocusId(id)}
             testID="routine-edit-focus-dropdown"
           />
+
+          {/* Frequency note */}
+          <TextInput
+            style={styles.detailInput}
+            value={frequencyNote}
+            onChangeText={setFrequencyNote}
+            placeholder="Frequency note (optional)"
+            placeholderTextColor={colors.chrome}
+            testID="routine-edit-frequency-note"
+            returnKeyType="done"
+          />
+
+          {/* Load error */}
+          {loadError !== null && (
+            <Text style={logScreenStyles.saveErrorText} testID="routine-edit-load-error">
+              {loadError}
+            </Text>
+          )}
 
           {/* Time block multi-select */}
           <Text style={styles.sectionLabel}>When</Text>

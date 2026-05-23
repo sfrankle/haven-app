@@ -22,12 +22,10 @@ jest.mock('@/lib/db/database', () => ({
 const mockCreateRoutine = jest.fn();
 const mockCreateRoutineItems = jest.fn();
 const mockGetEntryTypes = jest.fn();
-const mockGetLabels = jest.fn();
 jest.mock('@/lib/db/queries', () => ({
   createRoutine: (...args: unknown[]) => mockCreateRoutine(...args),
   createRoutineItems: (...args: unknown[]) => mockCreateRoutineItems(...args),
   getEntryTypes: (...args: unknown[]) => mockGetEntryTypes(...args),
-  getLabels: (...args: unknown[]) => mockGetLabels(...args),
 }));
 
 // FocusDropdown uses useFocuses hook — provide a stub
@@ -51,7 +49,6 @@ describe('CreateRoutineScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetEntryTypes.mockResolvedValue([ENTRY_TYPE_FOOD, ENTRY_TYPE_ACTIVITY]);
-    mockGetLabels.mockResolvedValue([]);
     mockCreateRoutine.mockResolvedValue({
       id: 10,
       name: 'Morning Routine',
@@ -256,7 +253,26 @@ describe('CreateRoutineScreen', () => {
     await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
   });
 
-  // ── 13. Error shown when createRoutine throws ─────────────────────────────
+  // ── 13. Frequency note passed to createRoutine when filled ───────────────
+
+  it('passes frequencyNote to createRoutine when filled in', async () => {
+    const { getByTestId } = render(<CreateRoutineScreen />);
+    fireEvent.changeText(getByTestId('routine-name-input'), 'Morning Routine');
+    fireEvent.changeText(getByTestId('routine-frequency-note'), '3x daily');
+
+    await act(async () => {
+      fireEvent.press(getByTestId('routine-save-button'));
+    });
+
+    await waitFor(() => {
+      expect(mockCreateRoutine).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ frequencyNote: '3x daily' })
+      );
+    });
+  });
+
+  // ── 14. Error shown when createRoutine throws ─────────────────────────────
 
   it('shows error message when createRoutine throws', async () => {
     mockCreateRoutine.mockRejectedValue(new Error('DB error'));

@@ -26,7 +26,6 @@ const mockUpdateRoutine = jest.fn();
 const mockReplaceRoutineItems = jest.fn();
 const mockSetRoutineArchived = jest.fn();
 const mockGetEntryTypes = jest.fn();
-const mockGetLabels = jest.fn();
 jest.mock('@/lib/db/queries', () => ({
   getRoutines: (...args: unknown[]) => mockGetRoutines(...args),
   getRoutineItems: (...args: unknown[]) => mockGetRoutineItems(...args),
@@ -34,7 +33,6 @@ jest.mock('@/lib/db/queries', () => ({
   replaceRoutineItems: (...args: unknown[]) => mockReplaceRoutineItems(...args),
   setRoutineArchived: (...args: unknown[]) => mockSetRoutineArchived(...args),
   getEntryTypes: (...args: unknown[]) => mockGetEntryTypes(...args),
-  getLabels: (...args: unknown[]) => mockGetLabels(...args),
 }));
 
 // FocusDropdown uses useFocuses hook — provide a stub
@@ -92,7 +90,6 @@ describe('EditRoutineScreen', () => {
     mockGetRoutines.mockResolvedValue([ROUTINE]);
     mockGetRoutineItems.mockResolvedValue([ROUTINE_ITEM]);
     mockGetEntryTypes.mockResolvedValue([ENTRY_TYPE_FOOD, ENTRY_TYPE_ACTIVITY]);
-    mockGetLabels.mockResolvedValue([]);
     mockUpdateRoutine.mockResolvedValue(undefined);
     mockReplaceRoutineItems.mockResolvedValue(undefined);
     mockSetRoutineArchived.mockResolvedValue(undefined);
@@ -224,7 +221,27 @@ describe('EditRoutineScreen', () => {
     });
   });
 
-  // ── 10. Archive error shown when setRoutineArchived throws ────────────────
+  // ── 10. Frequency note pre-filled from loaded routine ────────────────────
+
+  it('pre-fills frequency note from loaded routine', async () => {
+    mockGetRoutines.mockResolvedValue([makeRoutine({ frequencyNote: '3x daily' })]);
+    const { getByTestId } = render(<EditRoutineScreen />);
+    await waitFor(() => {
+      expect(getByTestId('routine-edit-frequency-note').props.value).toBe('3x daily');
+    });
+  });
+
+  // ── 11. Load error displayed when getRoutines throws ─────────────────────
+
+  it('shows load error message when data fetch fails', async () => {
+    mockGetRoutines.mockRejectedValue(new Error('DB error'));
+    const { getByTestId } = render(<EditRoutineScreen />);
+    await waitFor(() => {
+      expect(getByTestId('routine-edit-load-error')).toBeTruthy();
+    });
+  });
+
+  // ── 12. Archive error shown when setRoutineArchived throws ────────────────
 
   it('shows archive error when setRoutineArchived throws', async () => {
     mockSetRoutineArchived.mockRejectedValue(new Error('DB error'));

@@ -55,6 +55,7 @@ export default function CreateRoutineScreen() {
   const [associatedFocusId, setAssociatedFocusId] = useState<number | undefined>(undefined);
   const [items, setItems] = useState<DraftRoutineItem[]>([]);
   const [entryTypes, setEntryTypes] = useState<EntryType[]>([]);
+  const [frequencyNote, setFrequencyNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -129,6 +130,7 @@ export default function CreateRoutineScreen() {
         name: trimmedName,
         timeBlocks: Array.from(selectedBlocks),
         associatedFocusId,
+        frequencyNote: frequencyNote.trim() || undefined,
       });
 
       const itemInputs: RoutineItemInput[] = items.map((item) => ({
@@ -172,6 +174,17 @@ export default function CreateRoutineScreen() {
             selectedId={associatedFocusId}
             onSelect={(id) => setAssociatedFocusId(id)}
             testID="routine-focus-dropdown"
+          />
+
+          {/* Frequency note */}
+          <TextInput
+            style={styles.detailInput}
+            value={frequencyNote}
+            onChangeText={setFrequencyNote}
+            placeholder="Frequency note (optional)"
+            placeholderTextColor={colors.chrome}
+            testID="routine-frequency-note"
+            returnKeyType="done"
           />
 
           {/* Time block multi-select */}
