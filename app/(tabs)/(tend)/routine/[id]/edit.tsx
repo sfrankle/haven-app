@@ -38,6 +38,7 @@ export default function EditRoutineScreen() {
   const routineId = Number(idParam);
 
   const form = useRoutineForm();
+  const { setName, setSelectedBlocks, setFrequencyNote, setAssociatedFocusId, setItems } = form;
   const [entryTypes, setEntryTypes] = useState<EntryType[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,13 +60,13 @@ export default function EditRoutineScreen() {
 
         const routine = routines.find((r) => r.id === routineId);
         if (routine) {
-          form.setName(routine.name);
-          form.setSelectedBlocks(new Set(routine.timeBlocks));
-          form.setFrequencyNote(routine.frequencyNote ?? '');
+          setName(routine.name);
+          setSelectedBlocks(new Set(routine.timeBlocks));
+          setFrequencyNote(routine.frequencyNote ?? '');
           if (routine.associatedFocusId != null) {
-            form.setAssociatedFocusId(routine.associatedFocusId);
+            setAssociatedFocusId(routine.associatedFocusId);
           }
-          form.setItems(routineItems.map(draftFromRoutineItem));
+          setItems(routineItems.map(draftFromRoutineItem));
           setEntryTypes(types);
         } else {
           setLoadError("Couldn't load routine. Go back and try again.");
@@ -76,7 +77,7 @@ export default function EditRoutineScreen() {
     }
     void load();
     return () => { isMounted = false; };
-  }, [routineId]);
+  }, [routineId, setName, setSelectedBlocks, setFrequencyNote, setAssociatedFocusId, setItems]);
 
   async function handleSave() {
     if (!form.canSave) return;
