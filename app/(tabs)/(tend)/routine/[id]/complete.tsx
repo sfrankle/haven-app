@@ -20,8 +20,6 @@
  */
 import React, { useState, useEffect } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,

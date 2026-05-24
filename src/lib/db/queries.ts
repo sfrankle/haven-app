@@ -1238,10 +1238,10 @@ export async function completeRoutine(
   input: {
     routineId: number;
     associatedFocusId: number | null;
-    checkedItems: Array<{
+    checkedItems: {
       entryTypeId: number;
       labelIds: number[];
-    }>;
+    }[];
     notes: string | null;
     timestamp: string; // ISO-8601 wall-clock from nowLocalIso()
   }
