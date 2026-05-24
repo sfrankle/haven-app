@@ -14,7 +14,10 @@ import {
   setRoutineArchived,
   getRoutineItems,
   getRoutineCompletionState,
+  createRoutineItems,
+  replaceRoutineItems,
 } from '../../lib/db/queries';
+import type { RoutineItemInput } from '../../lib/db/query-types';
 
 const TEST_TODAY = '2026-05-22';
 
@@ -165,6 +168,43 @@ describe('routine query layer', () => {
       expect(routine.sortOrder).toBe(0);
 
       raw.prepare(`DELETE FROM routine WHERE id = ?`).run(routine.id);
+    });
+
+    test('inserts items atomically — routine and items created in one transaction', async () => {
+      const foodId = entryTypeId(raw, 'Food');
+      const items: RoutineItemInput[] = [
+        { name: 'Breakfast', entryTypeId: foodId },
+      ];
+
+      const routine = await createRoutine(db, { name: 'Atomic Routine', items });
+
+      const rows = raw
+        .prepare(`SELECT name FROM routine_entry_type WHERE routine_id = ?`)
+        .all(routine.id) as { name: string }[];
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].name).toBe('Breakfast');
+
+      raw.prepare(`DELETE FROM routine WHERE id = ?`).run(routine.id);
+    });
+
+    test('rolls back routine row when items fail — no orphan left in DB', async () => {
+      const invalidEntryTypeId = 999999; // does not exist → FK violation
+      const items: RoutineItemInput[] = [
+        { name: 'Bad Item', entryTypeId: invalidEntryTypeId },
+      ];
+      const countBefore = (
+        raw.prepare(`SELECT COUNT(*) as c FROM routine`).get() as { c: number }
+      ).c;
+
+      await expect(
+        createRoutine(db, { name: 'Orphan Routine', items })
+      ).rejects.toThrow();
+
+      const countAfter = (
+        raw.prepare(`SELECT COUNT(*) as c FROM routine`).get() as { c: number }
+      ).c;
+      expect(countAfter).toBe(countBefore); // routine row was rolled back
     });
   });
 
@@ -471,6 +511,265 @@ describe('routine query layer', () => {
       // Should be 'due' for Morning (hour 12 is NOT in Morning window [5,12])
       const morningState = await getRoutineCompletionState(db, id, 'Morning', TEST_TODAY);
       expect(morningState).toBe('due');
+    });
+  });
+
+  // ── createRoutineItems ──────────────────────────────────────────────────────
+
+  describe('createRoutineItems', () => {
+    let routineId: number;
+    let foodTypeId: number;
+    let activityTypeId: number;
+
+    beforeEach(() => {
+      const now = `${TEST_TODAY}T09:00:00-07:00`;
+      const result = raw
+        .prepare(
+          `INSERT INTO routine (name, sort_order, archived, created_at, updated_at) VALUES (?, 0, 0, ?, ?)`
+        )
+        .run('ItemsTest', now, now);
+      routineId = Number(result.lastInsertRowid);
+      foodTypeId = entryTypeId(raw, 'Food');
+      activityTypeId = entryTypeId(raw, 'Activity');
+    });
+
+    afterEach(() => {
+      raw.prepare(`DELETE FROM routine WHERE name = 'ItemsTest'`).run();
+    });
+
+    test('inserts items with correct sort_order', async () => {
+      const items: RoutineItemInput[] = [
+        { name: 'Breakfast', entryTypeId: foodTypeId },
+        { name: 'Morning walk', entryTypeId: activityTypeId },
+      ];
+      await createRoutineItems(db, routineId, items);
+
+      const rows = raw
+        .prepare(
+          `SELECT name, sort_order FROM routine_entry_type WHERE routine_id = ? ORDER BY sort_order`
+        )
+        .all(routineId) as { name: string; sort_order: number }[];
+
+      expect(rows).toHaveLength(2);
+      expect(rows[0]).toMatchObject({ name: 'Breakfast', sort_order: 0 });
+      expect(rows[1]).toMatchObject({ name: 'Morning walk', sort_order: 1 });
+    });
+
+    test('inserts routine_entry_type_label rows for items with labels', async () => {
+      const labelId = (
+        raw
+          .prepare(
+            `SELECT l.id FROM label l
+             JOIN entry_type et ON l.entry_type_id = et.id
+             WHERE et.name = 'Food' AND l.is_enabled = 1
+             LIMIT 1`
+          )
+          .get() as { id: number }
+      ).id;
+
+      const items: RoutineItemInput[] = [
+        { name: 'Breakfast', entryTypeId: foodTypeId, labelIds: [labelId] },
+      ];
+      await createRoutineItems(db, routineId, items);
+
+      const itemRow = raw
+        .prepare(`SELECT id FROM routine_entry_type WHERE routine_id = ? LIMIT 1`)
+        .get(routineId) as { id: number };
+
+      const labelRows = raw
+        .prepare(
+          `SELECT label_id FROM routine_entry_type_label WHERE routine_entry_type_id = ?`
+        )
+        .all(itemRow.id) as { label_id: number }[];
+
+      expect(labelRows).toHaveLength(1);
+      expect(labelRows[0].label_id).toBe(labelId);
+    });
+
+    test('is a no-op when items array is empty', async () => {
+      await createRoutineItems(db, routineId, []);
+      const rows = raw
+        .prepare(`SELECT id FROM routine_entry_type WHERE routine_id = ?`)
+        .all(routineId);
+      expect(rows).toHaveLength(0);
+    });
+
+    test('stores prescribed_detail and instruction_note', async () => {
+      const items: RoutineItemInput[] = [
+        {
+          name: 'Breakfast',
+          entryTypeId: foodTypeId,
+          prescribedDetail: 'Oatmeal',
+          instructionNote: 'No added sugar',
+        },
+      ];
+      await createRoutineItems(db, routineId, items);
+
+      const row = raw
+        .prepare(
+          `SELECT prescribed_detail, instruction_note FROM routine_entry_type WHERE routine_id = ?`
+        )
+        .get(routineId) as { prescribed_detail: string; instruction_note: string };
+
+      expect(row.prescribed_detail).toBe('Oatmeal');
+      expect(row.instruction_note).toBe('No added sugar');
+    });
+
+    test('rolls back transaction when a row insert fails (invalid FK)', async () => {
+      const BAD_ENTRY_TYPE_ID = 99999;
+      const items: RoutineItemInput[] = [
+        { name: 'Valid item', entryTypeId: foodTypeId },
+        { name: 'Bad item', entryTypeId: BAD_ENTRY_TYPE_ID }, // will fail FK
+      ];
+
+      await expect(createRoutineItems(db, routineId, items)).rejects.toThrow();
+
+      const rows = raw
+        .prepare(`SELECT id FROM routine_entry_type WHERE routine_id = ?`)
+        .all(routineId);
+      // Transaction rolled back — no rows should remain
+      expect(rows).toHaveLength(0);
+    });
+  });
+
+  // ── replaceRoutineItems ─────────────────────────────────────────────────────
+
+  describe('replaceRoutineItems', () => {
+    let routineId: number;
+    let foodTypeId: number;
+    let activityTypeId: number;
+
+    beforeEach(() => {
+      const now = `${TEST_TODAY}T09:00:00-07:00`;
+      const result = raw
+        .prepare(
+          `INSERT INTO routine (name, sort_order, archived, created_at, updated_at) VALUES (?, 0, 0, ?, ?)`
+        )
+        .run('ReplaceTest', now, now);
+      routineId = Number(result.lastInsertRowid);
+      foodTypeId = entryTypeId(raw, 'Food');
+      activityTypeId = entryTypeId(raw, 'Activity');
+    });
+
+    afterEach(() => {
+      raw.prepare(`DELETE FROM routine WHERE name = 'ReplaceTest'`).run();
+    });
+
+    test('clears all prior items and inserts the new set', async () => {
+      // Insert initial items
+      await createRoutineItems(db, routineId, [
+        { name: 'Old item 1', entryTypeId: foodTypeId },
+        { name: 'Old item 2', entryTypeId: activityTypeId },
+      ]);
+
+      // Replace with a single new item
+      await replaceRoutineItems(db, routineId, [
+        { name: 'New item', entryTypeId: activityTypeId },
+      ]);
+
+      const rows = raw
+        .prepare(
+          `SELECT name FROM routine_entry_type WHERE routine_id = ? ORDER BY sort_order`
+        )
+        .all(routineId) as { name: string }[];
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].name).toBe('New item');
+    });
+
+    test('cascade-deletes routine_entry_type_label rows when prior items are cleared', async () => {
+      const labelId = (
+        raw
+          .prepare(
+            `SELECT l.id FROM label l
+             JOIN entry_type et ON l.entry_type_id = et.id
+             WHERE et.name = 'Food' AND l.is_enabled = 1
+             LIMIT 1`
+          )
+          .get() as { id: number }
+      ).id;
+
+      await createRoutineItems(db, routineId, [
+        { name: 'Breakfast', entryTypeId: foodTypeId, labelIds: [labelId] },
+      ]);
+
+      // Verify labels exist
+      const beforeRows = raw
+        .prepare(
+          `SELECT retl.label_id FROM routine_entry_type_label retl
+           JOIN routine_entry_type ret ON ret.id = retl.routine_entry_type_id
+           WHERE ret.routine_id = ?`
+        )
+        .all(routineId);
+      expect(beforeRows).toHaveLength(1);
+
+      // Replace items — old label rows should be gone
+      await replaceRoutineItems(db, routineId, [
+        { name: 'Lunch', entryTypeId: foodTypeId },
+      ]);
+
+      const afterRows = raw
+        .prepare(
+          `SELECT retl.label_id FROM routine_entry_type_label retl
+           JOIN routine_entry_type ret ON ret.id = retl.routine_entry_type_id
+           WHERE ret.routine_id = ?`
+        )
+        .all(routineId);
+      expect(afterRows).toHaveLength(0);
+    });
+
+    test('sort_order is correct on the new set', async () => {
+      await replaceRoutineItems(db, routineId, [
+        { name: 'Alpha', entryTypeId: foodTypeId },
+        { name: 'Beta', entryTypeId: activityTypeId },
+        { name: 'Gamma', entryTypeId: foodTypeId },
+      ]);
+
+      const rows = raw
+        .prepare(
+          `SELECT name, sort_order FROM routine_entry_type WHERE routine_id = ? ORDER BY sort_order`
+        )
+        .all(routineId) as { name: string; sort_order: number }[];
+
+      expect(rows).toHaveLength(3);
+      expect(rows[0]).toMatchObject({ name: 'Alpha', sort_order: 0 });
+      expect(rows[1]).toMatchObject({ name: 'Beta', sort_order: 1 });
+      expect(rows[2]).toMatchObject({ name: 'Gamma', sort_order: 2 });
+    });
+
+    test('handles empty replacement (clears all items)', async () => {
+      await createRoutineItems(db, routineId, [
+        { name: 'To remove', entryTypeId: foodTypeId },
+      ]);
+
+      await replaceRoutineItems(db, routineId, []);
+
+      const rows = raw
+        .prepare(`SELECT id FROM routine_entry_type WHERE routine_id = ?`)
+        .all(routineId);
+      expect(rows).toHaveLength(0);
+    });
+
+    test('rolls back when a new insert fails (invalid FK)', async () => {
+      // Pre-populate items
+      await createRoutineItems(db, routineId, [
+        { name: 'Existing', entryTypeId: foodTypeId },
+      ]);
+
+      const BAD_ENTRY_TYPE_ID = 99999;
+      await expect(
+        replaceRoutineItems(db, routineId, [
+          { name: 'Good item', entryTypeId: foodTypeId },
+          { name: 'Bad item', entryTypeId: BAD_ENTRY_TYPE_ID },
+        ])
+      ).rejects.toThrow();
+
+      // After rollback, original items should still be present
+      const rows = raw
+        .prepare(`SELECT name FROM routine_entry_type WHERE routine_id = ?`)
+        .all(routineId) as { name: string }[];
+      expect(rows).toHaveLength(1);
+      expect(rows[0].name).toBe('Existing');
     });
   });
 });
