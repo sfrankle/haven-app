@@ -16,8 +16,10 @@ import {
   getRoutineCompletionState,
   createRoutineItems,
   replaceRoutineItems,
+  completeRoutine,
+  saveEntryBatch,
 } from '../../lib/db/queries';
-import type { RoutineItemInput } from '../../lib/db/query-types';
+import type { RoutineItemInput, SaveEntryInput } from '../../lib/db/query-types';
 
 const TEST_TODAY = '2026-05-22';
 
@@ -632,6 +634,66 @@ describe('routine query layer', () => {
     });
   });
 
+  // ── saveEntryBatch (routine_id + routine_completion_id columns) ─────────────
+
+  describe('saveEntryBatch — routine FK fields', () => {
+    test('persists routine_id and routine_completion_id when provided', async () => {
+      const now = `${TEST_TODAY}T09:00:00-07:00`;
+      const foodId = entryTypeId(raw, 'Food');
+
+      // Insert a routine + completion so FKs are valid
+      const routineResult = raw
+        .prepare(
+          `INSERT INTO routine (name, sort_order, archived, created_at, updated_at) VALUES (?, 0, 0, ?, ?)`
+        )
+        .run('FK Test Routine', now, now);
+      const rId = Number(routineResult.lastInsertRowid);
+
+      const completionResult = raw
+        .prepare(`INSERT INTO routine_completion (routine_id, created_at) VALUES (?, ?)`)
+        .run(rId, now);
+      const cId = Number(completionResult.lastInsertRowid);
+
+      const inputs: SaveEntryInput[] = [
+        {
+          entryTypeId: foodId,
+          timestamp: now,
+          routineId: rId,
+          routineCompletionId: cId,
+        },
+      ];
+
+      const [entryId] = await saveEntryBatch(db, inputs);
+
+      const row = raw
+        .prepare(`SELECT routine_id, routine_completion_id FROM entry WHERE id = ?`)
+        .get(entryId) as { routine_id: number; routine_completion_id: number };
+
+      expect(row.routine_id).toBe(rId);
+      expect(row.routine_completion_id).toBe(cId);
+
+      raw.prepare(`DELETE FROM routine WHERE id = ?`).run(rId);
+    });
+
+    test('stores NULL for routine_id and routine_completion_id when not provided', async () => {
+      const now = `${TEST_TODAY}T09:00:00-07:00`;
+      const foodId = entryTypeId(raw, 'Food');
+
+      const inputs: SaveEntryInput[] = [
+        { entryTypeId: foodId, timestamp: now },
+      ];
+
+      const [entryId] = await saveEntryBatch(db, inputs);
+
+      const row = raw
+        .prepare(`SELECT routine_id, routine_completion_id FROM entry WHERE id = ?`)
+        .get(entryId) as { routine_id: number | null; routine_completion_id: number | null };
+
+      expect(row.routine_id).toBeNull();
+      expect(row.routine_completion_id).toBeNull();
+    });
+  });
+
   // ── replaceRoutineItems ─────────────────────────────────────────────────────
 
   describe('replaceRoutineItems', () => {
@@ -770,6 +832,276 @@ describe('routine query layer', () => {
         .all(routineId) as { name: string }[];
       expect(rows).toHaveLength(1);
       expect(rows[0].name).toBe('Existing');
+    });
+  });
+
+  // ── completeRoutine ──────────────────────────────────────────────────────────
+
+  describe('completeRoutine', () => {
+    let routineId: number;
+    let foodTypeId: number;
+    let activityTypeId: number;
+    let focusId: number;
+
+    const NOW = `${TEST_TODAY}T09:00:00-07:00`;
+
+    beforeEach(() => {
+      const result = raw
+        .prepare(
+          `INSERT INTO routine (name, sort_order, archived, created_at, updated_at) VALUES (?, 0, 0, ?, ?)`
+        )
+        .run('Complete Test Routine', NOW, NOW);
+      routineId = Number(result.lastInsertRowid);
+
+      foodTypeId = entryTypeId(raw, 'Food');
+      activityTypeId = entryTypeId(raw, 'Activity');
+
+      const focusResult = raw
+        .prepare(`INSERT INTO focus (name, archived, sort_order, created_at) VALUES (?, 0, 0, ?)`)
+        .run('Test Focus', NOW);
+      focusId = Number(focusResult.lastInsertRowid);
+    });
+
+    afterEach(() => {
+      raw.prepare(`DELETE FROM routine WHERE name = 'Complete Test Routine'`).run();
+      raw.prepare(`DELETE FROM focus WHERE name = 'Test Focus'`).run();
+    });
+
+    test('creates a routine_completion row with correct routine_id and created_at', async () => {
+      const completionId = await completeRoutine(db, {
+        routineId,
+        associatedFocusId: null,
+        checkedItems: [],
+        notes: null,
+        timestamp: NOW,
+      });
+
+      const row = raw
+        .prepare(`SELECT routine_id, created_at FROM routine_completion WHERE id = ?`)
+        .get(completionId) as { routine_id: number; created_at: string };
+
+      expect(row).toBeDefined();
+      expect(row.routine_id).toBe(routineId);
+      expect(row.created_at).toBe(NOW);
+    });
+
+    test('returns the new routine_completion id as a positive integer', async () => {
+      const completionId = await completeRoutine(db, {
+        routineId,
+        associatedFocusId: null,
+        checkedItems: [],
+        notes: null,
+        timestamp: NOW,
+      });
+
+      expect(typeof completionId).toBe('number');
+      expect(completionId).toBeGreaterThan(0);
+    });
+
+    test('creates one entry per checked item', async () => {
+      const completionId = await completeRoutine(db, {
+        routineId,
+        associatedFocusId: null,
+        checkedItems: [
+          { entryTypeId: foodTypeId, labelIds: [] },
+          { entryTypeId: activityTypeId, labelIds: [] },
+          { entryTypeId: foodTypeId, labelIds: [] },
+        ],
+        notes: null,
+        timestamp: NOW,
+      });
+
+      const rows = raw
+        .prepare(`SELECT id FROM entry WHERE routine_completion_id = ?`)
+        .all(completionId) as { id: number }[];
+
+      expect(rows).toHaveLength(3);
+    });
+
+    test('sets routine_id and routine_completion_id on every entry row', async () => {
+      const completionId = await completeRoutine(db, {
+        routineId,
+        associatedFocusId: null,
+        checkedItems: [
+          { entryTypeId: foodTypeId, labelIds: [] },
+          { entryTypeId: activityTypeId, labelIds: [] },
+        ],
+        notes: null,
+        timestamp: NOW,
+      });
+
+      const rows = raw
+        .prepare(`SELECT routine_id, routine_completion_id FROM entry WHERE routine_completion_id = ?`)
+        .all(completionId) as { routine_id: number; routine_completion_id: number }[];
+
+      expect(rows).toHaveLength(2);
+      for (const row of rows) {
+        expect(row.routine_id).toBe(routineId);
+        expect(row.routine_completion_id).toBe(completionId);
+      }
+    });
+
+    test('empty checkedItems creates only the routine_completion row, zero entry rows', async () => {
+      const completionId = await completeRoutine(db, {
+        routineId,
+        associatedFocusId: null,
+        checkedItems: [],
+        notes: null,
+        timestamp: NOW,
+      });
+
+      const completionRows = raw
+        .prepare(`SELECT id FROM routine_completion WHERE id = ?`)
+        .all(completionId);
+      expect(completionRows).toHaveLength(1);
+
+      const entryRows = raw
+        .prepare(`SELECT id FROM entry WHERE routine_completion_id = ?`)
+        .all(completionId);
+      expect(entryRows).toHaveLength(0);
+    });
+
+    test('notes propagated to all entries', async () => {
+      const sharedNotes = 'Felt good today';
+
+      const completionId = await completeRoutine(db, {
+        routineId,
+        associatedFocusId: null,
+        checkedItems: [
+          { entryTypeId: foodTypeId, labelIds: [] },
+          { entryTypeId: activityTypeId, labelIds: [] },
+        ],
+        notes: sharedNotes,
+        timestamp: NOW,
+      });
+
+      const rows = raw
+        .prepare(`SELECT notes FROM entry WHERE routine_completion_id = ?`)
+        .all(completionId) as { notes: string }[];
+
+      expect(rows).toHaveLength(2);
+      for (const row of rows) {
+        expect(row.notes).toBe(sharedNotes);
+      }
+    });
+
+    test('entry_focus rows created for each entry when associatedFocusId is set', async () => {
+      const completionId = await completeRoutine(db, {
+        routineId,
+        associatedFocusId: focusId,
+        checkedItems: [
+          { entryTypeId: foodTypeId, labelIds: [] },
+          { entryTypeId: activityTypeId, labelIds: [] },
+        ],
+        notes: null,
+        timestamp: NOW,
+      });
+
+      const entryRows = raw
+        .prepare(`SELECT id FROM entry WHERE routine_completion_id = ?`)
+        .all(completionId) as { id: number }[];
+
+      expect(entryRows).toHaveLength(2);
+
+      for (const entryRow of entryRows) {
+        const focusRow = raw
+          .prepare(`SELECT focus_id FROM entry_focus WHERE entry_id = ? AND focus_id = ?`)
+          .get(entryRow.id, focusId) as { focus_id: number } | undefined;
+        expect(focusRow).toBeDefined();
+        expect(focusRow!.focus_id).toBe(focusId);
+      }
+    });
+
+    test('no entry_focus rows when associatedFocusId is null', async () => {
+      const completionId = await completeRoutine(db, {
+        routineId,
+        associatedFocusId: null,
+        checkedItems: [
+          { entryTypeId: foodTypeId, labelIds: [] },
+        ],
+        notes: null,
+        timestamp: NOW,
+      });
+
+      const entryRows = raw
+        .prepare(`SELECT id FROM entry WHERE routine_completion_id = ?`)
+        .all(completionId) as { id: number }[];
+      expect(entryRows).toHaveLength(1);
+
+      const focusRows = raw
+        .prepare(`SELECT focus_id FROM entry_focus WHERE entry_id = ?`)
+        .all(entryRows[0].id);
+      expect(focusRows).toHaveLength(0);
+    });
+
+    test('entry_label rows inserted per item', async () => {
+      const labelRows = raw
+        .prepare(
+          `SELECT l.id FROM label l
+           JOIN entry_type et ON l.entry_type_id = et.id
+           WHERE et.name = 'Food' AND l.is_enabled = 1
+           LIMIT 2`
+        )
+        .all() as { id: number }[];
+      expect(labelRows.length).toBeGreaterThanOrEqual(2);
+
+      const labelId1 = labelRows[0].id;
+      const labelId2 = labelRows[1].id;
+
+      const completionId = await completeRoutine(db, {
+        routineId,
+        associatedFocusId: null,
+        checkedItems: [
+          { entryTypeId: foodTypeId, labelIds: [labelId1, labelId2] },
+        ],
+        notes: null,
+        timestamp: NOW,
+      });
+
+      const entryRow = raw
+        .prepare(`SELECT id FROM entry WHERE routine_completion_id = ?`)
+        .get(completionId) as { id: number };
+
+      const labels = raw
+        .prepare(`SELECT label_id FROM entry_label WHERE entry_id = ?`)
+        .all(entryRow.id) as { label_id: number }[];
+
+      expect(labels).toHaveLength(2);
+      expect(labels.map((l) => l.label_id)).toContain(labelId1);
+      expect(labels.map((l) => l.label_id)).toContain(labelId2);
+    });
+
+    test('transaction rolls back when an entry INSERT fails (invalid entry_type_id)', async () => {
+      const BAD_ENTRY_TYPE_ID = 99999;
+      const completionCountBefore = (
+        raw.prepare(`SELECT COUNT(*) as c FROM routine_completion`).get() as { c: number }
+      ).c;
+      const entryCountBefore = (
+        raw.prepare(`SELECT COUNT(*) as c FROM entry`).get() as { c: number }
+      ).c;
+
+      await expect(
+        completeRoutine(db, {
+          routineId,
+          associatedFocusId: null,
+          checkedItems: [
+            { entryTypeId: foodTypeId, labelIds: [] },
+            { entryTypeId: BAD_ENTRY_TYPE_ID, labelIds: [] },
+          ],
+          notes: null,
+          timestamp: NOW,
+        })
+      ).rejects.toThrow();
+
+      const completionCountAfter = (
+        raw.prepare(`SELECT COUNT(*) as c FROM routine_completion`).get() as { c: number }
+      ).c;
+      const entryCountAfter = (
+        raw.prepare(`SELECT COUNT(*) as c FROM entry`).get() as { c: number }
+      ).c;
+
+      expect(completionCountAfter).toBe(completionCountBefore);
+      expect(entryCountAfter).toBe(entryCountBefore);
     });
   });
 });
