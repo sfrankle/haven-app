@@ -24,7 +24,7 @@ import {
 } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { getScheduleableBlocks } from '@/lib/utils/timestamp';
-import { colors } from '@/constants/theme';
+import { colors, spacing } from '@/constants/theme';
 import { logScreenStyles, routineStyles } from '@/constants/sharedStyles';
 import { useRoutineForm, draftFromRoutineItem, toRoutineItemInputs } from '@/hooks/useRoutineForm';
 import type { Db } from '@/lib/db/queries';
@@ -92,10 +92,10 @@ export default function EditRoutineScreen() {
         frequencyNote: form.frequencyNote.trim() || null,
       });
       await replaceRoutineItems(db, routineId, toRoutineItemInputs(form.items));
-      setSaving(false);
       router.back();
     } catch {
       setError('Something went wrong. Please try again.');
+    } finally {
       setSaving(false);
     }
   }
@@ -106,12 +106,22 @@ export default function EditRoutineScreen() {
     try {
       const db = (await getDb()) as unknown as Db;
       await setRoutineArchived(db, routineId, true);
-      setArchiving(false);
       router.back();
     } catch {
       setArchiveError('Something went wrong. Please try again.');
+    } finally {
       setArchiving(false);
     }
+  }
+
+  if (loadError !== null) {
+    return (
+      <Screen showBack>
+        <Text style={logScreenStyles.saveErrorText} testID="routine-edit-load-error">
+          {loadError}
+        </Text>
+      </Screen>
+    );
   }
 
   return (
@@ -141,17 +151,11 @@ export default function EditRoutineScreen() {
             style={routineStyles.detailInput}
             value={form.frequencyNote}
             onChangeText={form.setFrequencyNote}
-            placeholder="Frequency note (optional)"
+            placeholder="e.g. 3x daily as prescribed (optional)"
             placeholderTextColor={colors.chrome}
             testID="routine-edit-frequency-note"
             returnKeyType="done"
           />
-
-          {loadError !== null && (
-            <Text style={logScreenStyles.saveErrorText} testID="routine-edit-load-error">
-              {loadError}
-            </Text>
-          )}
 
           <Text style={routineStyles.sectionLabel}>When</Text>
           <View style={routineStyles.timeBlockRow}>
@@ -241,8 +245,8 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.chrome,
     opacity: 0.2,
-    marginTop: 24,
-    marginBottom: 24,
+    marginTop: spacing.sectionGap,
+    marginBottom: spacing.sectionGap,
   },
   archiveButtonContainer: {
     marginTop: 0,

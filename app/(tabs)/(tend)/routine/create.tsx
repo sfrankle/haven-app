@@ -60,10 +60,10 @@ export default function CreateRoutineScreen() {
         frequencyNote: form.frequencyNote.trim() || undefined,
         items: toRoutineItemInputs(form.items),
       });
-      setSaving(false);
       router.back();
     } catch {
       setError('Something went wrong. Please try again.');
+    } finally {
       setSaving(false);
     }
   }
@@ -96,7 +96,7 @@ export default function CreateRoutineScreen() {
             style={routineStyles.detailInput}
             value={form.frequencyNote}
             onChangeText={form.setFrequencyNote}
-            placeholder="Frequency note (optional)"
+            placeholder="e.g. 3x daily as prescribed (optional)"
             placeholderTextColor={colors.chrome}
             testID="routine-frequency-note"
             returnKeyType="done"

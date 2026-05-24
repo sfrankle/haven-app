@@ -41,13 +41,15 @@ export function draftFromRoutineItem(item: {
 }
 
 export function toRoutineItemInputs(items: DraftRoutineItem[]): RoutineItemInput[] {
-  return items.map((item) => ({
-    name: item.name.trim(),
-    entryTypeId: item.entryTypeId!,
-    labelIds: item.labelIds.length ? item.labelIds : undefined,
-    prescribedDetail: item.prescribedDetail.trim() || null,
-    instructionNote: item.instructionNote.trim() || null,
-  }));
+  return items
+    .filter((item): item is DraftRoutineItem & { entryTypeId: number } => item.entryTypeId !== null)
+    .map((item) => ({
+      name: item.name.trim(),
+      entryTypeId: item.entryTypeId,
+      labelIds: item.labelIds.length ? item.labelIds : undefined,
+      prescribedDetail: item.prescribedDetail.trim() || null,
+      instructionNote: item.instructionNote.trim() || null,
+    }));
 }
 
 export interface UseRoutineFormResult {
@@ -76,7 +78,7 @@ export function useRoutineForm(): UseRoutineFormResult {
   const [frequencyNote, setFrequencyNote] = useState('');
   const [items, setItems] = useState<DraftRoutineItem[]>([]);
 
-  function toggleBlock(block: ScheduleableBlock) {
+  const toggleBlock = useCallback((block: ScheduleableBlock) => {
     setSelectedBlocks((prev) => {
       const next = new Set(prev);
       if (next.has(block)) {
@@ -86,17 +88,17 @@ export function useRoutineForm(): UseRoutineFormResult {
       }
       return next;
     });
-  }
+  }, []);
 
-  function addItem() {
+  const addItem = useCallback(() => {
     setItems((prev) => [...prev, makeDraftItem()]);
-  }
+  }, []);
 
-  function removeItem(key: string) {
+  const removeItem = useCallback((key: string) => {
     setItems((prev) => prev.filter((i) => i.key !== key));
-  }
+  }, []);
 
-  function moveItem(index: number, direction: 'up' | 'down') {
+  const moveItem = useCallback((index: number, direction: 'up' | 'down') => {
     setItems((prev) => {
       const next = [...prev];
       const swapIndex = direction === 'up' ? index - 1 : index + 1;
@@ -104,7 +106,7 @@ export function useRoutineForm(): UseRoutineFormResult {
       [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
       return next;
     });
-  }
+  }, []);
 
   const updateItem = useCallback((key: string, patch: Partial<DraftRoutineItem>) => {
     setItems((prev) =>

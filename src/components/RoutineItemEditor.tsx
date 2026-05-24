@@ -63,7 +63,7 @@ export function RoutineItemEditor({
         style={routineStyles.detailInput}
         value={item.prescribedDetail}
         onChangeText={(text) => onUpdate({ prescribedDetail: text })}
-        placeholder="Prescribed detail (optional)"
+        placeholder="What to do or take (optional)"
         placeholderTextColor={colors.chrome}
         testID={`${testIDPrefix}-prescribed-detail`}
         returnKeyType="done"
