@@ -40,8 +40,7 @@ import type { Routine, RoutineItem } from '@/lib/db/query-types';
 
 // ─── local types ─────────────────────────────────────────────────────────────
 
-type ChecklistItemState = {
-  routineItem: RoutineItem;
+type ChecklistItemState = RoutineItem & {
   checked: boolean;
   expanded: boolean; // whether instruction note is visible
 };
@@ -75,11 +74,7 @@ export default function CompleteRoutineScreen() {
         if (found) {
           setRoutine(found);
           setItems(
-            routineItems.map((item) => ({
-              routineItem: item,
-              checked: true,
-              expanded: false,
-            }))
+            routineItems.map((item) => ({ ...item, checked: true, expanded: false }))
           );
         } else {
           setLoadError("Couldn't load routine. Go back and try again.");
@@ -114,11 +109,8 @@ export default function CompleteRoutineScreen() {
     try {
       const db = (await getDb()) as unknown as Db;
       const checkedItems = items
-        .filter((i) => i.checked)
-        .map((i) => ({
-          entryTypeId: i.routineItem.entryTypeId,
-          labelIds: i.routineItem.labelIds,
-        }));
+        .filter((item) => item.checked)
+        .map((item) => ({ entryTypeId: item.entryTypeId, labelIds: item.labelIds }));
 
       await completeRoutine(db, {
         routineId,
@@ -154,7 +146,7 @@ export default function CompleteRoutineScreen() {
         )}
 
         {items.map((item, index) => (
-          <View key={item.routineItem.id} style={routineStyles.itemCard}>
+          <View key={item.id} style={routineStyles.itemCard}>
             {/* Item header row: checkbox, name, expand button */}
             <View style={styles.itemHeaderRow}>
               <Pressable
@@ -167,9 +159,9 @@ export default function CompleteRoutineScreen() {
                 {item.checked && <Text style={styles.checkmark}>✓</Text>}
               </Pressable>
 
-              <Text style={styles.itemName}>{item.routineItem.name}</Text>
+              <Text style={styles.itemName}>{item.name}</Text>
 
-              {item.routineItem.instructionNote != null && (
+              {item.instructionNote != null && (
                 <Pressable
                   onPress={() => toggleExpanded(index)}
                   testID={`routine-complete-item-${index}-expand-button`}
@@ -183,19 +175,19 @@ export default function CompleteRoutineScreen() {
             </View>
 
             {/* Prescribed detail — static display only, not editable */}
-            {item.routineItem.prescribedDetail != null && (
+            {item.prescribedDetail != null && (
               <Text style={styles.prescribedDetail}>
-                {item.routineItem.prescribedDetail}
+                {item.prescribedDetail}
               </Text>
             )}
 
             {/* Instruction note — revealed on expand */}
-            {item.expanded && item.routineItem.instructionNote != null && (
+            {item.expanded && item.instructionNote != null && (
               <Text
                 style={styles.instructionNote}
                 testID={`routine-complete-item-${index}-instruction-note`}
               >
-                {item.routineItem.instructionNote}
+                {item.instructionNote}
               </Text>
             )}
           </View>
