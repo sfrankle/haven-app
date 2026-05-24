@@ -58,6 +58,10 @@ export interface SaveEntryInput {
   notes?: string;
   labelIds?: number[];
   focusId?: number;
+  /** Optional FK to a routine that triggered this entry. Nullable in schema (ON DELETE SET NULL). */
+  routineId?: number;
+  /** Optional FK to the specific routine_completion row. Nullable in schema (ON DELETE SET NULL). */
+  routineCompletionId?: number;
 }
 
 export interface Focus {

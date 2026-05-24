@@ -712,10 +712,20 @@ export async function saveEntryBatch(db: Db, inputs: SaveEntryInput[]): Promise<
   const ids: number[] = [];
   await db.withTransactionAsync(async () => {
     for (const input of inputs) {
+      // NOTE: If you add a new column to the entry INSERT in saveEntry, mirror it here.
+      // Also mirror any new columns in completeRoutine's entry INSERT below.
       const result = await db.runAsync(
-        `INSERT INTO entry (entry_type_id, source_type, timestamp, created_at, numeric_value, notes)
-         VALUES (?, 'log', ?, ?, ?, ?)`,
-        [input.entryTypeId, input.timestamp, input.timestamp, input.numericValue ?? null, input.notes ?? null]
+        `INSERT INTO entry (entry_type_id, source_type, timestamp, created_at, numeric_value, notes, routine_id, routine_completion_id)
+         VALUES (?, 'log', ?, ?, ?, ?, ?, ?)`,
+        [
+          input.entryTypeId,
+          input.timestamp,
+          input.timestamp,
+          input.numericValue ?? null,
+          input.notes ?? null,
+          input.routineId ?? null,
+          input.routineCompletionId ?? null,
+        ]
       );
       const newId = result.lastInsertRowId;
       ids.push(newId);
@@ -1206,4 +1216,81 @@ export async function replaceRoutineItems(
     );
     await insertRoutineItems(db, routineId, items);
   });
+}
+
+/**
+ * Records a single routine completion session in a single atomic transaction.
+ *
+ * Steps:
+ *   1. INSERT a routine_completion row (capturing the completion event itself).
+ *   2. For each checked item, INSERT an entry row with routine_id and
+ *      routine_completion_id set, entry_label rows for each labelId, and an
+ *      entry_focus row if associatedFocusId is non-null.
+ *
+ * The shared `notes` value is stored on every entry row. The per-item
+ * prescribedDetail is display-only on the complete screen and is NOT persisted
+ * to entry — the entry's label associations capture what was recorded.
+ *
+ * Returns the newly created routine_completion.id.
+ */
+export async function completeRoutine(
+  db: Db,
+  input: {
+    routineId: number;
+    associatedFocusId: number | null;
+    checkedItems: Array<{
+      entryTypeId: number;
+      labelIds: number[];
+    }>;
+    notes: string | null;
+    timestamp: string; // ISO-8601 wall-clock from nowLocalIso()
+  }
+): Promise<number> {
+  let completionId: number | undefined;
+
+  await db.withTransactionAsync(async () => {
+    // 1. Insert the routine_completion row for this session.
+    const completionResult = await db.runAsync(
+      `INSERT INTO routine_completion (routine_id, created_at) VALUES (?, ?)`,
+      [input.routineId, input.timestamp]
+    );
+    completionId = completionResult.lastInsertRowId;
+
+    // 2. Insert one entry per checked item.
+    for (const item of input.checkedItems) {
+      const entryResult = await db.runAsync(
+        `INSERT INTO entry (entry_type_id, source_type, timestamp, created_at, numeric_value, notes, routine_id, routine_completion_id)
+         VALUES (?, 'log', ?, ?, NULL, ?, ?, ?)`,
+        [
+          item.entryTypeId,
+          input.timestamp,
+          input.timestamp,
+          input.notes,
+          input.routineId,
+          completionId,
+        ]
+      );
+      const entryId = entryResult.lastInsertRowId;
+
+      if (item.labelIds.length > 0) {
+        const placeholders = item.labelIds.map(() => '(?, ?)').join(', ');
+        await db.runAsync(
+          `INSERT INTO entry_label (entry_id, label_id) VALUES ${placeholders}`,
+          item.labelIds.flatMap((lid) => [entryId, lid])
+        );
+      }
+
+      if (input.associatedFocusId != null) {
+        await db.runAsync(
+          `INSERT INTO entry_focus (entry_id, focus_id) VALUES (?, ?)`,
+          [entryId, input.associatedFocusId]
+        );
+      }
+    }
+  });
+
+  if (completionId === undefined) {
+    throw new Error('completeRoutine: transaction completed without setting completionId');
+  }
+  return completionId;
 }
