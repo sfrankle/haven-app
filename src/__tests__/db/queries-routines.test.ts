@@ -169,6 +169,43 @@ describe('routine query layer', () => {
 
       raw.prepare(`DELETE FROM routine WHERE id = ?`).run(routine.id);
     });
+
+    test('inserts items atomically — routine and items created in one transaction', async () => {
+      const foodId = entryTypeId(raw, 'Food');
+      const items: RoutineItemInput[] = [
+        { name: 'Breakfast', entryTypeId: foodId },
+      ];
+
+      const routine = await createRoutine(db, { name: 'Atomic Routine', items });
+
+      const rows = raw
+        .prepare(`SELECT name FROM routine_entry_type WHERE routine_id = ?`)
+        .all(routine.id) as { name: string }[];
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].name).toBe('Breakfast');
+
+      raw.prepare(`DELETE FROM routine WHERE id = ?`).run(routine.id);
+    });
+
+    test('rolls back routine row when items fail — no orphan left in DB', async () => {
+      const invalidEntryTypeId = 999999; // does not exist → FK violation
+      const items: RoutineItemInput[] = [
+        { name: 'Bad Item', entryTypeId: invalidEntryTypeId },
+      ];
+      const countBefore = (
+        raw.prepare(`SELECT COUNT(*) as c FROM routine`).get() as { c: number }
+      ).c;
+
+      await expect(
+        createRoutine(db, { name: 'Orphan Routine', items })
+      ).rejects.toThrow();
+
+      const countAfter = (
+        raw.prepare(`SELECT COUNT(*) as c FROM routine`).get() as { c: number }
+      ).c;
+      expect(countAfter).toBe(countBefore); // routine row was rolled back
+    });
   });
 
   // ── updateRoutine ─────────────────────────────────────────────────────────────

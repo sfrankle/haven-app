@@ -901,6 +901,7 @@ export async function createRoutine(
     timeBlocks?: ScheduleableBlock[];
     associatedFocusId?: number;
     frequencyNote?: string;
+    items?: RoutineItemInput[];
   }
 ): Promise<Routine> {
   let routineId: number | undefined;
@@ -925,6 +926,10 @@ export async function createRoutine(
         `INSERT INTO routine_time_block (routine_id, time_block) VALUES (?, ?)`,
         [routineId, block]
       );
+    }
+
+    if (input.items?.length) {
+      await insertRoutineItems(db, routineId, input.items);
     }
   });
 
