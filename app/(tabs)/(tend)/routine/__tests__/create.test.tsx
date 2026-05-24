@@ -210,9 +210,9 @@ describe('CreateRoutineScreen', () => {
     });
   });
 
-  // ── 11. createRoutineItems called after createRoutine with items ──────────
+  // ── 11. items passed directly to createRoutine for atomic creation ────────
 
-  it('calls createRoutineItems with correct items after createRoutine', async () => {
+  it('passes items directly to createRoutine instead of calling createRoutineItems separately', async () => {
     const { getByTestId } = render(<CreateRoutineScreen />);
     fireEvent.changeText(getByTestId('routine-name-input'), 'Routine');
 
@@ -230,13 +230,15 @@ describe('CreateRoutineScreen', () => {
     });
 
     await waitFor(() => {
-      expect(mockCreateRoutineItems).toHaveBeenCalledWith(
+      expect(mockCreateRoutine).toHaveBeenCalledWith(
         expect.anything(),
-        10, // routineId returned by mockCreateRoutine
-        expect.arrayContaining([
-          expect.objectContaining({ name: 'Breakfast', entryTypeId: 1 }),
-        ])
+        expect.objectContaining({
+          items: expect.arrayContaining([
+            expect.objectContaining({ name: 'Breakfast', entryTypeId: 1 }),
+          ]),
+        })
       );
+      expect(mockCreateRoutineItems).not.toHaveBeenCalled();
     });
   });
 
@@ -272,7 +274,17 @@ describe('CreateRoutineScreen', () => {
     });
   });
 
-  // ── 14. Error shown when createRoutine throws ─────────────────────────────
+  // ── 14. Load error shown when getEntryTypes fails ────────────────────────
+
+  it('shows load error message when getEntryTypes fails to load entry types', async () => {
+    mockGetEntryTypes.mockRejectedValue(new Error('DB error'));
+    const { getByTestId } = render(<CreateRoutineScreen />);
+    await waitFor(() => {
+      expect(getByTestId('routine-load-error')).toBeTruthy();
+    });
+  });
+
+  // ── 15. Error shown when createRoutine throws ─────────────────────────────
 
   it('shows error message when createRoutine throws', async () => {
     mockCreateRoutine.mockRejectedValue(new Error('DB error'));

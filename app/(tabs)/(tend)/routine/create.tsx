@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { Screen } from '@/components';
 import { Button } from '@/components/Button';
 import { FocusDropdown } from '@/components/FocusDropdown';
-import { createRoutine, createRoutineItems, getEntryTypes } from '@/lib/db/queries';
+import { createRoutine, getEntryTypes } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { getScheduleableBlocks } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
@@ -58,6 +58,7 @@ export default function CreateRoutineScreen() {
   const [frequencyNote, setFrequencyNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Load entry types once
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function CreateRoutineScreen() {
         const types = await getEntryTypes(db);
         if (isMounted) setEntryTypes(types);
       } catch {
-        // non-fatal — entry type chips just won't appear
+        if (isMounted) setLoadError("Couldn't load entry types. Go back and try again.");
       }
     }
     void load();
@@ -126,13 +127,6 @@ export default function CreateRoutineScreen() {
     setError(null);
     try {
       const db = (await getDb()) as unknown as Db;
-      const routine = await createRoutine(db, {
-        name: trimmedName,
-        timeBlocks: Array.from(selectedBlocks),
-        associatedFocusId,
-        frequencyNote: frequencyNote.trim() || undefined,
-      });
-
       const itemInputs: RoutineItemInput[] = items.map((item) => ({
         name: item.name.trim(),
         entryTypeId: item.entryTypeId!,
@@ -140,7 +134,13 @@ export default function CreateRoutineScreen() {
         prescribedDetail: item.prescribedDetail.trim() || null,
         instructionNote: item.instructionNote.trim() || null,
       }));
-      await createRoutineItems(db, routine.id, itemInputs);
+      await createRoutine(db, {
+        name: trimmedName,
+        timeBlocks: Array.from(selectedBlocks),
+        associatedFocusId,
+        frequencyNote: frequencyNote.trim() || undefined,
+        items: itemInputs,
+      });
 
       setSaving(false);
       router.back();
@@ -234,7 +234,14 @@ export default function CreateRoutineScreen() {
             <Text style={styles.addItemText}>+ Add Item</Text>
           </Pressable>
 
-          {/* Error */}
+          {/* Load error */}
+          {loadError !== null && (
+            <Text style={logScreenStyles.saveErrorText} testID="routine-load-error">
+              {loadError}
+            </Text>
+          )}
+
+          {/* Save error */}
           {error !== null && (
             <Text style={logScreenStyles.saveErrorText} testID="routine-save-error">
               {error}
