@@ -256,4 +256,42 @@ describe('EditRoutineScreen', () => {
       expect(getByText('Something went wrong. Please try again.')).toBeTruthy();
     });
   });
+
+  // ── 13. Load error when routine not found in fetched list ─────────────────
+
+  it('shows load error when routine is not found in the fetched list', async () => {
+    mockGetRoutines.mockResolvedValue([]); // resolves successfully but no matching routine
+    const { getByTestId } = render(<EditRoutineScreen />);
+    await waitFor(() => {
+      expect(getByTestId('routine-edit-load-error')).toBeTruthy();
+    });
+  });
+
+  // ── 14. Archive button disabled while save is in progress ─────────────────
+
+  it('archive button is disabled while save is in progress', async () => {
+    mockUpdateRoutine.mockImplementation(() => new Promise(() => {})); // never resolves
+    const { getByTestId } = render(<EditRoutineScreen />);
+    await waitFor(() => getByTestId('routine-edit-save-button'));
+
+    fireEvent.press(getByTestId('routine-edit-save-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('routine-edit-archive-button').props.accessibilityState?.disabled).toBe(true);
+    });
+  });
+
+  // ── 15. Save button disabled while archive is in progress ─────────────────
+
+  it('save button is disabled while archive is in progress', async () => {
+    mockSetRoutineArchived.mockImplementation(() => new Promise(() => {})); // never resolves
+    const { getByTestId } = render(<EditRoutineScreen />);
+    await waitFor(() => getByTestId('routine-edit-save-button'));
+
+    fireEvent.press(getByTestId('routine-edit-archive-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('routine-edit-save-button').props.accessibilityState?.disabled).toBe(true);
+    });
+  });
 });

@@ -111,10 +111,11 @@ export default function EditRoutineScreen() {
           if (routine.associatedFocusId != null) {
             setAssociatedFocusId(routine.associatedFocusId);
           }
+          setItems(routineItems.map(draftFromRoutineItem));
+          setEntryTypes(types);
+        } else {
+          setLoadError("Couldn't load routine. Go back and try again.");
         }
-
-        setItems(routineItems.map(draftFromRoutineItem));
-        setEntryTypes(types);
       } catch {
         if (isMounted) setLoadError("Couldn't load routine. Go back and try again.");
       }
@@ -315,7 +316,7 @@ export default function EditRoutineScreen() {
               <Button
                 label="Save"
                 onPress={() => { void handleSave(); }}
-                disabled={saving}
+                disabled={saving || archiving}
                 testID="routine-edit-save-button"
               />
             </View>
@@ -335,7 +336,7 @@ export default function EditRoutineScreen() {
             <Button
               label="Archive"
               onPress={() => { void handleArchive(); }}
-              disabled={archiving}
+              disabled={archiving || saving}
               testID="routine-edit-archive-button"
               variant="secondary"
             />
