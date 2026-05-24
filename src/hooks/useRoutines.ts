@@ -16,6 +16,7 @@ export interface UseRoutinesResult {
 }
 
 export function useRoutines(options?: { includeArchived?: boolean }): UseRoutinesResult {
+  const includeArchived = options?.includeArchived;
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -27,7 +28,7 @@ export function useRoutines(options?: { includeArchived?: boolean }): UseRoutine
       async function load() {
         try {
           const db = (await getDb()) as unknown as Db;
-          const result = await getRoutines(db, options);
+          const result = await getRoutines(db, includeArchived != null ? { includeArchived } : undefined);
           if (!cancelled) {
             setRoutines(result);
           }
@@ -47,7 +48,7 @@ export function useRoutines(options?: { includeArchived?: boolean }): UseRoutine
       return () => {
         cancelled = true;
       };
-    }, [options?.includeArchived])
+    }, [includeArchived])
   );
 
   return { routines, loading, error };
