@@ -239,7 +239,8 @@ describe('CompleteRoutineScreen', () => {
 
   // ── 9. router.back() called after successful submit ───────────────────────
 
-  it('calls router.back() after successful submit', async () => {
+  it('shows saved confirmation and calls router.back() after successful submit', async () => {
+    jest.useFakeTimers();
     const { getByTestId } = render(<CompleteRoutineScreen />);
     await waitFor(() => getByTestId('routine-complete-submit-button'));
 
@@ -247,7 +248,15 @@ describe('CompleteRoutineScreen', () => {
       fireEvent.press(getByTestId('routine-complete-submit-button'));
     });
 
-    await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
+    // Confirmation should appear immediately
+    await waitFor(() => expect(getByTestId('routine-complete-saved')).toBeTruthy());
+    expect(mockBack).not.toHaveBeenCalled();
+
+    // Advance past the 800ms delay
+    await act(async () => { jest.advanceTimersByTime(1000); });
+    expect(mockBack).toHaveBeenCalledTimes(1);
+
+    jest.useRealTimers();
   });
 
   // ── 10. Error shown when completeRoutine throws ───────────────────────────
@@ -295,6 +304,14 @@ describe('CompleteRoutineScreen', () => {
     const { getByTestId } = render(<CompleteRoutineScreen />);
     await waitFor(() => {
       expect(getByTestId('routine-complete-load-error')).toBeTruthy();
+    });
+  });
+
+  it('shows go-back button in load error state', async () => {
+    mockGetRoutineItems.mockRejectedValue(new Error('DB error'));
+    const { getByTestId } = render(<CompleteRoutineScreen />);
+    await waitFor(() => {
+      expect(getByTestId('routine-complete-go-back')).toBeTruthy();
     });
   });
 

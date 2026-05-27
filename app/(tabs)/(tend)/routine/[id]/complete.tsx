@@ -58,6 +58,7 @@ export default function CompleteRoutineScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -120,9 +121,10 @@ export default function CompleteRoutineScreen() {
         timestamp: nowLocalIso(),
       });
 
-      router.back();
+      setSaved(true);
+      setTimeout(() => router.back(), 800);
     } catch {
-      setSubmitError('Something went wrong. Please try again.');
+      setSubmitError("Couldn't save. Try again.");
     } finally {
       setSubmitting(false);
     }
@@ -134,6 +136,9 @@ export default function CompleteRoutineScreen() {
         <Text style={logScreenStyles.saveErrorText} testID="routine-complete-load-error">
           {loadError}
         </Text>
+        <View style={logScreenStyles.saveButton}>
+          <Button label="Go back" onPress={() => router.back()} testID="routine-complete-go-back" />
+        </View>
       </Screen>
     );
   }
@@ -209,11 +214,17 @@ export default function CompleteRoutineScreen() {
           </Text>
         )}
 
+        {saved && (
+          <Text style={styles.savedConfirmation} testID="routine-complete-saved">
+            Saved.
+          </Text>
+        )}
+
         <View style={logScreenStyles.saveButton}>
           <Button
-            label="Submit"
+            label="Save"
             onPress={() => { void handleSubmit(); }}
-            disabled={submitting}
+            disabled={submitting || saved}
             testID="routine-complete-submit-button"
           />
         </View>
@@ -264,7 +275,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   expandButton: {
-    padding: 4,
+    padding: 12,
     flexShrink: 0,
   },
   expandIcon: {
@@ -288,5 +299,13 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: spacing.micro,
     marginLeft: 24 + spacing.elementGap, // indent to align under item name
+  },
+  savedConfirmation: {
+    fontFamily: typeScale.bodyMedium.family,
+    fontSize: typeScale.bodyMedium.size,
+    lineHeight: lineHeight(typeScale.bodyMedium),
+    color: colors.chrome,
+    textAlign: 'center',
+    marginTop: spacing.micro,
   },
 });
