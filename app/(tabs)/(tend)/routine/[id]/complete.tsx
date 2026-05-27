@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   expandButton: {
-    padding: 12,
+    padding: 18,
     flexShrink: 0,
   },
   expandIcon: {
