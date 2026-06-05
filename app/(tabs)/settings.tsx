@@ -97,7 +97,7 @@ function SettingsFocusSection() {
                 testID={`settings-focus-unarchive-${focus.id}`}
                 hitSlop={8}
               >
-                <Text style={styles.unarchiveText}>Unarchive</Text>
+                <Text style={styles.interactiveLabel}>Unarchive</Text>
               </Pressable>
             </Surface>
           ))}
@@ -145,7 +145,7 @@ function SettingsRoutinesSection() {
             accessibilityLabel="Add Routine"
             testID="settings-routines-add-button"
           >
-            <Text style={styles.addRoutineText}>+ Add Routine</Text>
+            <Text style={styles.interactiveLabel}>+ Add Routine</Text>
           </Pressable>
         </Surface>
       )}
@@ -187,7 +187,7 @@ function SettingsRoutinesSection() {
                 testID={`settings-routine-unarchive-${routine.id}`}
                 hitSlop={8}
               >
-                <Text style={styles.unarchiveText}>Unarchive</Text>
+                <Text style={styles.interactiveLabel}>Unarchive</Text>
               </Pressable>
             </Surface>
           ))}
@@ -255,13 +255,7 @@ const styles = StyleSheet.create({
   archivedHeading: {
     marginTop: spacing.elementGap,
   },
-  unarchiveText: {
-    fontFamily: typeScale.labelMedium.family,
-    fontSize: typeScale.labelMedium.size,
-    lineHeight: lineHeight(typeScale.labelMedium),
-    color: colors.interactive,
-  },
-  addRoutineText: {
+  interactiveLabel: {
     fontFamily: typeScale.labelMedium.family,
     fontSize: typeScale.labelMedium.size,
     lineHeight: lineHeight(typeScale.labelMedium),
