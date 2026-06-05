@@ -1,0 +1,24 @@
+name: _spike-cc-action
+on: { workflow_dispatch: {} }
+permissions: { contents: write }
+jobs:
+  spike:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Implement (raw prompt → commit in place)
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            On a new branch `spike/cc-probe`, create a file SPIKE.txt containing the word "ok",
+            then git add and git commit it with message "spike: probe". Do not push. Do not open a PR.
+            Then run `/simplify` on the repo and report whether the command was found.
+          claude_args: '--allowed-tools "Read,Write,Edit,Bash"'
+      - name: Inspect what the action did to git
+        run: |
+          echo "=== branches ==="; git branch -a
+          echo "=== log (spike branch if present) ==="; git log --oneline -5 spike/cc-probe 2>/dev/null || echo "no spike/cc-probe branch"
+          echo "=== status ==="; git status --short
+          echo "=== SPIKE.txt? ==="; cat SPIKE.txt 2>/dev/null || echo "not on this ref"
