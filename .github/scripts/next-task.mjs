@@ -36,11 +36,11 @@ export function nextTask(dag) {
   );
 }
 
-// CLI entry: prints the next task id (or empty line) for the workflow to consume.
+// CLI entry: prints the next task as JSON (or an empty line) for the workflow to consume.
 if (import.meta.url === `file://${process.argv[1]}`) {
   const fs = await import('node:fs');
   const path = process.argv[2] ?? 'docs/tasks.json';
   const dag = JSON.parse(fs.readFileSync(path, 'utf8'));
   const next = nextTask(dag);
-  process.stdout.write(next ? `${next.id}\n` : '\n');
+  process.stdout.write(next ? `${JSON.stringify(next)}\n` : '\n');
 }
