@@ -1,6 +1,6 @@
 > ## ⚠️ Under testing — workflow in transition (2026-06-05)
 >
-> The autonomous flow described below (`complete-ticket`) is **canonical and the fallback** today. A **milestone-autonomy redesign** is being trialed that moves the human gate from per-ticket approval to the milestone boundary, runs execution as a GitHub Actions pipeline, and adds data-safety-aware auto-merge. Design spec: [`docs/superpowers/specs/2026-06-05-milestone-autonomy-workflow.md`](../docs/superpowers/specs/2026-06-05-milestone-autonomy-workflow.md) (status: Proposed). Tracked under #170 (umbrella — no separate epic).
+> The autonomous flow described below (`complete-ticket`) is **canonical and the fallback** today. A **milestone-autonomy redesign** is being trialed that moves the human gate from per-ticket approval to the milestone boundary, runs execution as a GitHub Actions pipeline, and adds data-safety-aware auto-merge. The design decisions are tracked on **#170** (umbrella — no separate epic); the working spec lives local-only at `docs/superpowers/specs/2026-06-05-milestone-autonomy-workflow.md` (gitignored — not in the repo).
 >
 > **What the redesign changes in the flow below:**
 > - **Step 4 (Human approves plan) is removed** — the plan-critic (→ Opus) becomes the load-bearing gate.

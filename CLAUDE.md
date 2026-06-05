@@ -47,7 +47,7 @@ npm test -- --ci        # unit tests
 | Implementation details | Code + PR descriptions |
 | Changelog | `docs/changelog.md` — one row per code-changing PR |
 | Per-ticket implementation plans | `docs/plans/` — local only, never committed, deleted after merge |
-| Workflow/architecture design specs | `docs/superpowers/specs/` — committed, persistent |
+| Workflow/architecture design specs | `docs/superpowers/specs/` — local-only (gitignored), never committed |
 
 ## Design work
 Read `docs/design/` before making any UI, copy, or interaction decisions — the `CLAUDE.md` there maps what each file owns.
