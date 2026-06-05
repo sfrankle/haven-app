@@ -1,0 +1,60 @@
+# Routine complete E2E flow
+#
+# TODO: The navigation entry point for the Complete Routine screen (a "Complete"
+# button on each routine card in the Tend tab) is wired in a separate issue.
+# Until that work lands, this flow cannot be launched from a natural in-app tap.
+# The assertions below describe the intended behavior and will be activated once
+# the calling screens exist.
+#
+# Related flow: maestro/flows/tend/routine-create-edit.yaml
+#
+# To validate in the meantime you can deep-link directly to the complete screen:
+#   appId: com.haven.app
+#   launchArguments: { initialUrl: "haven://routine/1/complete" }
+
+appId: com.haven.app
+
+---
+
+# STUB — update navigation steps once Tend routine card "Complete" button is wired
+
+- launchApp
+
+# Navigate to Tend tab (home)
+- tapOn:
+    id: "tend-tab"
+
+# --- Complete a Routine ---
+# TODO: tap the "Complete" button on a routine card once it exists on Tend
+# - tapOn:
+#     id: "routine-1-complete-button"
+
+# Verify items are loaded and checked by default
+# - assertVisible:
+#     id: "routine-complete-item-0-checkbox"
+# - assertTrue:
+#     id: "routine-complete-item-0-checkbox"
+#     accessibilityState: { checked: true }
+
+# Uncheck an item (it will be skipped — no entry created)
+# - tapOn:
+#     id: "routine-complete-item-1-checkbox"
+
+# Expand instruction note on an item (if present)
+# - tapOn:
+#     id: "routine-complete-item-0-expand-button"
+# - assertVisible:
+#     id: "routine-complete-item-0-instruction-note"
+
+# Add shared notes
+# - tapOn:
+#     id: "routine-complete-notes-input"
+# - inputText: "Felt great today"
+
+# Submit
+# - tapOn:
+#     id: "routine-complete-submit-button"
+
+# Verify navigation back to previous screen
+# - assertNotVisible:
+#     id: "routine-complete-submit-button"

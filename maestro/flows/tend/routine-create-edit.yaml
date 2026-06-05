@@ -9,6 +9,9 @@
 # To validate in the meantime you can deep-link directly to the create screen:
 #   appId: com.haven.app
 #   launchArguments: { initialUrl: "haven://routine/create" }
+#
+# See also: maestro/flows/tend/routine-complete.yaml — the complete (execution)
+# flow for an existing routine.
 
 appId: com.haven.app
 
