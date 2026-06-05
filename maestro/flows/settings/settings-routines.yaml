@@ -1,0 +1,10 @@
+appId: com.haven.app
+---
+# Verify the Routines section appears in Settings.
+# This flow relies on the app having no existing routines (fresh install /
+# cleared state), so the + Add Routine entry is visible.
+
+- launchApp
+- tapOn: "Settings"
+- assertVisible: "Routines"
+- assertVisible: "+ Add Routine"
