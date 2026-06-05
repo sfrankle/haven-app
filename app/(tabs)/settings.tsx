@@ -137,19 +137,6 @@ function SettingsRoutinesSection() {
     <View style={styles.section}>
       <Text style={sectionLabelStyle}>Routines</Text>
 
-      {allRoutines.length === 0 && (
-        <Surface style={styles.focusRow} testID="settings-routines-add-row">
-          <Pressable
-            onPress={() => router.push('/routine/create')}
-            accessibilityRole="button"
-            accessibilityLabel="Add Routine"
-            testID="settings-routines-add-button"
-          >
-            <Text style={styles.interactiveLabel}>+ Add Routine</Text>
-          </Pressable>
-        </Surface>
-      )}
-
       {activeRoutines.map((routine) => (
         <Surface
           key={routine.id}
@@ -193,6 +180,19 @@ function SettingsRoutinesSection() {
           ))}
         </View>
       )}
+
+      {/* + Add Routine is always available — Settings is the canonical
+          create-anytime surface for Routine management. */}
+      <Surface style={styles.focusRow} testID="settings-routines-add-row">
+        <Pressable
+          onPress={() => router.push('/routine/create')}
+          accessibilityRole="button"
+          accessibilityLabel="Add Routine"
+          testID="settings-routines-add-button"
+        >
+          <Text style={styles.interactiveLabel}>+ Add Routine</Text>
+        </Pressable>
+      </Surface>
     </View>
   );
 }

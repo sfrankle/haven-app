@@ -172,18 +172,20 @@ describe('SettingsScreen — Routines section', () => {
     expect(mockPush).toHaveBeenCalledWith('/routine/create');
   });
 
-  it('hides + Add Routine when active routines exist', async () => {
+  it('keeps + Add Routine visible alongside active routines', async () => {
+    // Settings is the canonical create-anytime surface, so + Add Routine is
+    // always available — not gated on the empty state.
     mockGetRoutines.mockResolvedValue([ACTIVE_ROUTINE]);
-    const { queryByTestId, getByTestId } = render(<SettingsScreen />);
+    const { getByTestId } = render(<SettingsScreen />);
     await waitFor(() => getByTestId(`settings-routine-row-${ACTIVE_ROUTINE.id}`));
-    expect(queryByTestId('settings-routines-add-row')).toBeNull();
+    expect(getByTestId('settings-routines-add-row')).toBeTruthy();
   });
 
-  it('hides + Add Routine when only archived routines exist', async () => {
+  it('keeps + Add Routine visible alongside archived routines', async () => {
     mockGetRoutines.mockResolvedValue([ARCHIVED_ROUTINE]);
-    const { queryByTestId, getByTestId } = render(<SettingsScreen />);
+    const { getByTestId } = render(<SettingsScreen />);
     await waitFor(() => getByTestId(`settings-routine-archived-row-${ARCHIVED_ROUTINE.id}`));
-    expect(queryByTestId('settings-routines-add-row')).toBeNull();
+    expect(getByTestId('settings-routines-add-row')).toBeTruthy();
   });
 
   it('shows active routine rows with a gear icon', async () => {
@@ -228,9 +230,9 @@ describe('SettingsScreen — Routines section', () => {
     });
   });
 
-  it('does not show + Add Routine after optimistically unarchiving the only routine', async () => {
-    // The hook does not refetch, so the unarchived routine still counts as an
-    // existing routine — + Add Routine must stay hidden (allRoutines.length > 0).
+  it('keeps + Add Routine visible after optimistically unarchiving the only routine', async () => {
+    // + Add Routine is always present, so it stays visible through the
+    // optimistic unarchive (the archived row disappears, the add row does not).
     mockGetRoutines.mockResolvedValue([ARCHIVED_ROUTINE]);
     const { getByTestId, queryByTestId } = render(<SettingsScreen />);
     await waitFor(() => getByTestId(`settings-routine-unarchive-${ARCHIVED_ROUTINE.id}`));
@@ -242,7 +244,7 @@ describe('SettingsScreen — Routines section', () => {
     await waitFor(() => {
       expect(queryByTestId(`settings-routine-archived-row-${ARCHIVED_ROUTINE.id}`)).toBeNull();
     });
-    expect(queryByTestId('settings-routines-add-row')).toBeNull();
+    expect(getByTestId('settings-routines-add-row')).toBeTruthy();
   });
 
   it('shows the archived row again when setRoutineArchived throws', async () => {
