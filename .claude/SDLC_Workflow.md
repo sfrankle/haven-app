@@ -1,3 +1,14 @@
+> ## ⚠️ Under testing — workflow in transition (2026-06-05)
+>
+> The autonomous flow described below (`complete-ticket`) is **canonical and the fallback** today. A **milestone-autonomy redesign** is being trialed that moves the human gate from per-ticket approval to the milestone boundary, runs execution as a GitHub Actions pipeline, and adds data-safety-aware auto-merge. Design spec: [`docs/superpowers/specs/2026-06-05-milestone-autonomy-workflow.md`](../docs/superpowers/specs/2026-06-05-milestone-autonomy-workflow.md) (status: Proposed). Tracked under #170 (umbrella — no separate epic).
+>
+> **What the redesign changes in the flow below:**
+> - **Step 4 (Human approves plan) is removed** — the plan-critic (→ Opus) becomes the load-bearing gate.
+> - **Step 11 (Human merges) is replaced** by data-safety-aware auto-merge — schema/migration changes always escalate to a human; everything else merges itself when all critics pass + CI is green.
+> - Target-state model assignments live in the spec, **not** the Agents table below (which still reflects current state — don't read it as the target).
+>
+> **Trial rules (Stage 1):** the pipeline runs with **auto-merge OFF** (opens PRs for human review) against **one trial milestone, pipeline-only**. Do **not** run `complete-ticket` against the trial milestone — two walkers can grab the same task. See the spec's *Migration & rollout* section for the staged rollout (trial → full → delete-last).
+
 ## Starting work
 
 Natural language triggers for skills:

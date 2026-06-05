@@ -129,6 +129,21 @@ WRAP-UP
   merge event re-triggers PRE-CHECK → next unblocked task
 ```
 
+### Phase 3 — Acceptance & iterate (human + Claude, at the milestone boundary)
+
+When the pipeline **STOPs** at "milestone N complete," the milestone is *code-complete*, not *done*. Phase 3 is the human loop that sits between that stop and approving N+1:
+
+1. **You test** the milestone hands-on.
+2. **File feedback** as a single GitHub issue — typically a checkbox dump of bugs, polish, and open questions (cf. #156, the Focus milestone's end-of-milestone feedback: nine fixes plus design questions in one issue).
+3. **Triage at breakdown, not execution.** The feedback issue re-enters Phase 1's **breakdown** step — it is *not* handed raw to the implementer. Breakdown splits it three ways:
+   - **Deterministic bugs** (missing severity 0, save button hidden under the nav, keyboard covers the input) — a correct answer exists, no product judgment → technical tasks in the DAG → full loop, mostly auto-mergeable.
+   - **Design decisions dressed as feedback** ("…open to other solutions", "Option A or Option B") — underspecified by design → resolved *with you* as user stories / a short design chat **before** breakdown, not discovered mid-pipeline.
+   - **Out of scope / not now** (depends on unbuilt work, e.g. #156's Routines item) → deferred and filed elsewhere.
+4. **Pipeline iterates** the resulting bug tasks (Phase 2).
+5. **You close the milestone**, then approve N+1 (flip `draft → approved` in the DAG).
+
+**The load-bearing idea: feedback re-enters at definition, not execution.** The breakdown step is the triage gate that keeps the autonomous loop pointed only at items with a correct answer. The mid-pipeline escalation is the *safety net* for a design-flavored item that slips the triage — not the primary path. (Whether end-of-milestone polish is best done as one batched "fixups" task or atomized per-bug is an [open question](#open-questions-resolve-during-implementation-breakdown).)
+
 ---
 
 ## Merge policy: data-safety-aware auto-merge
@@ -191,6 +206,20 @@ This requires widening `claude.yml` permissions from read-only to `contents: wri
 
 ---
 
+## Migration & rollout (test before delete)
+
+This redesign ships as a **staged migration**, not a cutover. `complete-ticket` (the CLI orchestrator) stays canonical and available as a fallback until the pipeline is proven.
+
+**Stage 0 — today.** CLI `complete-ticket` as-is. Baseline.
+
+**Stage 1 — Trial pipeline, auto-merge OFF.** The GitHub Action runs the full agent chain on a fresh checkout, opens a PR, and **stops without merging** — the auto-merge gate in [Merge policy](#merge-policy-data-safety-aware-auto-merge) sits behind a flag that is **OFF** in this stage. You review every PR by hand (as today, minus the per-ticket plan checkpoint). Scope: **one trial milestone, pipeline-only** — the CLI is not run against the same milestone, so two walkers can't grab the same "next unblocked." What Stage 1 actually trials: fresh-checkout context re-derivation, the quality of *planless-but-critiqued* output, and the escalation → stop → resume cycle. Exit criteria ("if tokens allow it and the process works"): cost-per-ticket acceptable, output quality matches the CLI flow, escalation/resume verified.
+
+**Stage 2 — Full autonomy, auto-merge ON.** Flip the auto-merge flag on (the data-safety escalation still always gates schema changes). *Only now* delete the `complete-ticket` orchestrator skill and drop `next-task` from the pipeline path.
+
+**Reused vs replaced.** The pipeline **reuses the agents unchanged** — `haven-technical-planner`, `haven-implementer`, the four critics, `/simplify`, `/code-review`. What's replaced is narrow: the `complete-ticket` *orchestrator glue* (→ a workflow file) and `next-task` *in-pipeline* (→ the deterministic DAG resolver; `next-task` is retained for interactive use). Deletion is ultimately one skill file, and it comes **last** — only after Stage 1 earns the trust.
+
+---
+
 ## Conscious postures (stated, not relitigated)
 
 - **Auto-merged non-schema code lands with no human eyes**, relying entirely on the critics + CI. This is a deliberate trust posture ("trusting Claude more"), bounded by the data-safety escalation on anything that touches user data.
@@ -216,7 +245,7 @@ This requires widening `claude.yml` permissions from read-only to `contents: wri
 
 - **DAG file format and location** — `docs/tasks.yml`? YAML vs JSON? Resolver tool (`yq` vs `jq`).
 - **Drift detection** between GitHub stories and the DAG — a CI check that fails if they disagree?
-- **Within-run vs across-run ticket chaining** — does one Action run do a single ticket (re-triggered on merge) or loop until the milestone is done? Token/time bounds favour one-per-run; decide explicitly.
+- **Within-run vs across-run ticket chaining, and batching** — does one Action run do a single ticket (re-triggered on merge) or loop until the milestone is done? Token/time bounds favour one-per-run; decide explicitly. **Relatedly:** end-of-milestone polish (cf. #156 — nine fixes in one human-authored PR) is far cheaper as a single "milestone-N fixups" task than atomized into one PR per bug, which multiplies plan/critic/CI overhead. Decide whether the DAG needs a multi-item task notion and whether batching or atomization is the default for fixup bundles.
 - **Auto-merge mechanics** — merge method, branch-protection interaction, who holds the merge token.
 - **Re-trigger plumbing** — exact event filter that resumes a `blocked-on-human` ticket from a comment reply.
 
@@ -225,4 +254,4 @@ This requires widening `claude.yml` permissions from read-only to `contents: wri
 ## Out of scope for this spec
 
 - #170 Part 1 (review/critics consolidation), Part 2 (concise critic messages), and the non-plan-critic model assignments — **independently shippable**, do not wait on this redesign.
-- The implementation breakdown itself (skills/agents/CI to create or modify) — a follow-up once this design is approved.
+- The implementation breakdown itself (skills/agents/CI to create or modify) — done once this design is approved, tracked under the **#170 umbrella (no separate epic)**.
