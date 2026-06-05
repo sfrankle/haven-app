@@ -3,11 +3,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Surface } from '@/components';
 import { useFocuses } from '@/hooks/useFocuses';
-import { setFocusArchived } from '@/lib/db/queries';
+import { useRoutines } from '@/hooks/useRoutines';
+import { setFocusArchived, setRoutineArchived } from '@/lib/db/queries';
 import { getDb } from '@/lib/db/database';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import type { Db } from '@/lib/db/queries';
-import type { Focus } from '@/lib/db/query-types';
+import type { Focus, Routine } from '@/lib/db/query-types';
 
 const sectionLabelStyle = {
   fontFamily: typeScale.titleMedium.family,
@@ -96,12 +97,102 @@ function SettingsFocusSection() {
                 testID={`settings-focus-unarchive-${focus.id}`}
                 hitSlop={8}
               >
-                <Text style={styles.unarchiveText}>Unarchive</Text>
+                <Text style={styles.interactiveLabel}>Unarchive</Text>
               </Pressable>
             </Surface>
           ))}
         </View>
       )}
+    </View>
+  );
+}
+
+function SettingsRoutinesSection() {
+  const router = useRouter();
+  const { routines: allRoutines } = useRoutines({ includeArchived: true });
+
+  const [unarchiving, setUnarchiving] = useState<number | null>(null);
+  // Local optimistic state: track IDs that have been unarchived in this session
+  const [locallyUnarchived, setLocallyUnarchived] = useState<Set<number>>(new Set());
+
+  const activeRoutines = allRoutines.filter((r) => !r.archived);
+  const archivedRoutines = allRoutines.filter(
+    (r) => r.archived && !locallyUnarchived.has(r.id)
+  );
+
+  async function handleUnarchive(routine: Routine) {
+    setUnarchiving(routine.id);
+    try {
+      const db = (await getDb()) as unknown as Db;
+      await setRoutineArchived(db, routine.id, false);
+      setLocallyUnarchived((prev) => new Set([...prev, routine.id]));
+    } catch {
+      // unarchive failed — row remains visible; user can retry
+    } finally {
+      setUnarchiving(null);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <Text style={sectionLabelStyle}>Routines</Text>
+
+      {activeRoutines.map((routine) => (
+        <Surface
+          key={routine.id}
+          style={styles.focusRow}
+          testID={`settings-routine-row-${routine.id}`}
+        >
+          <Text style={focusNameStyle}>{routine.name}</Text>
+          <Pressable
+            onPress={() => router.push(`/routine/${routine.id}/edit`)}
+            accessibilityRole="button"
+            accessibilityLabel={`Edit ${routine.name}`}
+            testID={`settings-routine-edit-${routine.id}`}
+            hitSlop={8}
+          >
+            <Text style={styles.settingsIcon}>⚙</Text>
+          </Pressable>
+        </Surface>
+      ))}
+
+      {archivedRoutines.length > 0 && (
+        <View style={styles.archivedGroup}>
+          <Text style={[sectionLabelStyle, styles.archivedHeading]}>Archived</Text>
+          {archivedRoutines.map((routine) => (
+            <Surface
+              key={routine.id}
+              style={styles.focusRow}
+              testID={`settings-routine-archived-row-${routine.id}`}
+            >
+              <Text style={focusNameStyle}>{routine.name}</Text>
+              <Pressable
+                onPress={() => { void handleUnarchive(routine); }}
+                disabled={unarchiving === routine.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Unarchive ${routine.name}`}
+                testID={`settings-routine-unarchive-${routine.id}`}
+                hitSlop={8}
+              >
+                <Text style={styles.interactiveLabel}>Unarchive</Text>
+              </Pressable>
+            </Surface>
+          ))}
+        </View>
+      )}
+
+      {/* + Add Routine is always available — Settings is the canonical
+          create-anytime surface for Routine management. */}
+      <Surface style={styles.focusRow} testID="settings-routines-add-row">
+        <Pressable
+          onPress={() => router.push('/routine/create')}
+          accessibilityRole="button"
+          accessibilityLabel="Add Routine"
+          testID="settings-routines-add-button"
+        >
+          <Text style={styles.interactiveLabel}>+ Add Routine</Text>
+        </Pressable>
+      </Surface>
     </View>
   );
 }
@@ -129,6 +220,10 @@ export default function SettingsScreen() {
       <View style={styles.sectionDivider} testID="settings-section-divider" />
 
       <SettingsFocusSection />
+
+      <View style={styles.sectionDivider} testID="settings-routines-divider" />
+
+      <SettingsRoutinesSection />
     </Screen>
   );
 }
@@ -160,7 +255,7 @@ const styles = StyleSheet.create({
   archivedHeading: {
     marginTop: spacing.elementGap,
   },
-  unarchiveText: {
+  interactiveLabel: {
     fontFamily: typeScale.labelMedium.family,
     fontSize: typeScale.labelMedium.size,
     lineHeight: lineHeight(typeScale.labelMedium),

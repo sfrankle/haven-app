@@ -1,10 +1,11 @@
 # Routine create/edit E2E flow
 #
-# TODO: The navigation entry points for the Routine create and edit screens
-# ("+Add Routine" button on the Tend tab and "Routines" in Settings) are wired
-# in a separate issue. Until that work lands, this flow cannot be launched from
-# a natural in-app tap. The assertions below describe the intended behavior and
-# will be activated once the calling screens exist.
+# NOTE: Settings now has a live "Routines" section with a "+ Add Routine"
+# entry (see maestro/flows/settings/settings-routines.yaml) — this flow can be
+# updated to navigate via Settings → Routines → + Add Routine. The Tend tab
+# "+ Add Routine" entry point is still wired in a separate issue. Until that
+# Tend work lands, the assertions below describe the intended Tend behavior and
+# will be activated once the Tend calling screen exists.
 #
 # To validate in the meantime you can deep-link directly to the create screen:
 #   appId: com.haven.app
