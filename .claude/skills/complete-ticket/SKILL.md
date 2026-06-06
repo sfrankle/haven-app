@@ -78,11 +78,11 @@ Make a todo list of the following steps. Mark each in_progress when starting, co
 
 ### 8. Critique implementation (parallel)
 - Dispatch these three subagents as parallel Task calls (all at once):
-  - `haven-code-quality-critic` — pass: PR number, base SHA (`git rev-parse origin/main`), head SHA (`git rev-parse HEAD`), `plan_critic_concerns`
+  - `haven-conventions-critic` — pass: PR number, base SHA (`git rev-parse origin/main`), head SHA (`git rev-parse HEAD`), `plan_critic_concerns`
   - `haven-product-vision-critic` — pass: PR number, technical task issue number, `plan_critic_concerns` (it derives the user story number itself)
   - `haven-safety-critic` — pass: PR number, branch name
 - Wait for all three to complete
-- Write state: `step: "critics-complete"`, `critic_findings: { code_quality, product_vision, safety }`
+- Write state: `step: "critics-complete"`, `critic_findings: { conventions, product_vision, safety }`
 
 ### 9. Synthesize findings
 Apply `escalation-policy.md`:

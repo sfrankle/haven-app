@@ -4,7 +4,7 @@
 >
 > **Status:** the Stage-1 scaffold (DAG + resolver + an inert workflow) is in **PR #176**; the per-ticket orchestration is designed (`docs/superpowers/specs/2026-06-05-pipeline-orchestration-design.md`) and planned (`docs/plans/170-pipeline-orchestration.md`) but **not yet operational**. All redesign decisions are tracked on **#170** (umbrella — no separate epic). Specs and plans are local-only (gitignored); the durable record lives on the issue/PR.
 >
-> The **Agents** table below reflects **current** state, not the target — e.g. under the redesign `haven-code-quality-critic` is renamed and slimmed to `haven-conventions-critic`, and model assignments shift (see the spec).
+> The **Agents** table below reflects **current** state, not the target — e.g. under the redesign model assignments shift (see the spec).
 
 ## Starting work
 
@@ -70,7 +70,7 @@ Run **`complete-ticket`** — the skill orchestrates every step; **Claude is the
 5. Implement (`haven-implementer`)
 6. Create draft PR (`haven-create-pr`)
 7. Simplify (`/simplify`)
-8. Critique in parallel: `haven-code-quality-critic`, `haven-product-vision-critic`, `haven-safety-critic`
+8. Critique in parallel: `haven-conventions-critic`, `haven-product-vision-critic`, `haven-safety-critic`
 9. Process feedback autonomously; escalate blocks to human
 10. Wrap up (`/wrap-up-pr`)
 11. **Human merges**
@@ -105,7 +105,7 @@ Per-ticket sequence (one job, shared checkout; `.pipeline/` holds run-local arti
 | `haven-implementer` | Executes plan with TDD, commits; stops before PR creation | sonnet |
 | `haven-create-pr` | Creates draft PR, fills template, writes changelog row | sonnet |
 | `haven-plan-critic` | Reviews plan before implementation; posts findings to issue | opus |
-| `haven-code-quality-critic` | Reviews code against RN/Expo/TS patterns and Haven conventions | sonnet |
+| `haven-conventions-critic` | Reviews code against Haven conventions (`docs/decisions.md` patterns + RN/Expo/TS idioms); generic quality is `/code-review` + `/simplify` | sonnet |
 | `haven-product-vision-critic` | Reviews product vision fit, UX, and user story fulfillment | opus |
 | `haven-safety-critic` | Reviews privacy, data safety, tone, workflow artifacts | sonnet |
 | `haven-technical-health` | Scans for tech debt and architecture gaps; run between milestones | sonnet |

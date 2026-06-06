@@ -14,7 +14,7 @@ The orchestrator writes `docs/plans/ticket-in-progress.json` after every step. T
   "step": "planner-complete",
   "critic_findings": {
     "plan": "PASS",
-    "code_quality": null,
+    "conventions": null,
     "product_vision": null,
     "safety": null
   },
