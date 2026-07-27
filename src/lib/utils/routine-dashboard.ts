@@ -24,7 +24,17 @@ export interface GroupedRoutines {
   completed: Routine[];
 }
 
-const BLOCK_ORDER: TimeBlock[] = ['Morning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+// Derived, not restated: timestamp.ts owns the canonical block order, and Night
+// is the one block that is never scheduleable but always sorts last.
+//
+// Resolved lazily and cached rather than computed at module load. Several test
+// suites partially mock timestamp.ts, and a module-level call would run against
+// the mock at import time — in files that never touch a Routine.
+let blockOrderCache: TimeBlock[] | null = null;
+function blockOrder(): TimeBlock[] {
+  blockOrderCache ??= [...getScheduleableBlocks(), 'Night'];
+  return blockOrderCache;
+}
 
 /**
  * Position of a time block in the day. Night sorts last and is only ever the
@@ -32,7 +42,7 @@ const BLOCK_ORDER: TimeBlock[] = ['Morning', 'Midday', 'Afternoon', 'Evening', '
  * reads as already started.
  */
 function blockIndex(block: TimeBlock): number {
-  return BLOCK_ORDER.indexOf(block);
+  return blockOrder().indexOf(block);
 }
 
 /**
@@ -40,7 +50,7 @@ function blockIndex(block: TimeBlock): number {
  */
 function inBlockOrder(blocks: ScheduleableBlock[]): ScheduleableBlock[] {
   const present = new Set(blocks);
-  return getScheduleableBlocks().filter((b) => present.has(b));
+  return blockOrder().filter((b): b is ScheduleableBlock => b !== 'Night' && present.has(b));
 }
 
 /**
@@ -109,9 +119,12 @@ export function formatTimeBlocks(blocks: ScheduleableBlock[]): string {
  * reads "3 of 2". Showing "2 of 2" would quietly hide something the user did.
  */
 export function formatRoutineProgress(
-  progress: RoutineDayProgress,
+  progress: RoutineDayProgress | undefined,
   timeBlocks: ScheduleableBlock[]
 ): string | null {
+  // undefined only on the first render, before the batched read resolves.
+  if (progress === undefined) return null;
+
   const { completionCount, completedBlocks } = progress;
   if (completionCount === 0) return null;
 

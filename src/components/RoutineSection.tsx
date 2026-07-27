@@ -1,7 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import dayjs from 'dayjs';
 import { Surface } from './Surface';
 import { RoutineCard } from './RoutineCard';
 import { useRoutines } from '@/hooks/useRoutines';
@@ -12,11 +11,9 @@ import {
   formatRoutineProgress,
   disclosureLabel,
 } from '@/lib/utils/routine-dashboard';
-import { getTimeBlock, type TimeBlock } from '@/lib/utils/timestamp';
+import { getTimeBlock, todayLocalDate, type TimeBlock } from '@/lib/utils/timestamp';
 import { colors, typeScale, spacing, lineHeight } from '@/constants/theme';
-import type { Routine, RoutineDayProgress } from '@/lib/db/query-types';
-
-const EMPTY_PROGRESS: RoutineDayProgress = { completionCount: 0, completedBlocks: [] };
+import type { Routine } from '@/lib/db/query-types';
 
 /**
  * The Routines section of the Tend dashboard.
@@ -34,20 +31,16 @@ export function RoutineSection() {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
 
-  // Bumped on every screen focus. Two jobs: it recomputes the time block so a
-  // rollover that happened while the app was backgrounded is picked up, and it
-  // forces the completion reads to re-run after the user completes a Routine
-  // and navigates back (the routine IDs are unchanged, so nothing else in
-  // those hooks' dep arrays would move). See useRoutineCompletionStates.
-  const [refreshKey, setRefreshKey] = useState(0);
+  // Recomputed on focus so a block or date rollover that happened while the
+  // app was backgrounded is picked up. The completion reads refresh themselves
+  // on focus — see useRoutineKeyedRead.
   const [nowBlock, setNowBlock] = useState<TimeBlock>(() => getTimeBlock());
-  const [today, setToday] = useState(() => dayjs().format('YYYY-MM-DD'));
+  const [today, setToday] = useState(() => todayLocalDate());
 
   useFocusEffect(
     useCallback(() => {
       setNowBlock(getTimeBlock());
-      setToday(dayjs().format('YYYY-MM-DD'));
-      setRefreshKey((k) => k + 1);
+      setToday(todayLocalDate());
     }, [])
   );
 
@@ -62,7 +55,7 @@ export function RoutineSection() {
   // Defensive: useRoutines already excludes archived Routines by default, but
   // an archived Routine must never surface on the dashboard even if that
   // default changes.
-  const routines = allRoutines.filter((r) => !r.archived);
+  const routines = useMemo(() => allRoutines.filter((r) => !r.archived), [allRoutines]);
 
   // getRoutineCompletionState needs a scheduleable block, and Night is not one.
   // Evening is the nearest preceding window.
@@ -74,17 +67,16 @@ export function RoutineSection() {
   // Fixing it properly means teaching getRoutineCompletionState about Night.
   const stateBlock = nowBlock === 'Night' ? 'Evening' : nowBlock;
 
-  const { states } = useRoutineCompletionStates(routines, stateBlock, today, refreshKey);
-  const { progress } = useRoutineDayProgress(routines, today, refreshKey);
+  const { states } = useRoutineCompletionStates(routines, stateBlock, today);
+  const { progress } = useRoutineDayProgress(routines, today);
 
-  const { dueNow, later, completed } = groupRoutinesForDashboard(
-    routines,
-    states,
-    nowBlock
+  const { dueNow, later, completed } = useMemo(
+    () => groupRoutinesForDashboard(routines, states, nowBlock),
+    [routines, states, nowBlock]
   );
 
   function progressTextFor(routine: Routine): string | null {
-    return formatRoutineProgress(progress[routine.id] ?? EMPTY_PROGRESS, routine.timeBlocks);
+    return formatRoutineProgress(progress[routine.id], routine.timeBlocks);
   }
 
   function openComplete(routine: Routine) {
@@ -122,25 +114,16 @@ export function RoutineSection() {
           </Pressable>
 
           {expanded &&
-            collapsedRoutines.map((routine) => {
-              const progressText = progressTextFor(routine);
-              return (
-                <Pressable
-                  key={routine.id}
-                  onPress={() => openComplete(routine)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Complete ${routine.name}`}
-                  testID={`routine-collapsed-row-${routine.id}`}
-                >
-                  <Surface style={styles.collapsedRow}>
-                    <Text style={styles.collapsedName}>{routine.name}</Text>
-                    {progressText !== null && (
-                      <Text style={styles.collapsedProgress}>{progressText}</Text>
-                    )}
-                  </Surface>
-                </Pressable>
-              );
-            })}
+            collapsedRoutines.map((routine) => (
+              <RoutineCard
+                key={routine.id}
+                routine={routine}
+                progressText={progressTextFor(routine)}
+                onPress={() => openComplete(routine)}
+                variant="compact"
+                testID={`routine-collapsed-row-${routine.id}`}
+              />
+            ))}
         </>
       )}
 
@@ -160,6 +143,12 @@ export function RoutineSection() {
   );
 }
 
+const labelMediumText = {
+  fontFamily: typeScale.labelMedium.family,
+  fontSize: typeScale.labelMedium.size,
+  lineHeight: lineHeight(typeScale.labelMedium),
+};
+
 const styles = StyleSheet.create({
   section: {
     marginBottom: spacing.sectionGap,
@@ -171,31 +160,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.elementGap,
   },
   disclosureLabel: {
-    fontFamily: typeScale.labelMedium.family,
-    fontSize: typeScale.labelMedium.size,
-    lineHeight: lineHeight(typeScale.labelMedium),
+    ...labelMediumText,
     color: colors.chrome,
   },
   disclosureIcon: {
     fontSize: 12,
-    color: colors.chrome,
-  },
-  collapsedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.elementGap,
-  },
-  collapsedName: {
-    fontFamily: typeScale.labelMedium.family,
-    fontSize: typeScale.labelMedium.size,
-    lineHeight: lineHeight(typeScale.labelMedium),
-    color: colors.ink,
-  },
-  collapsedProgress: {
-    fontFamily: typeScale.labelMedium.family,
-    fontSize: typeScale.labelMedium.size,
-    lineHeight: lineHeight(typeScale.labelMedium),
     color: colors.chrome,
   },
   addRow: {
@@ -203,9 +172,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   interactiveLabel: {
-    fontFamily: typeScale.labelMedium.family,
-    fontSize: typeScale.labelMedium.size,
-    lineHeight: lineHeight(typeScale.labelMedium),
+    ...labelMediumText,
     color: colors.interactive,
   },
 });

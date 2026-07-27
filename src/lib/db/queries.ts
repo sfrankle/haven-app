@@ -1157,28 +1157,27 @@ export async function getRoutineDayProgress(
   );
 
   // Seed every requested id so callers never have to handle a missing key.
-  const counts = new Map<number, number>();
-  const blocks = new Map<number, Set<ScheduleableBlock>>();
+  const tally = new Map<number, { count: number; blocks: Set<ScheduleableBlock> }>();
   for (const id of routineIds) {
-    counts.set(id, 0);
-    blocks.set(id, new Set());
+    tally.set(id, { count: 0, blocks: new Set() });
   }
 
   for (const row of rows) {
-    counts.set(row.routine_id, (counts.get(row.routine_id) ?? 0) + 1);
+    const entry = tally.get(row.routine_id);
+    if (entry === undefined) continue;
+    entry.count += 1;
     const block = getTimeBlock(row.created_at);
     if (block !== 'Night') {
-      blocks.get(row.routine_id)?.add(block);
+      entry.blocks.add(block);
     }
   }
 
   const scheduleable = getScheduleableBlocks();
   const result: Record<number, RoutineDayProgress> = {};
-  for (const id of routineIds) {
-    const seen = blocks.get(id) ?? new Set<ScheduleableBlock>();
+  for (const [id, { count, blocks }] of tally) {
     result[id] = {
-      completionCount: counts.get(id) ?? 0,
-      completedBlocks: scheduleable.filter((b) => seen.has(b)),
+      completionCount: count,
+      completedBlocks: scheduleable.filter((b) => blocks.has(b)),
     };
   }
 

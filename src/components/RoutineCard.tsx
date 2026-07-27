@@ -10,14 +10,27 @@ interface RoutineCardProps {
   /** Today's progress line, or null when there is nothing to report. */
   progressText: string | null;
   onPress: () => void;
+  /**
+   * "full" is a due-now card: name, configured blocks, progress.
+   * "compact" is a row inside the disclosure: name and progress on one line.
+   */
+  variant?: 'full' | 'compact';
   testID?: string;
 }
 
 /**
- * A due-now Routine on the Tend dashboard. Presentational only — no hooks, no
+ * A Routine on the Tend dashboard. Presentational only — no hooks, no
  * database. Completion reads as plain text: no ticks, no bars, no percentages.
  */
-export function RoutineCard({ routine, progressText, onPress, testID }: RoutineCardProps) {
+export function RoutineCard({
+  routine,
+  progressText,
+  onPress,
+  variant = 'full',
+  testID,
+}: RoutineCardProps) {
+  const compact = variant === 'compact';
+
   return (
     <Pressable
       onPress={onPress}
@@ -25,9 +38,9 @@ export function RoutineCard({ routine, progressText, onPress, testID }: RoutineC
       accessibilityLabel={`Complete ${routine.name}`}
       testID={testID}
     >
-      <Surface style={styles.card}>
-        <Text style={styles.name}>{routine.name}</Text>
-        <Text style={styles.meta}>{formatTimeBlocks(routine.timeBlocks)}</Text>
+      <Surface style={compact ? styles.compactCard : styles.card}>
+        <Text style={compact ? styles.compactName : styles.name}>{routine.name}</Text>
+        {!compact && <Text style={styles.meta}>{formatTimeBlocks(routine.timeBlocks)}</Text>}
         {progressText !== null && <Text style={styles.meta}>{progressText}</Text>}
       </Surface>
     </Pressable>
@@ -38,11 +51,23 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: spacing.elementGap,
   },
+  compactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.elementGap,
+  },
   name: {
     fontFamily: typeScale.titleMedium.family,
     fontWeight: typeScale.titleMedium.weight,
     fontSize: typeScale.titleMedium.size,
     lineHeight: lineHeight(typeScale.titleMedium),
+    color: colors.ink,
+  },
+  compactName: {
+    fontFamily: typeScale.labelMedium.family,
+    fontSize: typeScale.labelMedium.size,
+    lineHeight: lineHeight(typeScale.labelMedium),
     color: colors.ink,
   },
   meta: {

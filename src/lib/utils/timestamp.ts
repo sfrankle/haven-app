@@ -16,6 +16,14 @@ export function nowLocalIso(): string {
 }
 
 /**
+ * Today's local calendar date as "YYYY-MM-DD" — the form stored dates are
+ * compared against with substr(created_at, 1, 10).
+ */
+export function todayLocalDate(): string {
+  return nowLocalIso().slice(0, 10);
+}
+
+/**
  * Formats the time portion of a stored ISO 8601 offset string for display,
  * e.g. "9:00 AM". Reads the wall-clock hours and minutes directly from the
  * string — does not re-interpret via the current device timezone.
