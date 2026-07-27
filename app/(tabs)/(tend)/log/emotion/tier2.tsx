@@ -4,12 +4,11 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Screen, SplitPane, SplitPaneRow, Chip, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getTier1EmotionLabels, getLabelsByParent, saveEntry } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colorForEmotionLabel } from '@/constants/chipColors';
 import { spacing } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
 export default function LogEmotionScreen2() {
@@ -37,7 +36,7 @@ export default function LogEmotionScreen2() {
   useEffect(() => {
     if (!emotionEntryType) return;
     void (async () => {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       const labels = await getTier1EmotionLabels(db, emotionEntryType.id);
       setTier1Labels(labels);
     })();
@@ -47,7 +46,7 @@ export default function LogEmotionScreen2() {
   useEffect(() => {
     if (!activeTier1Id) return;
     void (async () => {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       const labels = await getLabelsByParent(db, activeTier1Id);
       setTier2Labels(labels);
     })();
@@ -78,7 +77,7 @@ export default function LogEmotionScreen2() {
 
   async function handleSave(extras: { notes?: string }) {
     if (!emotionEntryType || !chipLabel) return;
-    const db = (await getDb()) as unknown as Db;
+    const db = await getTypedDb();
     await saveEntry(db, {
       entryTypeId: emotionEntryType.id,
       timestamp: nowLocalIso(),

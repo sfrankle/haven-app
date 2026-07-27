@@ -12,10 +12,9 @@ import { useRouter } from 'expo-router';
 import { Screen, SearchBar, ChipTray } from '@/components';
 import { Button } from '@/components/Button';
 import { createFocus, searchLabelsAcross } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
 const SUGGESTION_LIMIT = 5;
@@ -37,7 +36,7 @@ export default function CreateFocusScreen() {
       return;
     }
     const seq = ++fetchSeq.current;
-    const db = (await getDb()) as unknown as Db;
+    const db = await getTypedDb();
     const labels = await searchLabelsAcross(db, search, SUGGESTION_LIMIT);
     if (seq === fetchSeq.current) {
       setRawSuggestions(labels);
@@ -76,7 +75,7 @@ export default function CreateFocusScreen() {
     setSaving(true);
     setError(null);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       await createFocus(db, {
         name: trimmedName,
         labelIds: chips.map((c) => c.id),

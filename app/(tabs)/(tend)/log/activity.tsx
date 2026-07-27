@@ -10,12 +10,11 @@ import {
 import { Screen, SearchBar, ChipTray, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getLabels, saveEntry, createLabel } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { colorForActivityLabel } from '@/constants/chipColors';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
 const SUGGESTION_LIMIT = 5;
@@ -30,7 +29,7 @@ export default function LogActivityScreen() {
 
   const fetchSuggestions = useCallback(async () => {
     if (!activityEntryType) return;
-    const db = (await getDb()) as unknown as Db;
+    const db = await getTypedDb();
     const options = search.length > 0
       ? { search, limit: SUGGESTION_LIMIT }
       : { limit: SUGGESTION_LIMIT };
@@ -67,7 +66,7 @@ export default function LogActivityScreen() {
 
   async function handleAddCustom() {
     if (!activityEntryType || search.trim() === '') return;
-    const db = (await getDb()) as unknown as Db;
+    const db = await getTypedDb();
     const label = await createLabel(db, activityEntryType.id, search.trim());
     setChips((prev) => [...prev, label]);
     setSearch('');
@@ -75,7 +74,7 @@ export default function LogActivityScreen() {
 
   async function handleSave(extras: { notes?: string; focusId?: number }) {
     if (!activityEntryType || chips.length === 0) return;
-    const db = (await getDb()) as unknown as Db;
+    const db = await getTypedDb();
     await saveEntry(db, {
       entryTypeId: activityEntryType.id,
       timestamp: nowLocalIso(),

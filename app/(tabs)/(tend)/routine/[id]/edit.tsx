@@ -22,12 +22,11 @@ import {
   setRoutineArchived,
   getEntryTypes,
 } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { getScheduleableBlocks } from '@/lib/utils/timestamp';
 import { colors, spacing } from '@/constants/theme';
 import { logScreenStyles, routineStyles } from '@/constants/sharedStyles';
 import { useRoutineForm, draftFromRoutineItem, toRoutineItemInputs } from '@/hooks/useRoutineForm';
-import type { Db } from '@/lib/db/queries';
 import type { EntryType } from '@/lib/db/query-types';
 
 const SCHEDULEABLE_BLOCKS = getScheduleableBlocks();
@@ -50,7 +49,7 @@ export default function EditRoutineScreen() {
     let isMounted = true;
     async function load() {
       try {
-        const db = (await getDb()) as unknown as Db;
+        const db = await getTypedDb();
         const [routines, routineItems, types] = await Promise.all([
           getRoutines(db, { includeArchived: true }),
           getRoutineItems(db, routineId),
@@ -84,7 +83,7 @@ export default function EditRoutineScreen() {
     setSaving(true);
     setError(null);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       await updateRoutine(db, routineId, {
         name: form.name.trim(),
         timeBlocks: Array.from(form.selectedBlocks),
@@ -104,7 +103,7 @@ export default function EditRoutineScreen() {
     setArchiving(true);
     setArchiveError(null);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       await setRoutineArchived(db, routineId, true);
       router.back();
     } catch {

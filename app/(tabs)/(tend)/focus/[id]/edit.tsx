@@ -19,10 +19,9 @@ import {
   setFocusArchived,
   searchLabelsAcross,
 } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
 const SUGGESTION_LIMIT = 5;
@@ -48,7 +47,7 @@ export default function EditFocusScreen() {
     let isMounted = true;
     async function load() {
       try {
-        const db = (await getDb()) as unknown as Db;
+        const db = await getTypedDb();
         const [focuses, items] = await Promise.all([
           getFocuses(db, { includeArchived: true }),
           getFocusItems(db, focusId),
@@ -100,7 +99,7 @@ export default function EditFocusScreen() {
       return;
     }
     const seq = ++fetchSeq.current;
-    const db = (await getDb()) as unknown as Db;
+    const db = await getTypedDb();
     const labels = await searchLabelsAcross(db, search, SUGGESTION_LIMIT);
     if (seq === fetchSeq.current) {
       setRawSuggestions(labels);
@@ -139,7 +138,7 @@ export default function EditFocusScreen() {
     setSaving(true);
     setError(null);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       await updateFocus(db, focusId, {
         name: trimmedName,
         labelIds: chips.map((c) => c.id),
@@ -156,7 +155,7 @@ export default function EditFocusScreen() {
     setArchiving(true);
     setArchiveError(null);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       await setFocusArchived(db, focusId, true);
       setArchiving(false);
       router.back();

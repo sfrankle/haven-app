@@ -4,9 +4,8 @@ import { useRouter } from 'expo-router';
 import { Screen, SplitPaneRow } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { getTier1EmotionLabels } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
-import type { Db } from '@/lib/db/queries';
 import type { Label } from '@/lib/db/query-types';
 
 export default function LogEmotionScreen1() {
@@ -19,7 +18,7 @@ export default function LogEmotionScreen1() {
   useEffect(() => {
     if (!emotionEntryType) return;
     void (async () => {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       const labels = await getTier1EmotionLabels(db, emotionEntryType.id);
       setTier1Labels(labels);
     })();

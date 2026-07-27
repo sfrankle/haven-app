@@ -13,8 +13,8 @@ import type { TraceSection } from '@/lib/utils/traceUtils';
 import { messages } from '@/constants/messages';
 import { useFocuses } from '@/hooks/useFocuses';
 import { FocusPill } from '@/components/FocusPill';
-import { getDb } from '@/lib/db/database';
-import { getContextEntries, type Db } from '@/lib/db/queries';
+import { getTypedDb } from '@/lib/db/typed-db';
+import { getContextEntries } from '@/lib/db/queries';
 import dayjs from 'dayjs';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -250,7 +250,7 @@ export default function TraceScreen() {
     // populate the context entries when the fetch resolves.
     setContextState({ focalEntry: entry, entries: [] });
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       const afterIso = dayjs(entry.timestamp).subtract(120, 'minute').format('YYYY-MM-DDTHH:mm:ssZ');
       const beforeIso = dayjs(entry.timestamp).add(120, 'minute').format('YYYY-MM-DDTHH:mm:ssZ');
       const entries = await getContextEntries(db, {
