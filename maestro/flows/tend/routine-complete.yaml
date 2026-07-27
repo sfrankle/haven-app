@@ -1,60 +1,55 @@
 # Routine complete E2E flow
 #
-# TODO: The navigation entry point for the Complete Routine screen (a "Complete"
-# button on each routine card in the Tend tab) is wired in a separate issue.
-# Until that work lands, this flow cannot be launched from a natural in-app tap.
-# The assertions below describe the intended behavior and will be activated once
-# the calling screens exist.
+# Exercises the Complete Routine screen reached by tapping a Routine card on the
+# Tend dashboard. The Routine is created explicitly by the shared subflow rather
+# than assuming one already exists, so this flow is self-contained.
 #
-# Related flow: maestro/flows/tend/routine-create-edit.yaml
-#
-# To validate in the meantime you can deep-link directly to the complete screen:
-#   appId: com.haven.app
-#   launchArguments: { initialUrl: "haven://routine/1/complete" }
-
+# Related flows: maestro/flows/tend/routine-create-edit.yaml (create and edit)
+#                maestro/flows/tend/routine-dashboard.yaml   (section states)
 appId: com.haven.app
-
 ---
+- launchApp:
+    clearState: true
 
-# STUB — update navigation steps once Tend routine card "Complete" button is wired
-
-- launchApp
-
-# Navigate to Tend tab (home)
 - tapOn:
     id: "tend-tab"
 
-# --- Complete a Routine ---
-# TODO: tap the "Complete" button on a routine card once it exists on Tend
-# - tapOn:
-#     id: "routine-1-complete-button"
+# --- Create the Routine to complete (first routine after clearState, so id 1) ---
+# Morning block keeps this time-of-day stable — the card is due-now from 05:00
+# onwards. See the note in the shared subflow.
+- runFlow: ../../subflows/create-morning-routine.yaml
 
-# Verify items are loaded and checked by default
-# - assertVisible:
-#     id: "routine-complete-item-0-checkbox"
-# - assertTrue:
-#     id: "routine-complete-item-0-checkbox"
-#     accessibilityState: { checked: true }
+# --- Open the complete flow from the Routine card ---
+- tapOn:
+    id: "routine-card-1"
 
-# Uncheck an item (it will be skipped — no entry created)
-# - tapOn:
-#     id: "routine-complete-item-1-checkbox"
-
-# Expand instruction note on an item (if present)
-# - tapOn:
-#     id: "routine-complete-item-0-expand-button"
-# - assertVisible:
-#     id: "routine-complete-item-0-instruction-note"
+# Items load checked by default
+- assertVisible:
+    id: "routine-complete-item-0-checkbox"
 
 # Add shared notes
-# - tapOn:
-#     id: "routine-complete-notes-input"
-# - inputText: "Felt great today"
+- tapOn:
+    id: "routine-complete-notes-input"
+- inputText: "Felt steady today"
 
 # Submit
-# - tapOn:
-#     id: "routine-complete-submit-button"
+- tapOn:
+    id: "routine-complete-submit-button"
+- assertVisible: "Saved."
 
-# Verify navigation back to previous screen
-# - assertNotVisible:
-#     id: "routine-complete-submit-button"
+# Returns to Tend, where the completed Routine has moved behind the disclosure row
+- assertVisible:
+    id: "routine-section-disclosure"
+- assertNotVisible:
+    id: "routine-complete-submit-button"
+
+# --- Unchecking an item skips it: complete a second time with the item off ---
+- tapOn:
+    id: "routine-section-disclosure"
+- tapOn:
+    id: "routine-collapsed-row-1"
+- tapOn:
+    id: "routine-complete-item-0-checkbox"
+- tapOn:
+    id: "routine-complete-submit-button"
+- assertVisible: "Saved."

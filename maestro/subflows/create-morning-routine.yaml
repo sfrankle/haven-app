@@ -1,0 +1,41 @@
+# Shared subflow: creates a Morning-block Routine named "Morning Flow" with a
+# single Food item, starting from the Tend dashboard.
+#
+# Time-of-day stability: the Routine is deliberately given the *Morning* block.
+# The dashboard groups a due Routine as "due now" once any configured block has
+# started, and Morning is the first block of the day — so from 05:00 onwards it
+# is always due-now, and outside that window it is still reachable via the
+# "Later" disclosure row. This is why callers can assert on it at any hour. Do
+# not change the block to a later one without revisiting those assertions.
+#
+# Callers: maestro/flows/tend/routine-dashboard.yaml
+#          maestro/flows/tend/routine-complete.yaml
+appId: com.haven.app
+---
+# Assumes the Tend dashboard is on screen.
+- tapOn:
+    id: "routine-section-add-button"
+
+- assertVisible:
+    id: "routine-name-input"
+- tapOn:
+    id: "routine-name-input"
+- inputText: "Morning Flow"
+
+- tapOn:
+    id: "routine-time-block-Morning"
+
+- tapOn:
+    id: "routine-add-item-button"
+- tapOn:
+    id: "routine-item-0-name-input"
+- inputText: "Breakfast"
+- tapOn:
+    id: "routine-item-0-entry-type-1"   # Food
+
+- tapOn:
+    id: "routine-save-button"
+
+# Back on the Tend dashboard.
+- assertVisible:
+    id: "routine-section-add-button"
