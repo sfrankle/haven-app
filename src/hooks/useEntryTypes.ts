@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getDb } from '@/lib/db/database';
-import { getEntryTypes, type Db } from '@/lib/db/queries';
+import { getTypedDb } from '@/lib/db/typed-db';
+import { getEntryTypes } from '@/lib/db/queries';
 import type { EntryType } from '@/lib/db/query-types';
 
 export interface UseEntryTypesResult {
@@ -19,7 +19,7 @@ export function useEntryTypes(): UseEntryTypesResult {
 
     async function load() {
       try {
-        const db = await getDb() as unknown as Db;
+        const db = await getTypedDb();
         const types = await getEntryTypes(db);
         if (!cancelled) {
           setEntryTypes(types);

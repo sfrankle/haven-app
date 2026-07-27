@@ -5,8 +5,8 @@
 
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { getDb } from '@/lib/db/database';
-import { getFocuses, type Db } from '@/lib/db/queries';
+import { getTypedDb } from '@/lib/db/typed-db';
+import { getFocuses } from '@/lib/db/queries';
 import type { Focus } from '@/lib/db/query-types';
 
 export interface UseFocusesResult {
@@ -26,7 +26,7 @@ export function useFocuses(options?: { includeArchived?: boolean }): UseFocusesR
 
       async function load() {
         try {
-          const db = (await getDb()) as unknown as Db;
+          const db = await getTypedDb();
           const result = await getFocuses(db, options);
           if (!cancelled) {
             setFocuses(result);

@@ -15,8 +15,8 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { getDb } from '@/lib/db/database';
-import { getRoutineCompletionState, type Db } from '@/lib/db/queries';
+import { getTypedDb } from '@/lib/db/typed-db';
+import { getRoutineCompletionState } from '@/lib/db/queries';
 import type { Routine, RoutineCompletionState } from '@/lib/db/query-types';
 import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 
@@ -63,7 +63,7 @@ export function useRoutineCompletionStates(
 
     async function load() {
       try {
-        const db = (await getDb()) as unknown as Db;
+        const db = await getTypedDb();
         const entries = await Promise.all(
           current.map(async (r) => {
             const state = await getRoutineCompletionState(db, r.id, currentTimeBlock, today);
