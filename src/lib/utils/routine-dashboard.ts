@@ -117,6 +117,11 @@ export function formatTimeBlocks(blocks: ScheduleableBlock[]): string {
  * The count is the true number of completions and is never clamped to the
  * configured block count: a Routine completed three times against two blocks
  * reads "3 of 2". Showing "2 of 2" would quietly hide something the user did.
+ *
+ * An over-count is disclosure-only, never on a due-now card: getRoutineCompletionState
+ * returns fully_done once completions >= configured blocks, so anything that
+ * could read "3 of 2" has already been grouped as completed. Pinned by
+ * "three completions against two blocks" in queries-routines.test.ts.
  */
 export function formatRoutineProgress(
   progress: RoutineDayProgress | undefined,

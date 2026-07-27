@@ -67,7 +67,11 @@ export function RoutineSection() {
   // Fixing it properly means teaching getRoutineCompletionState about Night.
   const stateBlock = nowBlock === 'Night' ? 'Evening' : nowBlock;
 
-  const { states } = useRoutineCompletionStates(routines, stateBlock, today);
+  const { states, loading: statesLoading } = useRoutineCompletionStates(
+    routines,
+    stateBlock,
+    today
+  );
   const { progress } = useRoutineDayProgress(routines, today);
 
   const { dueNow, later, completed } = useMemo(
@@ -99,7 +103,11 @@ export function RoutineSection() {
           />
         ))}
 
-      {!loading && label !== null && (
+      {/* Gated on the state read too: without a state every Routine parks in
+          "later", so an unstated section would flash a Later row that is
+          simply wrong. Costs the cards nothing — dueNow is empty until this
+          read resolves either way. */}
+      {!loading && !statesLoading && label !== null && (
         <>
           <Pressable
             onPress={() => setExpanded((e) => !e)}

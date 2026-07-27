@@ -488,6 +488,21 @@ describe('routine query layer', () => {
       expect(state).toBe('fully_done');
     });
 
+    test('three completions against two blocks — still fully_done, never due', async () => {
+      // Pins the invariant that keeps an over-count off a due-now card: once
+      // completions exceed the configured blocks the Routine is fully_done, so
+      // an unclamped "3 of 2" can only ever appear inside the collapsed
+      // disclosure, never on a card presented as something to do now.
+      // Relaxing the >= in getRoutineCompletionState to > would break this
+      // silently.
+      const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
+      insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
+      insertCompletion(id, `${TEST_TODAY}T12:30:00-07:00`);
+      insertCompletion(id, `${TEST_TODAY}T15:10:00-07:00`);
+      const state = await getRoutineCompletionState(db, id, 'Evening', TEST_TODAY);
+      expect(state).toBe('fully_done');
+    });
+
     test('one completion at 08:55, checked at 20:00 (Evening) — due', async () => {
       // Example 4 from issue #125 AC:
       // Routine has Morning + Afternoon. One completion at 08:55.
