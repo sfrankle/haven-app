@@ -9,8 +9,8 @@
  * No screen should call db.getAllAsync / db.runAsync / db.getFirstAsync directly.
  */
 
-import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem, Routine, RoutineItem, RoutineItemInput, RoutineCompletionState } from './query-types';
-import { nowLocalIso } from '@/lib/utils/timestamp';
+import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem, Routine, RoutineItem, RoutineItemInput, RoutineCompletionState, RoutineDayProgress } from './query-types';
+import { nowLocalIso, getTimeBlock, getScheduleableBlocks } from '@/lib/utils/timestamp';
 import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 
 // ─── minimal interface ────────────────────────────────────────────────────────
@@ -1126,6 +1126,63 @@ export async function getRoutineCompletionState(
   if ((blockCompletion?.cnt ?? 0) > 0) return 'completed_this_block';
 
   return 'due';
+}
+
+/**
+ * Batched, display-only read of today's completions for a set of routines.
+ *
+ * Answers "what do we print on the card" — the completion count and which
+ * blocks are already done. getRoutineCompletionState answers the separate
+ * question of which dashboard bucket a routine belongs in; the two are kept
+ * apart so this ticket does not reshape that tested API.
+ *
+ * Night completions are counted in completionCount but excluded from
+ * completedBlocks, because Night is not a scheduleable block.
+ *
+ * Every requested id appears in the returned map, with a zeroed entry when the
+ * routine has no completions today.
+ */
+export async function getRoutineDayProgress(
+  db: Db,
+  routineIds: number[],
+  today: string
+): Promise<Record<number, RoutineDayProgress>> {
+  if (routineIds.length === 0) return {};
+
+  const placeholders = routineIds.map(() => '?').join(',');
+  const rows = await db.getAllAsync<{ routine_id: number; created_at: string }>(
+    `SELECT routine_id, created_at FROM routine_completion
+     WHERE routine_id IN (${placeholders}) AND substr(created_at, 1, 10) = ?`,
+    [...routineIds, today]
+  );
+
+  // Seed every requested id so callers never have to handle a missing key.
+  const counts = new Map<number, number>();
+  const blocks = new Map<number, Set<ScheduleableBlock>>();
+  for (const id of routineIds) {
+    counts.set(id, 0);
+    blocks.set(id, new Set());
+  }
+
+  for (const row of rows) {
+    counts.set(row.routine_id, (counts.get(row.routine_id) ?? 0) + 1);
+    const block = getTimeBlock(row.created_at);
+    if (block !== 'Night') {
+      blocks.get(row.routine_id)?.add(block);
+    }
+  }
+
+  const scheduleable = getScheduleableBlocks();
+  const result: Record<number, RoutineDayProgress> = {};
+  for (const id of routineIds) {
+    const seen = blocks.get(id) ?? new Set<ScheduleableBlock>();
+    result[id] = {
+      completionCount: counts.get(id) ?? 0,
+      completedBlocks: scheduleable.filter((b) => seen.has(b)),
+    };
+  }
+
+  return result;
 }
 
 /**

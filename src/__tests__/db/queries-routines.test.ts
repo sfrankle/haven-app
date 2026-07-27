@@ -14,6 +14,7 @@ import {
   setRoutineArchived,
   getRoutineItems,
   getRoutineCompletionState,
+  getRoutineDayProgress,
   createRoutineItems,
   replaceRoutineItems,
   completeRoutine,
@@ -513,6 +514,109 @@ describe('routine query layer', () => {
       // Should be 'due' for Morning (hour 12 is NOT in Morning window [5,12])
       const morningState = await getRoutineCompletionState(db, id, 'Morning', TEST_TODAY);
       expect(morningState).toBe('due');
+    });
+  });
+
+  // ── getRoutineDayProgress ───────────────────────────────────────────────────
+
+  describe('getRoutineDayProgress', () => {
+    function insertRoutine(): number {
+      const now = `${TEST_TODAY}T09:00:00-07:00`;
+      const result = raw
+        .prepare(
+          `INSERT INTO routine (name, sort_order, archived, created_at, updated_at) VALUES (?, 0, 0, ?, ?)`
+        )
+        .run(`ProgressTest-${Math.random()}`, now, now);
+      return Number(result.lastInsertRowid);
+    }
+
+    function insertCompletion(routineId: number, createdAt: string): void {
+      raw
+        .prepare(`INSERT INTO routine_completion (routine_id, created_at) VALUES (?, ?)`)
+        .run(routineId, createdAt);
+    }
+
+    afterEach(() => {
+      raw.prepare(`DELETE FROM routine WHERE name LIKE 'ProgressTest-%'`).run();
+    });
+
+    test('returns an entry with zero progress for a routine with no completions', async () => {
+      const id = insertRoutine();
+      const progress = await getRoutineDayProgress(db, [id], TEST_TODAY);
+      expect(progress[id]).toEqual({ completionCount: 0, completedBlocks: [] });
+    });
+
+    test('counts completions and reports the blocks they landed in', async () => {
+      const id = insertRoutine();
+      insertCompletion(id, `${TEST_TODAY}T07:00:00-07:00`);
+      insertCompletion(id, `${TEST_TODAY}T15:00:00-07:00`);
+      const progress = await getRoutineDayProgress(db, [id], TEST_TODAY);
+      expect(progress[id]).toEqual({
+        completionCount: 2,
+        completedBlocks: ['Morning', 'Afternoon'],
+      });
+    });
+
+    test('deduplicates blocks when two completions land in the same block', async () => {
+      const id = insertRoutine();
+      insertCompletion(id, `${TEST_TODAY}T06:00:00-07:00`);
+      insertCompletion(id, `${TEST_TODAY}T09:30:00-07:00`);
+      const progress = await getRoutineDayProgress(db, [id], TEST_TODAY);
+      expect(progress[id]).toEqual({
+        completionCount: 2,
+        completedBlocks: ['Morning'],
+      });
+    });
+
+    test('counts a Night completion but excludes Night from completedBlocks', async () => {
+      const id = insertRoutine();
+      insertCompletion(id, `${TEST_TODAY}T23:00:00-07:00`);
+      const progress = await getRoutineDayProgress(db, [id], TEST_TODAY);
+      expect(progress[id]).toEqual({ completionCount: 1, completedBlocks: [] });
+    });
+
+    test("excludes completions dated other than the requested day", async () => {
+      const id = insertRoutine();
+      insertCompletion(id, `2026-05-21T09:00:00-07:00`);
+      const progress = await getRoutineDayProgress(db, [id], TEST_TODAY);
+      expect(progress[id]).toEqual({ completionCount: 0, completedBlocks: [] });
+    });
+
+    test('reports each routine separately when several ids are requested', async () => {
+      const a = insertRoutine();
+      const b = insertRoutine();
+      const c = insertRoutine();
+      insertCompletion(a, `${TEST_TODAY}T07:00:00-07:00`);
+      insertCompletion(b, `${TEST_TODAY}T13:00:00-07:00`);
+      insertCompletion(b, `${TEST_TODAY}T19:00:00-07:00`);
+
+      const progress = await getRoutineDayProgress(db, [a, b, c], TEST_TODAY);
+      expect(progress[a]).toEqual({ completionCount: 1, completedBlocks: ['Morning'] });
+      expect(progress[b]).toEqual({
+        completionCount: 2,
+        completedBlocks: ['Midday', 'Evening'],
+      });
+      expect(progress[c]).toEqual({ completionCount: 0, completedBlocks: [] });
+    });
+
+    test('returns an empty map for an empty id list', async () => {
+      const progress = await getRoutineDayProgress(db, [], TEST_TODAY);
+      expect(progress).toEqual({});
+    });
+
+    test('returns completedBlocks in canonical day order regardless of insertion order', async () => {
+      const id = insertRoutine();
+      insertCompletion(id, `${TEST_TODAY}T19:00:00-07:00`); // Evening
+      insertCompletion(id, `${TEST_TODAY}T07:00:00-07:00`); // Morning
+      insertCompletion(id, `${TEST_TODAY}T15:00:00-07:00`); // Afternoon
+      insertCompletion(id, `${TEST_TODAY}T13:00:00-07:00`); // Midday
+      const progress = await getRoutineDayProgress(db, [id], TEST_TODAY);
+      expect(progress[id].completedBlocks).toEqual([
+        'Morning',
+        'Midday',
+        'Afternoon',
+        'Evening',
+      ]);
     });
   });
 
