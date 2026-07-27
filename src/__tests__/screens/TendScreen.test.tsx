@@ -7,7 +7,28 @@ import TendScreen from '../../../app/(tabs)/(tend)/index';
 // Mock expo-router — must be declared before module is evaluated.
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
-  useFocusEffect: (cb: () => void) => { cb(); },
+  // Faithful to the real hook: once per focus, not once per render. Calling it
+  // on every render loops forever for any consumer whose focus callback sets
+  // state (RoutineSection bumps a refresh counter on focus).
+  useFocusEffect: (cb: () => void) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const react = require('react') as typeof import('react');
+    react.useEffect(cb, [cb]);
+  },
+}));
+
+// RoutineSection is mounted in the Tend header. Its hooks are stubbed here so
+// this suite stays focused on the entry type grid and never touches a real DB.
+jest.mock('@/hooks/useRoutines', () => ({
+  useRoutines: () => ({ routines: [], loading: false, error: null }),
+}));
+
+jest.mock('@/hooks/useRoutineCompletionStates', () => ({
+  useRoutineCompletionStates: () => ({ states: {}, loading: false, error: null }),
+}));
+
+jest.mock('@/hooks/useRoutineDayProgress', () => ({
+  useRoutineDayProgress: () => ({ progress: {}, loading: false, error: null }),
 }));
 
 // Mock the hooks so we control data without a real DB.

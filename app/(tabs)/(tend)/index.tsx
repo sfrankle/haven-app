@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { FlatList, Pressable, ScrollView, Text, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import dayjs from 'dayjs';
-import { Screen, EntryTypeTile, FocusPill } from '@/components';
+import { Screen, EntryTypeTile, FocusPill, RoutineSection } from '@/components';
 import { useEntryTypes, useFocuses } from '@/hooks';
 import { colors, typeScale, spacing, lineHeight } from '@/constants/theme';
 import type { EntryType } from '@/lib/db/query-types';
@@ -54,6 +54,7 @@ function ListHeader() {
   return (
     <>
       <DateHeader />
+      <RoutineSection />
       <FocusRow />
     </>
   );
