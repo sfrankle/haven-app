@@ -1,8 +1,20 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { renderHook, waitFor, act } from '@testing-library/react-native';
 import { useRoutineDayProgress } from '../useRoutineDayProgress';
 import type { Routine } from '@/lib/db/query-types';
 import { getDb } from '@/lib/db/database';
 import { getRoutineDayProgress } from '@/lib/db/queries';
+
+// Captures the hook's focus callback so a test can fire a second focus. The
+// mount render fires it once, mirroring real navigation focus.
+let mockFocusCallback: (() => void) | null = null;
+jest.mock('expo-router', () => ({
+  useFocusEffect: (cb: () => void) => {
+    mockFocusCallback = cb;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const react = require('react');
+    react.useEffect(cb, [cb]);
+  },
+}));
 
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn(),
@@ -84,16 +96,16 @@ describe('useRoutineDayProgress', () => {
     expect(result.current.progress).toEqual({});
   });
 
-  it('re-runs when refreshKey changes even though the routine ids are identical', async () => {
-    const { result, rerender } = renderHook(
-      ({ key }: { key: number }) => useRoutineDayProgress(FIXTURE_ROUTINES, TODAY, key),
-      { initialProps: { key: 0 } }
-    );
+  it('re-runs on screen focus even though the routine ids are identical', async () => {
+    // Guards the staleness trap: after completing a Routine and navigating
+    // back, the routine ids and today string are unchanged, so nothing in the
+    // dep array moves. Without the focus refresh the card would stay stale.
+    const { result } = renderHook(() => useRoutineDayProgress(FIXTURE_ROUTINES, TODAY));
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(mockGetProgress).toHaveBeenCalledTimes(1);
 
-    rerender({ key: 1 });
+    act(() => mockFocusCallback?.());
 
     await waitFor(() => expect(mockGetProgress).toHaveBeenCalledTimes(2));
   });
