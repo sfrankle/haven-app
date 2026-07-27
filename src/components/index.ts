@@ -17,3 +17,5 @@ export { FocusPill } from './FocusPill';
 export { ChipTray } from './ChipTray';
 export { FocusDropdown } from './FocusDropdown';
 export { RoutineItemEditor } from './RoutineItemEditor';
+export { RoutineCard } from './RoutineCard';
+export { RoutineSection } from './RoutineSection';
