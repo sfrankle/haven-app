@@ -125,4 +125,28 @@ describe('useRoutineCompletionStates', () => {
 
     expect(mockGetCompletionState.mock.calls.length).toBeGreaterThan(callCountAfterFirst);
   });
+
+  it('re-fetches when refreshKey changes even though the routine ids are identical', async () => {
+    // Guards the staleness trap: after completing a Routine and navigating
+    // back, the routine IDs, time block, and today string are all unchanged,
+    // so without refreshKey the completed card would still read as due.
+    mockGetCompletionState.mockResolvedValue('due');
+
+    const { result, rerender } = renderHook(
+      ({ key }: { key: number }) =>
+        useRoutineCompletionStates(FIXTURE_ROUTINES, 'Morning', TODAY, key),
+      { initialProps: { key: 0 } }
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    const callsAfterFirst = mockGetCompletionState.mock.calls.length;
+
+    mockGetCompletionState.mockResolvedValue('fully_done');
+    rerender({ key: 1 });
+
+    await waitFor(() =>
+      expect(mockGetCompletionState.mock.calls.length).toBeGreaterThan(callsAfterFirst)
+    );
+    await waitFor(() => expect(result.current.states[1]).toBe('fully_done'));
+  });
 });

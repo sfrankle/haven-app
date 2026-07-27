@@ -12,6 +12,14 @@
  * produced each time. Instead, we use a stable string derived from the routine
  * IDs (`routineIds`) as the dep. This is the canonical approach for arrays
  * in effect deps throughout Haven.
+ *
+ * The optional `refreshKey` exists because that stability is, on its own, too
+ * good. After a user completes a Routine and navigates back, useRoutines
+ * reloads and hands over a new array with the *same* routine IDs, while the
+ * time block and today string are also unchanged — so nothing in the dep array
+ * moves and the completed Routine would keep rendering as due. Callers bump
+ * refreshKey (typically on screen focus) to force a re-read when the underlying
+ * completion rows have changed but the inputs have not.
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -31,7 +39,8 @@ export interface UseRoutineCompletionStatesResult {
 export function useRoutineCompletionStates(
   routines: Routine[],
   currentTimeBlock: ScheduleableBlock,
-  today: string
+  today: string,
+  refreshKey?: number
 ): UseRoutineCompletionStatesResult {
   const [states, setStates] = useState<RoutineCompletionStateMap>({});
   const [loading, setLoading] = useState(true);
@@ -91,7 +100,7 @@ export function useRoutineCompletionStates(
     return () => {
       cancelled = true;
     };
-  }, [routineIds, currentTimeBlock, today]);
+  }, [routineIds, currentTimeBlock, today, refreshKey]);
 
   return { states, loading, error };
 }
