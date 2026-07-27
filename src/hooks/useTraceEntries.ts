@@ -5,8 +5,8 @@
 
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { getDb } from '@/lib/db/database';
-import { getEntriesForTrace, type Db } from '@/lib/db/queries';
+import { getTypedDb } from '@/lib/db/typed-db';
+import { getEntriesForTrace } from '@/lib/db/queries';
 import { groupEntriesByDate } from '@/lib/utils/traceUtils';
 import type { TraceSection } from '@/lib/utils/traceUtils';
 
@@ -27,7 +27,7 @@ export function useTraceEntries(focusId?: number): UseTraceEntriesResult {
 
       async function load() {
         try {
-          const db = (await getDb()) as unknown as Db;
+          const db = await getTypedDb();
           const entries = await getEntriesForTrace(db, { focusId });
           if (!cancelled) {
             setSections(groupEntriesByDate(entries));

@@ -14,12 +14,11 @@ import { Button } from '@/components/Button';
 import { FocusDropdown } from '@/components/FocusDropdown';
 import { RoutineItemEditor } from '@/components/RoutineItemEditor';
 import { createRoutine, getEntryTypes } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { getScheduleableBlocks } from '@/lib/utils/timestamp';
 import { colors } from '@/constants/theme';
 import { logScreenStyles, routineStyles } from '@/constants/sharedStyles';
 import { useRoutineForm, toRoutineItemInputs } from '@/hooks/useRoutineForm';
-import type { Db } from '@/lib/db/queries';
 import type { EntryType } from '@/lib/db/query-types';
 
 const SCHEDULEABLE_BLOCKS = getScheduleableBlocks();
@@ -36,7 +35,7 @@ export default function CreateRoutineScreen() {
     let isMounted = true;
     async function load() {
       try {
-        const db = (await getDb()) as unknown as Db;
+        const db = await getTypedDb();
         const types = await getEntryTypes(db);
         if (isMounted) setEntryTypes(types);
       } catch {
@@ -52,7 +51,7 @@ export default function CreateRoutineScreen() {
     setSaving(true);
     setError(null);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       await createRoutine(db, {
         name: form.name.trim(),
         timeBlocks: Array.from(form.selectedBlocks),

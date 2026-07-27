@@ -5,8 +5,8 @@
 
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { getDb } from '@/lib/db/database';
-import { getRoutines, type Db } from '@/lib/db/queries';
+import { getTypedDb } from '@/lib/db/typed-db';
+import { getRoutines } from '@/lib/db/queries';
 import type { Routine } from '@/lib/db/query-types';
 
 export interface UseRoutinesResult {
@@ -27,7 +27,7 @@ export function useRoutines(options?: { includeArchived?: boolean }): UseRoutine
 
       async function load() {
         try {
-          const db = (await getDb()) as unknown as Db;
+          const db = await getTypedDb();
           const result = await getRoutines(db, includeArchived != null ? { includeArchived } : undefined);
           if (!cancelled) {
             setRoutines(result);

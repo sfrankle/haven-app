@@ -5,9 +5,8 @@ import { Screen, Surface } from '@/components';
 import { useFocuses } from '@/hooks/useFocuses';
 import { useRoutines } from '@/hooks/useRoutines';
 import { setFocusArchived, setRoutineArchived } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
-import type { Db } from '@/lib/db/queries';
 import type { Focus, Routine } from '@/lib/db/query-types';
 
 const sectionLabelStyle = {
@@ -44,7 +43,7 @@ function SettingsFocusSection() {
   async function handleUnarchive(focus: Focus) {
     setUnarchiving(focus.id);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       await setFocusArchived(db, focus.id, false);
       setLocallyUnarchived((prev) => new Set([...prev, focus.id]));
     } catch {
@@ -123,7 +122,7 @@ function SettingsRoutinesSection() {
   async function handleUnarchive(routine: Routine) {
     setUnarchiving(routine.id);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       await setRoutineArchived(db, routine.id, false);
       setLocallyUnarchived((prev) => new Set([...prev, routine.id]));
     } catch {

@@ -31,11 +31,10 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/components';
 import { Button } from '@/components/Button';
 import { getRoutines, getRoutineItems, completeRoutine } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors, spacing, typeScale, lineHeight } from '@/constants/theme';
 import { logScreenStyles, routineStyles } from '@/constants/sharedStyles';
-import type { Db } from '@/lib/db/queries';
 import type { Routine, RoutineItem } from '@/lib/db/query-types';
 
 // ─── local types ─────────────────────────────────────────────────────────────
@@ -64,7 +63,7 @@ export default function CompleteRoutineScreen() {
     let isMounted = true;
     async function load() {
       try {
-        const db = (await getDb()) as unknown as Db;
+        const db = await getTypedDb();
         const [routines, routineItems] = await Promise.all([
           getRoutines(db, { includeArchived: true }),
           getRoutineItems(db, routineId),
@@ -108,7 +107,7 @@ export default function CompleteRoutineScreen() {
     setSubmitError(null);
 
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       const checkedItems = items
         .filter((item) => item.checked)
         .map((item) => ({ entryTypeId: item.entryTypeId, labelIds: item.labelIds }));

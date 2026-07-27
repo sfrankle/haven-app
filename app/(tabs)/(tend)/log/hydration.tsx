@@ -3,11 +3,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Screen, NumericInput, LogFormShell } from '@/components';
 import { useEntryTypes } from '@/hooks';
 import { saveEntry, getDailyHydrationTotal } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import type { Db } from '@/lib/db/queries';
 
 export default function LogHydrationScreen() {
   const { entryTypes } = useEntryTypes();
@@ -20,7 +19,7 @@ export default function LogHydrationScreen() {
     let cancelled = false;
     (async () => {
       const localDate = nowLocalIso().slice(0, 10);
-      const db = await getDb() as unknown as Db;
+      const db = await getTypedDb();
       const total = await getDailyHydrationTotal(db, localDate);
       if (!cancelled) setDailyTotal(total);
     })();
@@ -33,7 +32,7 @@ export default function LogHydrationScreen() {
     const parsed = parseFloat(oz);
     const timestamp = nowLocalIso();
     const localDate = timestamp.slice(0, 10);
-    const db = await getDb() as unknown as Db;
+    const db = await getTypedDb();
 
     await saveEntry(db, {
       entryTypeId: hydrationEntryType.id,

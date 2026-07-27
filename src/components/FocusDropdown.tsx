@@ -12,11 +12,10 @@ import {
 import type { ViewStyle } from 'react-native';
 import { useFocuses } from '@/hooks/useFocuses';
 import { createFocus } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { colors, spacing, typeScale, lineHeight } from '@/constants/theme';
 import { messages } from '@/constants/messages';
 import { SaveErrorMessage } from '@/components/SaveErrorMessage';
-import type { Db } from '@/lib/db/queries';
 
 interface FocusDropdownProps {
   selectedId: number | undefined;
@@ -75,7 +74,7 @@ export function FocusDropdown({
     if (!trimmed || submitting) return;
     setSubmitting(true);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       const focus = await createFocus(db, { name: trimmed });
       onSelect(focus.id);
       setModalVisible(false);

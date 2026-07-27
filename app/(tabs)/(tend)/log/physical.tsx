@@ -23,14 +23,13 @@ import {
   saveEntry,
   createLabel,
 } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { formatChipLabel } from '@/lib/utils/physicalChipLabel';
 import type { EnergyChip, StateChip, PhysicalChip } from '@/lib/utils/physicalChipLabel';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { colorForPhysicalLabel } from '@/constants/chipColors';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import type { Db } from '@/lib/db/queries';
 import type { PhysicalStateLabel } from '@/lib/db/query-types';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -55,7 +54,7 @@ export default function LogPhysicalScreen() {
 
   const fetchSuggestions = useCallback(async () => {
     if (!physicalEntryType) return;
-    const db = (await getDb()) as unknown as Db;
+    const db = await getTypedDb();
 
     if (energyLabelIdRef.current === null) {
       const parentLabels = await getPhysicalParentLabels(db, physicalEntryType.id);
@@ -166,7 +165,7 @@ export default function LogPhysicalScreen() {
 
   async function handleAddCustom() {
     if (!physicalEntryType || search.trim() === '') return;
-    const db = (await getDb()) as unknown as Db;
+    const db = await getTypedDb();
     const label = await createLabel(db, physicalEntryType.id, search.trim());
     const chip: StateChip = {
       kind: 'state',
@@ -181,7 +180,7 @@ export default function LogPhysicalScreen() {
 
   async function handleSave(extras: { notes?: string; focusId?: number }) {
     if (!physicalEntryType || chips.length === 0) return;
-    const db = (await getDb()) as unknown as Db;
+    const db = await getTypedDb();
     const ts = nowLocalIso();
 
     await Promise.all(chips.map((chip) => {

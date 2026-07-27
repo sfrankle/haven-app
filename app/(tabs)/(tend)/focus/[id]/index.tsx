@@ -23,11 +23,10 @@ import { Button } from '@/components/Button';
 import { SaveErrorMessage } from '@/components/SaveErrorMessage';
 import { SeverityRow } from '@/components/SeverityRow';
 import { getFocusById, getFocusItems, saveEntryBatch } from '@/lib/db/queries';
-import { getDb } from '@/lib/db/database';
+import { getTypedDb } from '@/lib/db/typed-db';
 import { nowLocalIso } from '@/lib/utils/timestamp';
 import { colors, lineHeight, spacing, typeScale } from '@/constants/theme';
 import { logScreenStyles } from '@/constants/sharedStyles';
-import type { Db } from '@/lib/db/queries';
 import type { FocusItem } from '@/lib/db/query-types';
 
 interface ItemState {
@@ -63,7 +62,7 @@ export default function QuickLogScreen() {
     let isMounted = true;
     async function load() {
       try {
-        const db = (await getDb()) as unknown as Db;
+        const db = await getTypedDb();
         const [focus, focusItems] = await Promise.all([
           getFocusById(db, focusId),
           getFocusItems(db, focusId),
@@ -125,7 +124,7 @@ export default function QuickLogScreen() {
     setSaving(true);
     setSaveError(false);
     try {
-      const db = (await getDb()) as unknown as Db;
+      const db = await getTypedDb();
       const timestamp = nowLocalIso();
       const inputs = checkedItems.map((item) => {
         const state = itemState.get(item.labelId);
