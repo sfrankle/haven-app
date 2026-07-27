@@ -134,6 +134,21 @@ export interface RoutineItem {
 
 export type RoutineCompletionState = 'due' | 'completed_this_block' | 'fully_done';
 
+/**
+ * Display-only view of a Routine's completions for a single day.
+ *
+ * Deliberately separate from RoutineCompletionState: that enum answers "which
+ * dashboard bucket does this Routine go in", this answers "what do we print on
+ * the card". Keeping them apart leaves getRoutineCompletionState's tested API
+ * untouched. A future refactor could derive one from the other.
+ */
+export interface RoutineDayProgress {
+  /** Total routine_completion rows for this routine today. Never clamped. */
+  completionCount: number;
+  /** Scheduleable blocks in which at least one completion landed today, in block order. */
+  completedBlocks: ScheduleableBlock[];
+}
+
 
 /**
  * Input shape for creating or replacing routine items (routine_entry_type rows).
