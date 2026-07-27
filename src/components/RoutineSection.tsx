@@ -140,15 +140,23 @@ export function RoutineSection() {
 
           {expanded && (
             <>
-              {showGroupHeadings && completed.length > 0 && (
-                <Text style={styles.groupHeading} testID="routine-group-heading-completed">
+              {showGroupHeadings && (
+                <Text
+                  style={styles.groupHeading}
+                  accessibilityRole="header"
+                  testID="routine-group-heading-completed"
+                >
                   Completed
                 </Text>
               )}
               {completed.map(renderCollapsed)}
 
-              {showGroupHeadings && later.length > 0 && (
-                <Text style={styles.groupHeading} testID="routine-group-heading-later">
+              {showGroupHeadings && (
+                <Text
+                  style={styles.groupHeading}
+                  accessibilityRole="header"
+                  testID="routine-group-heading-later"
+                >
                   Later
                 </Text>
               )}
@@ -203,6 +211,9 @@ const styles = StyleSheet.create({
   groupHeading: {
     ...labelMediumText,
     color: colors.chrome,
+    // Compact rows already carry marginBottom, so without a marginTop the
+    // heading sits equidistant between the group above and the one it labels.
+    marginTop: spacing.elementGap,
     marginBottom: spacing.elementGap,
   },
   addRow: {
