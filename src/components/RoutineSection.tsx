@@ -88,7 +88,24 @@ export function RoutineSection() {
   }
 
   const label = disclosureLabel(completed.length, later.length);
-  const collapsedRoutines = [...completed, ...later];
+
+  // Subheadings only when both groups are present. With one group the
+  // disclosure label already says which it is, and a lone subheading
+  // restating it is noise.
+  const showGroupHeadings = completed.length > 0 && later.length > 0;
+
+  function renderCollapsed(routine: Routine) {
+    return (
+      <RoutineCard
+        key={routine.id}
+        routine={routine}
+        progressText={progressTextFor(routine)}
+        onPress={() => openComplete(routine)}
+        variant="compact"
+        testID={`routine-collapsed-row-${routine.id}`}
+      />
+    );
+  }
 
   return (
     <View style={styles.section}>
@@ -121,17 +138,23 @@ export function RoutineSection() {
             <Text style={styles.disclosureIcon}>{expanded ? '▲' : '▼'}</Text>
           </Pressable>
 
-          {expanded &&
-            collapsedRoutines.map((routine) => (
-              <RoutineCard
-                key={routine.id}
-                routine={routine}
-                progressText={progressTextFor(routine)}
-                onPress={() => openComplete(routine)}
-                variant="compact"
-                testID={`routine-collapsed-row-${routine.id}`}
-              />
-            ))}
+          {expanded && (
+            <>
+              {showGroupHeadings && completed.length > 0 && (
+                <Text style={styles.groupHeading} testID="routine-group-heading-completed">
+                  Completed
+                </Text>
+              )}
+              {completed.map(renderCollapsed)}
+
+              {showGroupHeadings && later.length > 0 && (
+                <Text style={styles.groupHeading} testID="routine-group-heading-later">
+                  Later
+                </Text>
+              )}
+              {later.map(renderCollapsed)}
+            </>
+          )}
         </>
       )}
 
@@ -176,6 +199,11 @@ const styles = StyleSheet.create({
   disclosureIcon: {
     fontSize: 12,
     color: colors.chrome,
+  },
+  groupHeading: {
+    ...labelMediumText,
+    color: colors.chrome,
+    marginBottom: spacing.elementGap,
   },
   addRow: {
     flexDirection: 'row',

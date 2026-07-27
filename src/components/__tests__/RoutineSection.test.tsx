@@ -322,3 +322,57 @@ describe('RoutineSection — Night', () => {
     expect(queryByTestId('routine-section-disclosure')).toBeNull();
   });
 });
+
+// ─── disclosure group headings ───────────────────────────────────────────────
+
+describe('RoutineSection — disclosure group headings', () => {
+  it('labels both groups when the disclosure holds completed and later Routines', () => {
+    // Without headings a completed Routine showing "1 of 2 · Morning done"
+    // sits under "Completed · Later" with nothing saying which half it is in.
+    setup({
+      routines: [
+        makeRoutine(1, 'Morning Flow', ['Morning']),
+        makeRoutine(2, 'Wind Down', ['Evening']),
+      ],
+      states: { 1: 'completed_this_block', 2: 'due' },
+    });
+
+    const { getByTestId } = render(<RoutineSection />);
+    fireEvent.press(getByTestId('routine-section-disclosure'));
+
+    expect(getByTestId('routine-group-heading-completed')).toBeTruthy();
+    expect(getByTestId('routine-group-heading-later')).toBeTruthy();
+    expect(getByTestId('routine-collapsed-row-1')).toBeTruthy();
+    expect(getByTestId('routine-collapsed-row-2')).toBeTruthy();
+  });
+
+  it('omits headings when only one group is present', () => {
+    // The disclosure label already reads "Completed"; repeating it as a
+    // subheading is noise.
+    setup({
+      routines: [makeRoutine(1, 'Morning Flow', ['Morning'])],
+      states: { 1: 'fully_done' },
+    });
+
+    const { getByTestId, queryByTestId } = render(<RoutineSection />);
+    fireEvent.press(getByTestId('routine-section-disclosure'));
+
+    expect(queryByTestId('routine-group-heading-completed')).toBeNull();
+    expect(queryByTestId('routine-group-heading-later')).toBeNull();
+    expect(getByTestId('routine-collapsed-row-1')).toBeTruthy();
+  });
+
+  it('keeps headings hidden until the disclosure is expanded', () => {
+    setup({
+      routines: [
+        makeRoutine(1, 'Morning Flow', ['Morning']),
+        makeRoutine(2, 'Wind Down', ['Evening']),
+      ],
+      states: { 1: 'completed_this_block', 2: 'due' },
+    });
+
+    const { queryByTestId } = render(<RoutineSection />);
+    expect(queryByTestId('routine-group-heading-completed')).toBeNull();
+    expect(queryByTestId('routine-group-heading-later')).toBeNull();
+  });
+});
