@@ -1,85 +1,54 @@
 # Routine create/edit E2E flow
 #
-# NOTE: Settings now has a live "Routines" section with a "+ Add Routine"
-# entry (see maestro/flows/settings/settings-routines.yaml) — this flow can be
-# updated to navigate via Settings → Routines → + Add Routine. The Tend tab
-# "+ Add Routine" entry point is still wired in a separate issue. Until that
-# Tend work lands, the assertions below describe the intended Tend behavior and
-# will be activated once the Tend calling screen exists.
+# Creates a Routine from the Tend dashboard's "+ Add Routine" row, then edits it
+# via Settings → Routines (the ⚙ icon), which is the canonical edit surface.
+# Tapping a Routine card on Tend opens the *complete* flow, not edit — see
+# maestro/flows/tend/routine-complete.yaml.
 #
-# To validate in the meantime you can deep-link directly to the create screen:
-#   appId: com.haven.app
-#   launchArguments: { initialUrl: "haven://routine/create" }
-#
-# See also: maestro/flows/tend/routine-complete.yaml — the complete (execution)
-# flow for an existing routine.
-
+# Related flow: maestro/flows/tend/routine-dashboard.yaml (section states)
 appId: com.haven.app
-
 ---
+- launchApp:
+    clearState: true
 
-# STUB — update navigation steps once Tend +Add Routine button is wired
+- tapOn: "Tend"
 
-- launchApp
+# --- Create a new Routine from the Tend dashboard ---
+# Shared with the other Routine flows; see the subflow for why the block is
+# Morning and why that keeps the assertions below time-of-day stable.
+- runFlow: ../../subflows/create-morning-routine.yaml
 
-# Navigate to Tend tab (home)
+# --- The new Routine appears on the Tend dashboard ---
+- assertVisible:
+    id: "routine-card-1"
+- assertVisible: "Morning Flow"
+
+# --- Edit the Routine via Settings → Routines ---
+- tapOn: "Settings"
+- assertVisible: "Routines"
 - tapOn:
-    id: "tend-tab"
+    id: "settings-routine-edit-1"
 
-# --- Create a new Routine ---
-# TODO: tap the "+ Add Routine" button once it exists on Tend
-# - tapOn:
-#     text: "+ Add Routine"
+- assertVisible:
+    id: "routine-edit-name-input"
+- clearText:
+    id: "routine-edit-name-input"
+- inputText: "Updated Morning Flow"
 
-# Fill in the routine name
-# - tapOn:
-#     id: "routine-name-input"
-# - inputText: "Morning Flow"
+# Add a second item to the existing Routine. The subflow creates one item, so
+# this covers the add-item path on the edit screen rather than repeating the
+# create screen's.
+- tapOn:
+    id: "routine-edit-add-item-button"
+- tapOn:
+    id: "routine-edit-item-1-name-input"
+- inputText: "Morning walk"
+- tapOn:
+    id: "routine-edit-item-1-entry-type-6"   # Activity
 
-# Select a time block
-# - tapOn:
-#     id: "routine-time-block-Morning"
+- tapOn:
+    id: "routine-edit-save-button"
 
-# Add first item
-# - tapOn:
-#     id: "routine-add-item-button"
-# - tapOn:
-#     id: "routine-item-0-name-input"
-# - inputText: "Breakfast"
-# - tapOn:
-#     id: "routine-item-0-entry-type-1"   # Food
-
-# Add second item
-# - tapOn:
-#     id: "routine-add-item-button"
-# - tapOn:
-#     id: "routine-item-1-name-input"
-# - inputText: "Morning walk"
-# - tapOn:
-#     id: "routine-item-1-entry-type-6"   # Activity
-
-# Save
-# - tapOn:
-#     id: "routine-save-button"
-
-# Verify routine appears in Tend (once Tend integration is complete)
-# - assertVisible:
-#     text: "Morning Flow"
-
-# --- Edit the Routine ---
-# TODO: tap the routine card on Tend to navigate to edit screen
-# - tapOn:
-#     text: "Morning Flow"
-
-# Change the name
-# - clearText:
-#     id: "routine-edit-name-input"
-# - inputText: "Updated Morning Flow"
-
-# Save
-# - tapOn:
-#     id: "routine-edit-save-button"
-
-# Verify updated name appears in Tend
-# - assertVisible:
-#     text: "Updated Morning Flow"
+# --- The updated name is reflected back on Tend ---
+- tapOn: "Tend"
+- assertVisible: "Updated Morning Flow"

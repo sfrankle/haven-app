@@ -5,6 +5,18 @@ import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 import { getDb } from '@/lib/db/database';
 import { getRoutineCompletionState } from '@/lib/db/queries';
 
+// Captures the hook's focus callback so a test can fire a second focus. The
+// mount render fires it once, mirroring real navigation focus.
+let mockFocusCallback: (() => void) | null = null;
+jest.mock('expo-router', () => ({
+  useFocusEffect: (cb: () => void) => {
+    mockFocusCallback = cb;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const react = require('react');
+    react.useEffect(cb, [cb]);
+  },
+}));
+
 jest.mock('@/lib/db/database', () => ({
   getDb: jest.fn(),
 }));
@@ -124,5 +136,27 @@ describe('useRoutineCompletionStates', () => {
     );
 
     expect(mockGetCompletionState.mock.calls.length).toBeGreaterThan(callCountAfterFirst);
+  });
+
+  it('re-fetches on screen focus even though the routine ids are identical', async () => {
+    // Guards the staleness trap: after completing a Routine and navigating
+    // back, the routine IDs, time block, and today string are all unchanged,
+    // so without the focus refresh the completed card would still read as due.
+    mockGetCompletionState.mockResolvedValue('due');
+
+    const { result } = renderHook(() =>
+      useRoutineCompletionStates(FIXTURE_ROUTINES, 'Morning', TODAY)
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    const callsAfterFirst = mockGetCompletionState.mock.calls.length;
+
+    mockGetCompletionState.mockResolvedValue('fully_done');
+    act(() => mockFocusCallback?.());
+
+    await waitFor(() =>
+      expect(mockGetCompletionState.mock.calls.length).toBeGreaterThan(callsAfterFirst)
+    );
+    await waitFor(() => expect(result.current.states[1]).toBe('fully_done'));
   });
 });

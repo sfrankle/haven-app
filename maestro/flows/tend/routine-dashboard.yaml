@@ -1,0 +1,68 @@
+# Tend dashboard — Routines section
+#
+# Covers the three visual states of the section: the bare "+ Add Routine" row
+# when there are no Routines, a due-now card, and the collapsed disclosure row
+# holding completed Routines.
+#
+# The Routine created here uses the Morning block, which makes the flow
+# time-of-day stable — see the note in the shared create subflow.
+appId: com.haven.app
+---
+- launchApp:
+    clearState: true
+
+- tapOn: "Tend"
+
+# --- Empty state: the add row stands alone, no cards, no disclosure ---
+- assertVisible:
+    id: "routine-section-add-button"
+- assertNotVisible:
+    id: "routine-section-disclosure"
+
+# --- Create a Morning Routine (first routine after clearState, so id 1) ---
+- runFlow: ../../subflows/create-morning-routine.yaml
+
+# --- Due-now card ---
+# A Morning-block Routine is grouped as due-now from 05:00 onwards.
+- assertVisible:
+    id: "routine-card-1"
+- assertVisible: "Morning Flow"
+- assertVisible: "Morning"
+
+# Nothing is completed or pending yet, so there is nothing to disclose.
+- assertNotVisible:
+    id: "routine-section-disclosure"
+
+# --- Complete it, so it moves out of the due list ---
+- tapOn:
+    id: "routine-card-1"
+- assertVisible:
+    id: "routine-complete-submit-button"
+- tapOn:
+    id: "routine-complete-submit-button"
+
+# Back on Tend: the card is gone and the disclosure row has appeared. This also
+# guards the refresh path — the section re-reads completion state on focus, so a
+# stale "due" card here would mean the refresh key regressed.
+- assertVisible:
+    id: "routine-section-disclosure"
+- assertNotVisible:
+    id: "routine-card-1"
+
+# --- Expand and collapse ---
+- assertNotVisible:
+    id: "routine-collapsed-row-1"
+- tapOn:
+    id: "routine-section-disclosure"
+- assertVisible:
+    id: "routine-collapsed-row-1"
+- assertVisible: "Morning Flow"
+
+- tapOn:
+    id: "routine-section-disclosure"
+- assertNotVisible:
+    id: "routine-collapsed-row-1"
+
+# The add row remains available in every state.
+- assertVisible:
+    id: "routine-section-add-button"

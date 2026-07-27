@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#178](https://github.com/sfrankle/haven-app/pull/178) | Tend dashboard now opens with your Routines — what's due now up top, completed and later ones tucked behind a tap | 2026-07-27 |
 | [#177](https://github.com/sfrankle/haven-app/pull/177) | Extracted a `getTypedDb()` helper so DB call sites no longer repeat the `as unknown as Db` cast | 2026-07-27 |
 | [#174](https://github.com/sfrankle/haven-app/pull/174) | Settings gains a Routines section: edit active Routines, restore archived ones, and add a new Routine anytime | 2026-06-05 |
 | [#171](https://github.com/sfrankle/haven-app/pull/171) | Complete a Routine screen: checklist with static prescribed detail, batch entry creation on submit, unchecked items skipped, Focus auto-association, and 29 unit tests | 2026-05-24 |
