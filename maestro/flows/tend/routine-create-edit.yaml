@@ -11,46 +11,12 @@ appId: com.haven.app
 - launchApp:
     clearState: true
 
-- tapOn:
-    id: "tend-tab"
+- tapOn: "Tend"
 
 # --- Create a new Routine from the Tend dashboard ---
-- tapOn:
-    id: "routine-section-add-button"
-
-- assertVisible:
-    id: "routine-name-input"
-- tapOn:
-    id: "routine-name-input"
-- inputText: "Morning Flow"
-
-# Morning keeps the dashboard assertions below time-of-day stable: a Morning
-# block has always started by any waking hour, so the Routine groups as due-now
-# rather than sliding behind the "Later" disclosure row.
-- tapOn:
-    id: "routine-time-block-Morning"
-
-# Add first item
-- tapOn:
-    id: "routine-add-item-button"
-- tapOn:
-    id: "routine-item-0-name-input"
-- inputText: "Breakfast"
-- tapOn:
-    id: "routine-item-0-entry-type-1"   # Food
-
-# Add second item
-- tapOn:
-    id: "routine-add-item-button"
-- tapOn:
-    id: "routine-item-1-name-input"
-- inputText: "Morning walk"
-- tapOn:
-    id: "routine-item-1-entry-type-6"   # Activity
-
-# Save
-- tapOn:
-    id: "routine-save-button"
+# Shared with the other Routine flows; see the subflow for why the block is
+# Morning and why that keeps the assertions below time-of-day stable.
+- runFlow: ../../subflows/create-morning-routine.yaml
 
 # --- The new Routine appears on the Tend dashboard ---
 - assertVisible:
@@ -68,10 +34,21 @@ appId: com.haven.app
 - clearText:
     id: "routine-edit-name-input"
 - inputText: "Updated Morning Flow"
+
+# Add a second item to the existing Routine. The subflow creates one item, so
+# this covers the add-item path on the edit screen rather than repeating the
+# create screen's.
+- tapOn:
+    id: "routine-edit-add-item-button"
+- tapOn:
+    id: "routine-edit-item-1-name-input"
+- inputText: "Morning walk"
+- tapOn:
+    id: "routine-edit-item-1-entry-type-6"   # Activity
+
 - tapOn:
     id: "routine-edit-save-button"
 
 # --- The updated name is reflected back on Tend ---
-- tapOn:
-    id: "tend-tab"
+- tapOn: "Tend"
 - assertVisible: "Updated Morning Flow"

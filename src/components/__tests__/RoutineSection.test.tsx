@@ -38,12 +38,15 @@ jest.mock('@/hooks/useRoutineDayProgress', () => ({
 }));
 
 // eslint-disable-next-line import/first
+import { getTimeBlock } from '@/lib/utils/timestamp';
+// eslint-disable-next-line import/first
 import { useRoutines } from '@/hooks/useRoutines';
 // eslint-disable-next-line import/first
 import { useRoutineCompletionStates } from '@/hooks/useRoutineCompletionStates';
 // eslint-disable-next-line import/first
 import { useRoutineDayProgress } from '@/hooks/useRoutineDayProgress';
 
+const mockGetTimeBlock = jest.mocked(getTimeBlock);
 const mockUseRoutines = jest.mocked(useRoutines);
 const mockUseStates = jest.mocked(useRoutineCompletionStates);
 const mockUseProgress = jest.mocked(useRoutineDayProgress);
@@ -96,6 +99,8 @@ function setup(opts: {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Restored per test — the Night cases override it.
+  mockGetTimeBlock.mockReturnValue('Morning');
 });
 
 // ─── empty state ─────────────────────────────────────────────────────────────
@@ -284,5 +289,36 @@ describe('RoutineSection — loading and failure', () => {
     expect(getByTestId('routine-section-add-button')).toBeTruthy();
     // No state means no due card — the Routine falls back into the disclosure.
     expect(queryByTestId('routine-card-1')).toBeNull();
+  });
+});
+
+// ─── Night ───────────────────────────────────────────────────────────────────
+
+describe('RoutineSection — Night', () => {
+  it('asks for completion state against Evening, the nearest scheduleable block', () => {
+    // getRoutineCompletionState only accepts a ScheduleableBlock, and Night is
+    // not one. Passing Night through would be a type error at best and a
+    // missing window at worst.
+    mockGetTimeBlock.mockReturnValue('Night');
+    setup({ routines: [makeRoutine(1, 'Wind Down', ['Evening'])], states: { 1: 'due' } });
+
+    render(<RoutineSection />);
+
+    expect(mockUseStates).toHaveBeenCalledWith(
+      expect.anything(),
+      'Evening',
+      expect.any(String)
+    );
+  });
+
+  it('still shows an earlier-block Routine as due at night, never as missed', () => {
+    // Night sorts last, so every configured block has already started. A
+    // Morning Routine not yet done is simply still available.
+    mockGetTimeBlock.mockReturnValue('Night');
+    setup({ routines: [makeRoutine(1, 'Morning Flow', ['Morning'])], states: { 1: 'due' } });
+
+    const { getByTestId, queryByTestId } = render(<RoutineSection />);
+    expect(getByTestId('routine-card-1')).toBeTruthy();
+    expect(queryByTestId('routine-section-disclosure')).toBeNull();
   });
 });

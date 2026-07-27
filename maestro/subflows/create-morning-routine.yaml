@@ -10,6 +10,7 @@
 #
 # Callers: maestro/flows/tend/routine-dashboard.yaml
 #          maestro/flows/tend/routine-complete.yaml
+#          maestro/flows/tend/routine-create-edit.yaml
 appId: com.haven.app
 ---
 # Assumes the Tend dashboard is on screen.

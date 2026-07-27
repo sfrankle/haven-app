@@ -61,12 +61,15 @@ describe('useRoutineDayProgress', () => {
     expect(mockGetProgress).not.toHaveBeenCalled();
   });
 
-  it('calls the batched query exactly once with every routine id', async () => {
+  it('calls the batched query with every routine id in one call', async () => {
     const { result } = renderHook(() => useRoutineDayProgress(FIXTURE_ROUTINES, TODAY));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(mockGetProgress).toHaveBeenCalledTimes(1);
+    // One call per trigger, never one per routine — the point of batching.
     expect(mockGetProgress).toHaveBeenCalledWith(expect.anything(), [1, 2], TODAY);
+    for (const call of mockGetProgress.mock.calls) {
+      expect(call[1]).toEqual([1, 2]);
+    }
   });
 
   it('exposes the returned progress map', async () => {
@@ -103,10 +106,12 @@ describe('useRoutineDayProgress', () => {
     const { result } = renderHook(() => useRoutineDayProgress(FIXTURE_ROUTINES, TODAY));
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(mockGetProgress).toHaveBeenCalledTimes(1);
+    const callsBefore = mockGetProgress.mock.calls.length;
 
     act(() => mockFocusCallback?.());
 
-    await waitFor(() => expect(mockGetProgress).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(mockGetProgress.mock.calls.length).toBeGreaterThan(callsBefore)
+    );
   });
 });

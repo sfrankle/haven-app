@@ -52,16 +52,15 @@ export function useRoutineKeyedRead<T>(
 
   const routineIds = useMemo(() => routines.map((r) => r.id).join(','), [routines]);
 
-  // The first focus is the mount itself, which the read effect below already
-  // covers — bumping on it would fire a second identical query immediately.
+  // Every focus bumps the tick, including the first. Skipping the first would
+  // save one query on the common path where mount and focus coincide, but a
+  // screen can mount without being focused (tab pre-render) — and then the
+  // skipped focus is the one that matters, because the user has been away
+  // completing a Routine in between. A duplicate read of a local SQLite table
+  // is far cheaper than reintroducing the staleness bug.
   const [focusTick, setFocusTick] = useState(0);
-  const isInitialFocus = useRef(true);
   useFocusEffect(
     useCallback(() => {
-      if (isInitialFocus.current) {
-        isInitialFocus.current = false;
-        return;
-      }
       setFocusTick((t) => t + 1);
     }, [])
   );

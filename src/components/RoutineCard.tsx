@@ -30,17 +30,28 @@ export function RoutineCard({
   testID,
 }: RoutineCardProps) {
   const compact = variant === 'compact';
+  const blocksText = formatTimeBlocks(routine.timeBlocks);
+
+  // The Pressable collapses its subtree for screen readers, so the card's own
+  // lines are never announced on their own — the label has to carry them.
+  const label = [
+    `Complete ${routine.name}`,
+    compact ? null : blocksText,
+    progressText,
+  ]
+    .filter((part) => part !== null)
+    .join('. ');
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Complete ${routine.name}`}
+      accessibilityLabel={label}
       testID={testID}
     >
       <Surface style={compact ? styles.compactCard : styles.card}>
         <Text style={compact ? styles.compactName : styles.name}>{routine.name}</Text>
-        {!compact && <Text style={styles.meta}>{formatTimeBlocks(routine.timeBlocks)}</Text>}
+        {!compact && <Text style={styles.meta}>{blocksText}</Text>}
         {progressText !== null && <Text style={styles.meta}>{progressText}</Text>}
       </Surface>
     </Pressable>

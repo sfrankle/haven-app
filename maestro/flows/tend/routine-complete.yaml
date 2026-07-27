@@ -11,8 +11,7 @@ appId: com.haven.app
 - launchApp:
     clearState: true
 
-- tapOn:
-    id: "tend-tab"
+- tapOn: "Tend"
 
 # --- Create the Routine to complete (first routine after clearState, so id 1) ---
 # Morning block keeps this time-of-day stable — the card is due-now from 05:00

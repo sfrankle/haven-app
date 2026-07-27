@@ -129,16 +129,18 @@ export function RoutineSection() {
 
       {/* Always available, even while loading — the create path should never
           depend on a read succeeding. */}
-      <Surface style={styles.addRow} testID="routine-section-add-row">
-        <Pressable
-          onPress={() => router.push('/routine/create')}
-          accessibilityRole="button"
-          accessibilityLabel="Add Routine"
-          testID="routine-section-add-button"
-        >
+      {/* Pressable outside Surface so the whole card is the tap target, not
+          just the text inside its padding. Matches RoutineCard. */}
+      <Pressable
+        onPress={() => router.push('/routine/create')}
+        accessibilityRole="button"
+        accessibilityLabel="Add Routine"
+        testID="routine-section-add-button"
+      >
+        <Surface style={styles.addRow} testID="routine-section-add-row">
           <Text style={styles.interactiveLabel}>+ Add Routine</Text>
-        </Pressable>
-      </Surface>
+        </Surface>
+      </Pressable>
     </View>
   );
 }
