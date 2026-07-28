@@ -112,8 +112,9 @@ describe('adapter error normalisation', () => {
     const err = await capture(() =>
       db.withTransactionAsync(async () => {
         await db.runAsync(
-          `INSERT INTO entry (entry_type_id, timestamp, source_type) VALUES (?, ?, 'log')`,
-          [typeId, TEST_TS]
+          `INSERT INTO entry (entry_type_id, timestamp, created_at, source_type)
+           VALUES (?, ?, ?, 'log')`,
+          [typeId, TEST_TS, TEST_TS]
         );
         // Violates the FK on label_id — 999999 does not exist.
         await db.runAsync(`INSERT INTO entry_label (entry_id, label_id) VALUES (?, ?)`, [
