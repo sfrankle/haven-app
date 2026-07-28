@@ -41,6 +41,8 @@ export interface EntryWithLabels {
   numericValue: number | null;
   notes: string | null;
   labels: Label[];
+  /** Non-null when this entry was created as part of a Routine completion. Groups Trace rows. */
+  routineCompletionId: number | null;
 }
 
 /**
@@ -130,6 +132,25 @@ export interface RoutineItem {
   instructionNote: string | null;
   sortOrder: number;
   labelIds: number[]; // from routine_entry_type_label
+}
+
+/**
+ * One Routine completion session, with every entry it produced.
+ *
+ * Presentation-only enrichment for Trace: each member entry is also present in
+ * the plain getEntriesForTrace result, so this shape can be dropped entirely
+ * without losing data (see docs/decisions.md).
+ */
+export interface RoutineCompletionGroup {
+  completionId: number;
+  routineId: number;
+  routineName: string;
+  /** routine_completion.created_at — ISO-8601 wall-clock, the canonical group timestamp. */
+  completedAt: string;
+  /** YYYY-MM-DD sliced from completedAt (same convention as EntryWithLabels.localDate). */
+  localDate: string;
+  /** All member entries, unfiltered, oldest-first. */
+  entries: EntryWithLabels[];
 }
 
 export type RoutineCompletionState = 'due' | 'completed_this_block' | 'fully_done';

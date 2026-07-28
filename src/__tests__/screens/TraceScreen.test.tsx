@@ -2,8 +2,8 @@ import React from 'react';
 import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
 import { useTraceEntries } from '@/hooks/useTraceEntries';
 import { useFocuses } from '@/hooks/useFocuses';
-import type { EntryWithLabels } from '@/lib/db/query-types';
-import type { TraceSection } from '@/lib/utils/traceUtils';
+import type { EntryWithLabels, RoutineCompletionGroup } from '@/lib/db/query-types';
+import type { TraceItem, TraceSection } from '@/lib/utils/traceUtils';
 
 const mockRouterPush = jest.fn();
 
@@ -52,12 +52,13 @@ function makeEntry(overrides: Partial<EntryWithLabels> = {}): EntryWithLabels {
     numericValue: 7,
     notes: null,
     labels: [],
+    routineCompletionId: null,
     ...overrides,
   };
 }
 
 function makeSection(title: string, entries: EntryWithLabels[]): TraceSection {
-  return { title, data: entries };
+  return { title, data: entries.map((entry) => ({ kind: 'entry', entry })) };
 }
 
 // Import the screen component under test
@@ -217,6 +218,222 @@ describe('TraceScreen', () => {
     expect(queryByText('Oats')).toBeNull();
   });
 
+  describe('Routine group rows', () => {
+    const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
+
+    function makeGroup(overrides: Partial<RoutineCompletionGroup> = {}): RoutineCompletionGroup {
+      return {
+        completionId: 1,
+        routineId: 1,
+        routineName: 'Morning Flow',
+        completedAt: '2026-03-25T08:12:00-07:00',
+        localDate: '2026-03-25',
+        entries: [],
+        ...overrides,
+      };
+    }
+
+    function sectionWith(items: TraceItem[]): TraceSection {
+      return { title: 'Today', data: items };
+    }
+
+    const MEMBER_A = makeEntry({ id: 101, entryTypeName: 'Sleep', numericValue: 7 });
+    const MEMBER_B = makeEntry({ id: 102, entryTypeName: 'Hydration', numericValue: 16 });
+
+    function setupGroup(matchedIds: number[] = [101, 102]) {
+      const group = makeGroup({ entries: [MEMBER_A, MEMBER_B] });
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
+      mockUseTraceEntries.mockReturnValue({
+        sections: [sectionWith([{ kind: 'group', group, matchedIds: new Set(matchedIds) }])],
+        loading: false,
+        error: null,
+      });
+      return group;
+    }
+
+    it('renders the routine name and completion time, with members hidden', () => {
+      setupGroup();
+      const { getByText, queryByText, getByTestId } = render(<TraceScreen />);
+      expect(getByText('Morning Flow')).toBeTruthy();
+      expect(getByText('8:12 AM')).toBeTruthy();
+      expect(getByTestId('trace-group-icon-1')).toBeTruthy();
+      expect(queryByText('Slept 7 hours')).toBeNull();
+      expect(queryByText('Drank 16oz')).toBeNull();
+    });
+
+    it('tapping the group row reveals every member summary, tapping again hides them', () => {
+      setupGroup();
+      const { getByTestId, getByText, queryByText } = render(<TraceScreen />);
+
+      fireEvent.press(getByTestId('trace-group-1'));
+      expect(getByText('Slept 7 hours')).toBeTruthy();
+      expect(getByText('Drank 16oz')).toBeTruthy();
+
+      fireEvent.press(getByTestId('trace-group-1'));
+      expect(queryByText('Slept 7 hours')).toBeNull();
+    });
+
+    it('group expansion and entry expansion with the same numeric id are independent', () => {
+      // Key-space collision guard: completion 1 and entry 1 are different things.
+      const group = makeGroup({ completionId: 1, entries: [MEMBER_A] });
+      const entry = makeEntry({ id: 1, entryTypeName: 'Food', numericValue: null, labels: [
+        { id: 10, entryTypeId: 3, name: 'Oats', parentId: null, categoryId: null, categoryName: null, sortOrder: 0 },
+      ] });
+      mockUseFocuses.mockReturnValue({ focuses: [], loading: false, error: null });
+      mockUseTraceEntries.mockReturnValue({
+        sections: [sectionWith([
+          { kind: 'group', group, matchedIds: new Set([101]) },
+          { kind: 'entry', entry },
+        ])],
+        loading: false,
+        error: null,
+      });
+
+      const { getByTestId, getByText, queryByText } = render(<TraceScreen />);
+
+      fireEvent.press(getByTestId('trace-group-1'));
+      expect(getByText('Slept 7 hours')).toBeTruthy();
+      // The entry with id 1 must NOT have expanded alongside it.
+      expect(queryByText('Oats')).toBeNull();
+
+      fireEvent.press(getByText('Ate Oats'));
+      expect(getByText('Oats')).toBeTruthy();
+      expect(getByText('Slept 7 hours')).toBeTruthy();
+    });
+
+    it('mutes members outside the matched set while a filter is active', async () => {
+      setupGroup([101]);
+      const { getByTestId } = render(<TraceScreen />);
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      fireEvent.press(getByTestId('trace-group-1'));
+
+      const muted = getByTestId('trace-group-item-muted-102');
+      const style = muted.props.style;
+      const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
+      expect(flatStyle.opacity).toBe(0.45);
+      expect(getByTestId('trace-group-item-101')).toBeTruthy();
+    });
+
+    it('mutes nothing when no filter is active', () => {
+      setupGroup([101]);
+      const { getByTestId, queryByTestId } = render(<TraceScreen />);
+      fireEvent.press(getByTestId('trace-group-1'));
+
+      expect(queryByTestId('trace-group-item-muted-102')).toBeNull();
+      expect(getByTestId('trace-group-item-102')).toBeTruthy();
+    });
+
+    it('offers no "Show context" affordance on a group or inside it', async () => {
+      setupGroup();
+      const { getByTestId, queryByTestId } = render(<TraceScreen />);
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      fireEvent.press(getByTestId('trace-group-1'));
+
+      expect(queryByTestId('show-context-1')).toBeNull();
+      expect(queryByTestId('show-context-101')).toBeNull();
+      expect(queryByTestId('show-context-102')).toBeNull();
+    });
+
+    it('exposes the expanded state and item count to assistive tech', () => {
+      setupGroup();
+      const { getByTestId } = render(<TraceScreen />);
+      const row = getByTestId('trace-group-1');
+      expect(row.props.accessibilityLabel).toBe('Morning Flow, 8:12 AM, 2 items');
+      expect(row.props.accessibilityState.expanded).toBe(false);
+
+      fireEvent.press(row);
+      expect(getByTestId('trace-group-1').props.accessibilityState.expanded).toBe(true);
+    });
+
+    it('says "1 item", not "1 items", for a single-member routine', () => {
+      const group = makeGroup({ entries: [MEMBER_A] });
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
+      mockUseTraceEntries.mockReturnValue({
+        sections: [sectionWith([{ kind: 'group', group, matchedIds: new Set([101]) }])],
+        loading: false,
+        error: null,
+      });
+
+      const { getByTestId } = render(<TraceScreen />);
+      expect(getByTestId('trace-group-1').props.accessibilityLabel).toBe(
+        'Morning Flow, 8:12 AM, 1 item',
+      );
+    });
+  });
+
+  describe('Multi-focus filter selection', () => {
+    const FOCUS_A = { id: 9, name: 'Focus A', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
+    const FOCUS_B = { id: 10, name: 'Focus B', description: null, archived: false, sortOrder: 1, createdAt: '2026-01-01T00:00:00-07:00' };
+
+    function lastFocusIds(): number[] {
+      const calls = mockUseTraceEntries.mock.calls;
+      return calls[calls.length - 1][0] as number[];
+    }
+
+    beforeEach(() => {
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS_A, FOCUS_B], loading: false, error: null });
+      mockUseTraceEntries.mockReturnValue({
+        sections: [makeSection('Today', [makeEntry({ id: 1 })])],
+        loading: false,
+        error: null,
+      });
+    });
+
+    it('starts with no filters active', () => {
+      render(<TraceScreen />);
+      expect(lastFocusIds()).toEqual([]);
+    });
+
+    it('two focus pills can be selected at the same time', async () => {
+      const { getByTestId } = render(<TraceScreen />);
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-10')); });
+
+      expect(getByTestId('focus-pill-9').props.accessibilityState.selected).toBe(true);
+      expect(getByTestId('focus-pill-10').props.accessibilityState.selected).toBe(true);
+      expect(lastFocusIds()).toEqual([9, 10]);
+    });
+
+    it('tapping a selected pill deselects only that pill', async () => {
+      const { getByTestId } = render(<TraceScreen />);
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-10')); });
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+
+      expect(getByTestId('focus-pill-9').props.accessibilityState.selected).toBe(false);
+      expect(getByTestId('focus-pill-10').props.accessibilityState.selected).toBe(true);
+      expect(lastFocusIds()).toEqual([10]);
+    });
+
+    it('tab re-tap clears all active filters', async () => {
+      tabPressCallback = undefined;
+      mockIsFocused.mockReturnValue(true);
+      const { getByTestId } = render(<TraceScreen />);
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-10')); });
+      expect(lastFocusIds()).toEqual([9, 10]);
+
+      act(() => { tabPressCallback?.(); });
+
+      await waitFor(() => expect(lastFocusIds()).toEqual([]));
+    });
+
+    it('empty state names a single Focus when one filter is active', async () => {
+      mockUseTraceEntries.mockReturnValue({ sections: [], loading: false, error: null });
+      const { getByTestId, getByText } = render(<TraceScreen />);
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      expect(getByText('No entries for this Focus yet.')).toBeTruthy();
+    });
+
+    it('empty state pluralises when two filters are active', async () => {
+      mockUseTraceEntries.mockReturnValue({ sections: [], loading: false, error: null });
+      const { getByTestId, getByText } = render(<TraceScreen />);
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-9')); });
+      await act(async () => { fireEvent.press(getByTestId('focus-pill-10')); });
+      expect(getByText('No entries for these Focuses yet.')).toBeTruthy();
+    });
+  });
+
   describe('Focus pill long-press (item 3)', () => {
     it('long-pressing a focus pill navigates to the edit screen', async () => {
       const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
@@ -234,7 +451,7 @@ describe('TraceScreen', () => {
       mockIsFocused.mockReturnValue(true);
     });
 
-    it('tabPress while focused resets selectedFocusId', async () => {
+    it('tabPress while focused resets the active filters', async () => {
       const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
       mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
 

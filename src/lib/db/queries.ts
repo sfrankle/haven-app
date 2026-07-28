@@ -9,7 +9,7 @@
  * No screen should call db.getAllAsync / db.runAsync / db.getFirstAsync directly.
  */
 
-import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem, Routine, RoutineItem, RoutineItemInput, RoutineCompletionState, RoutineDayProgress } from './query-types';
+import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem, Routine, RoutineItem, RoutineItemInput, RoutineCompletionGroup, RoutineCompletionState, RoutineDayProgress } from './query-types';
 import { nowLocalIso, getTimeBlock, getScheduleableBlocks } from '@/lib/utils/timestamp';
 import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 
@@ -54,6 +54,7 @@ interface EntryTraceRaw {
   // local_date is derived in JS, not SQL — see getEntriesForTrace
   numeric_value: number | null;
   notes: string | null;
+  routine_completion_id: number | null;
   entry_type_name: string;
   entry_type_title: string;
   entry_type_icon: string | null;
@@ -275,48 +276,137 @@ export async function saveEntry(db: Db, input: SaveEntryInput): Promise<number> 
 }
 
 /**
+ * The entry+label projection shared by every query that returns EntryTraceRaw
+ * rows (getEntriesForTrace, getContextEntries, getRoutineCompletions).
+ *
+ * IMPORTANT: EntryTraceRaw and collapseTraceRows are shared by all three. If
+ * you add a column here, every consumer picks it up — but if you instead add it
+ * to one query's inline SELECT, the others compile cleanly and produce
+ * `undefined` at runtime with no type error. Same shared-shape hazard called out
+ * for saveEntry / saveEntryBatch. Pinned by getContextEntries.test.ts.
+ */
+const TRACE_ENTRY_SELECT = `
+    SELECT
+      e.id, e.entry_type_id, e.source_type, e.timestamp, e.numeric_value, e.notes,
+      e.routine_completion_id,
+      et.name AS entry_type_name, et.title AS entry_type_title, et.icon AS entry_type_icon,
+      l.id AS label_id, l.name AS label_name, l.parent_id AS label_parent_id,
+      lp.name AS label_parent_name,
+      l.category_id AS label_category_id, c.name AS label_category_name, l.sort_order AS label_sort_order`;
+
+/** The label LEFT JOINs that turn one entry into one row per associated label. */
+const TRACE_LABEL_JOINS = `
+    LEFT JOIN entry_label el ON el.entry_id = e.id
+    LEFT JOIN label l ON l.id = el.label_id
+    LEFT JOIN label lp ON lp.id = l.parent_id
+    LEFT JOIN category c ON c.id = l.category_id`;
+
+/**
+ * Returns a comma-separated run of `n` bound-parameter placeholders.
+ *
+ * The only thing ever interpolated into a SQL string from a variable-length
+ * list — derived solely from the list's *length*, never from any value. All IDs
+ * stay bound parameters. See docs/decisions.md.
+ */
+function placeholders(n: number): string {
+  return Array.from({ length: n }, () => '?').join(', ');
+}
+
+/**
+ * Builds the focus-filtered Trace SQL for `count` focus IDs.
+ *
+ * Uses a `WHERE EXISTS` semi-join rather than widening the entry_focus JOIN to
+ * `focus_id IN (...)`. A widening JOIN emits one row per entry×focus×label, and
+ * collapseTraceRows appends labels unconditionally — so an entry matching two
+ * active focuses would come back with every label duplicated. A semi-join
+ * cannot multiply rows no matter how many focuses match, and still uses
+ * idx_entry_focus_focus_id. See docs/decisions.md.
+ */
+function buildFilteredTraceSql(count: number): string {
+  return `${TRACE_ENTRY_SELECT}
+    FROM entry e
+    JOIN entry_type et ON et.id = e.entry_type_id${TRACE_LABEL_JOINS}
+    WHERE EXISTS (
+      SELECT 1 FROM entry_focus ef
+      WHERE ef.entry_id = e.id AND ef.focus_id IN (${placeholders(count)})
+    )
+    ORDER BY e.timestamp DESC`;
+}
+
+/**
  * Returns all entries in newest-first order, with their associated labels.
+ *
+ * `focusIds` filters with OR semantics: an entry is returned when it belongs to
+ * *any* of the given focuses. An empty array (or an omitted option) means no
+ * filter at all — this is the state right after the user deselects their last
+ * pill, and it must not build an `IN ()`, which is a SQLite syntax error.
  *
  * Labels are accumulated in JS (group by entry ID) to avoid multiple round-trips.
  * Callers (e.g. Trace screen) should group by `localDate` for day sections.
+ *
+ * Routine grouping is deliberately *not* done here — no GROUP BY. The fan-out
+ * this query produces is the very thing collapseTraceRows exists to undo, and
+ * grouping needs set arithmetic against a separate query. See buildTraceItems
+ * in traceUtils and docs/decisions.md.
  *
  * NOTE: No pagination for MVP. Add cursor-based pagination when entry count
  * exceeds ~1000 rows.
  */
 export async function getEntriesForTrace(
   db: Db,
-  options?: { focusId?: number }
+  options?: { focusIds?: number[] }
 ): Promise<EntryWithLabels[]> {
-  const SELECT = `
-    SELECT
-      e.id, e.entry_type_id, e.source_type, e.timestamp, e.numeric_value, e.notes,
-      et.name AS entry_type_name, et.title AS entry_type_title, et.icon AS entry_type_icon,
-      l.id AS label_id, l.name AS label_name, l.parent_id AS label_parent_id,
-      lp.name AS label_parent_name,
-      l.category_id AS label_category_id, c.name AS label_category_name, l.sort_order AS label_sort_order
+  const UNFILTERED_SQL = `${TRACE_ENTRY_SELECT}
     FROM entry e
-    JOIN entry_type et ON et.id = e.entry_type_id`;
-
-  // Build two query strings to avoid any risk of conditional SQL injection.
-  // The JOIN variant restricts results to entries linked to the given focus.
-  const TAIL = `
-    LEFT JOIN entry_label el ON el.entry_id = e.id
-    LEFT JOIN label l ON l.id = el.label_id
-    LEFT JOIN label lp ON lp.id = l.parent_id
-    LEFT JOIN category c ON c.id = l.category_id
-    -- TODO(Milestone 9): add GROUP BY routine_completion_id layer here for Routines grouping
+    JOIN entry_type et ON et.id = e.entry_type_id${TRACE_LABEL_JOINS}
     ORDER BY e.timestamp DESC`;
 
-  const FILTERED_SQL = `${SELECT}
-    JOIN entry_focus ef ON ef.entry_id = e.id AND ef.focus_id = ?${TAIL}`;
+  const focusIds = options?.focusIds ?? [];
 
-  const UNFILTERED_SQL = `${SELECT}${TAIL}`;
-
-  const rows = await (options?.focusId != null
-    ? db.getAllAsync<EntryTraceRaw>(FILTERED_SQL, [options.focusId])
+  const rows = await (focusIds.length > 0
+    ? db.getAllAsync<EntryTraceRaw>(buildFilteredTraceSql(focusIds.length), focusIds)
     : db.getAllAsync<EntryTraceRaw>(UNFILTERED_SQL));
 
   return collapseTraceRows(rows);
+}
+
+/**
+ * Maps one EntryTraceRaw row to a label-less EntryWithLabels.
+ *
+ * Shared by every collapser over EntryTraceRaw so the field list exists once.
+ */
+function mapTraceRowToEntry(row: EntryTraceRaw): EntryWithLabels {
+  return {
+    id: row.id,
+    entryTypeId: row.entry_type_id,
+    entryTypeName: row.entry_type_name,
+    entryTypeTitle: row.entry_type_title,
+    entryTypeIcon: row.entry_type_icon,
+    sourceType: row.source_type,
+    timestamp: row.timestamp,
+    // Slice the wall-clock date directly from the stored ISO string.
+    // strftime('%Y-%m-%d', timestamp) in SQLite normalises to UTC first,
+    // which gives the wrong date for users near midnight in non-UTC timezones.
+    localDate: row.timestamp.slice(0, 10),
+    numericValue: row.numeric_value,
+    notes: row.notes,
+    routineCompletionId: row.routine_completion_id,
+    labels: [],
+  };
+}
+
+/** Maps the label columns of an EntryTraceRaw row. Call only when label_id is non-null. */
+function mapTraceRowToLabel(row: EntryTraceRaw): Label {
+  return {
+    id: row.label_id!,
+    entryTypeId: row.entry_type_id,
+    name: row.label_name!,
+    parentId: row.label_parent_id,
+    categoryId: row.label_category_id,
+    parentName: row.label_parent_name,
+    categoryName: row.label_category_name,
+    sortOrder: row.label_sort_order!,
+  };
 }
 
 /**
@@ -325,6 +415,10 @@ export async function getEntriesForTrace(
  * first occurrence of each entry ID.
  *
  * This helper is shared by getEntriesForTrace and getContextEntries.
+ *
+ * Labels are appended unconditionally, so the caller's SQL must never emit an
+ * entry×label pair more than once — see buildFilteredTraceSql for why the focus
+ * filter is a semi-join rather than a widened JOIN.
  */
 function collapseTraceRows(rows: EntryTraceRaw[]): EntryWithLabels[] {
   const entryMap = new Map<number, EntryWithLabels>();
@@ -333,35 +427,11 @@ function collapseTraceRows(rows: EntryTraceRaw[]): EntryWithLabels[] {
   for (const row of rows) {
     if (!entryMap.has(row.id)) {
       orderedIds.push(row.id);
-      entryMap.set(row.id, {
-        id: row.id,
-        entryTypeId: row.entry_type_id,
-        entryTypeName: row.entry_type_name,
-        entryTypeTitle: row.entry_type_title,
-        entryTypeIcon: row.entry_type_icon,
-        sourceType: row.source_type,
-        timestamp: row.timestamp,
-        // Slice the wall-clock date directly from the stored ISO string.
-        // strftime('%Y-%m-%d', timestamp) in SQLite normalises to UTC first,
-        // which gives the wrong date for users near midnight in non-UTC timezones.
-        localDate: row.timestamp.slice(0, 10),
-        numericValue: row.numeric_value,
-        notes: row.notes,
-        labels: [],
-      });
+      entryMap.set(row.id, mapTraceRowToEntry(row));
     }
 
     if (row.label_id !== null) {
-      entryMap.get(row.id)!.labels.push({
-        id: row.label_id,
-        entryTypeId: row.entry_type_id,
-        name: row.label_name!,
-        parentId: row.label_parent_id,
-        categoryId: row.label_category_id,
-        parentName: row.label_parent_name,
-        categoryName: row.label_category_name,
-        sortOrder: row.label_sort_order!,
-      });
+      entryMap.get(row.id)!.labels.push(mapTraceRowToLabel(row));
     }
   }
 
@@ -385,24 +455,86 @@ export async function getContextEntries(
   const { excludeEntryId, afterIso, beforeIso } = params;
 
   const rows = await db.getAllAsync<EntryTraceRaw>(
-    `SELECT
-       e.id, e.entry_type_id, e.source_type, e.timestamp, e.numeric_value, e.notes,
-       et.name AS entry_type_name, et.title AS entry_type_title, et.icon AS entry_type_icon,
-       l.id AS label_id, l.name AS label_name, l.parent_id AS label_parent_id,
-       lp.name AS label_parent_name,
-       l.category_id AS label_category_id, c.name AS label_category_name, l.sort_order AS label_sort_order
+    `${TRACE_ENTRY_SELECT}
      FROM entry e
-     JOIN entry_type et ON et.id = e.entry_type_id
-     LEFT JOIN entry_label el ON el.entry_id = e.id
-     LEFT JOIN label l ON l.id = el.label_id
-     LEFT JOIN label lp ON lp.id = l.parent_id
-     LEFT JOIN category c ON c.id = l.category_id
+     JOIN entry_type et ON et.id = e.entry_type_id${TRACE_LABEL_JOINS}
      WHERE e.timestamp >= ? AND e.timestamp <= ? AND e.id != ?
      ORDER BY e.timestamp ASC`,
     [afterIso, beforeIso, excludeEntryId]
   );
 
   return collapseTraceRows(rows);
+}
+
+interface RoutineCompletionRaw extends EntryTraceRaw {
+  completion_id: number;
+  completion_created_at: string;
+  routine_id: number;
+  routine_name: string;
+}
+
+/**
+ * Returns the Routine completions identified by `completionIds`, each with
+ * **all** of its member entries — including entries that an active Trace filter
+ * excluded, so the expanded group can render non-matching members muted.
+ *
+ * This is presentation-only enrichment: every entry described here is already
+ * present in the getEntriesForTrace result. Callers must treat a failure as
+ * "render ungrouped", never as a load error — see useTraceEntries.
+ *
+ * `routine` is joined via `routine_completion.routine_id`, not `entry.routine_id`:
+ * the latter is ON DELETE SET NULL and could be null while the completion survives.
+ */
+export async function getRoutineCompletions(
+  db: Db,
+  completionIds: number[]
+): Promise<RoutineCompletionGroup[]> {
+  if (completionIds.length === 0) return [];
+
+  const rows = await db.getAllAsync<RoutineCompletionRaw>(
+    `${TRACE_ENTRY_SELECT},
+      rc.id AS completion_id, rc.created_at AS completion_created_at,
+      r.id AS routine_id, r.name AS routine_name
+     FROM entry e
+     JOIN routine_completion rc ON rc.id = e.routine_completion_id
+     JOIN routine r ON r.id = rc.routine_id
+     JOIN entry_type et ON et.id = e.entry_type_id${TRACE_LABEL_JOINS}
+     WHERE e.routine_completion_id IN (${placeholders(completionIds.length)})
+     ORDER BY rc.created_at DESC, e.timestamp ASC, e.id ASC`,
+    completionIds
+  );
+
+  // Insertion-ordered, so the ORDER BY above carries through to the result.
+  const groups = new Map<number, RoutineCompletionGroup>();
+  // Entry IDs are unique across the whole result, so one map is enough to
+  // dedupe the entry×label fan-out before bucketing by completion.
+  const entries = new Map<number, EntryWithLabels>();
+
+  for (const row of rows) {
+    if (!groups.has(row.completion_id)) {
+      groups.set(row.completion_id, {
+        completionId: row.completion_id,
+        routineId: row.routine_id,
+        routineName: row.routine_name,
+        completedAt: row.completion_created_at,
+        // Same wall-clock-slice rule as entries — never strftime.
+        localDate: row.completion_created_at.slice(0, 10),
+        entries: [],
+      });
+    }
+
+    if (!entries.has(row.id)) {
+      const entry = mapTraceRowToEntry(row);
+      entries.set(row.id, entry);
+      groups.get(row.completion_id)!.entries.push(entry);
+    }
+
+    if (row.label_id !== null) {
+      entries.get(row.id)!.labels.push(mapTraceRowToLabel(row));
+    }
+  }
+
+  return [...groups.values()];
 }
 
 /**
@@ -1149,10 +1281,9 @@ export async function getRoutineDayProgress(
 ): Promise<Record<number, RoutineDayProgress>> {
   if (routineIds.length === 0) return {};
 
-  const placeholders = routineIds.map(() => '?').join(',');
   const rows = await db.getAllAsync<{ routine_id: number; created_at: string }>(
     `SELECT routine_id, created_at FROM routine_completion
-     WHERE routine_id IN (${placeholders}) AND substr(created_at, 1, 10) = ?`,
+     WHERE routine_id IN (${placeholders(routineIds.length)}) AND substr(created_at, 1, 10) = ?`,
     [...routineIds, today]
   );
 

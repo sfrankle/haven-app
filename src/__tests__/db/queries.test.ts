@@ -18,6 +18,7 @@ import {
   saveEntry,
   getEntriesForTrace,
   getDailyHydrationTotal,
+  getRoutineCompletions,
   createLabel,
 } from '../../lib/db/queries';
 
@@ -351,6 +352,215 @@ describe('query layer', () => {
       expect(entry).toBeDefined();
       // strftime('%Y-%m-%d', '2026-03-05T22:30:00+05:30') → '2026-03-05'
       expect(entry!.localDate).toBe('2026-03-05');
+    });
+  });
+
+  // ── getEntriesForTrace — multi-focus filtering ──────────────────────────────
+
+  describe('getEntriesForTrace — multi-focus filtering', () => {
+    let foodTypeId: number;
+    let focusAId: number;
+    let focusBId: number;
+    let labelIds: number[];
+    let entryXId: number; // focus A only
+    let entryYId: number; // focus B only
+    let entryZId: number; // no focus
+    let entryBothId: number; // focus A *and* focus B, three labels
+
+    beforeAll(async () => {
+      foodTypeId = entryTypeId(raw, 'Food');
+      labelIds = (
+        raw
+          .prepare(
+            `SELECT id FROM label WHERE entry_type_id = ? AND is_enabled = 1 ORDER BY sort_order LIMIT 3`
+          )
+          .all(foodTypeId) as { id: number }[]
+      ).map((r) => r.id);
+
+      const insertFocus = raw.prepare(
+        `INSERT INTO focus (name, archived, sort_order, created_at) VALUES (?, 0, 0, '2026-05-01T08:00:00+00:00')`
+      );
+      focusAId = Number(insertFocus.run('Multi Focus A').lastInsertRowid);
+      focusBId = Number(insertFocus.run('Multi Focus B').lastInsertRowid);
+
+      entryXId = await saveEntry(db, {
+        entryTypeId: foodTypeId,
+        timestamp: '2026-05-01T08:00:00+00:00',
+        focusId: focusAId,
+      });
+      entryYId = await saveEntry(db, {
+        entryTypeId: foodTypeId,
+        timestamp: '2026-05-01T09:00:00+00:00',
+        focusId: focusBId,
+      });
+      entryZId = await saveEntry(db, {
+        entryTypeId: foodTypeId,
+        timestamp: '2026-05-01T10:00:00+00:00',
+      });
+
+      entryBothId = await saveEntry(db, {
+        entryTypeId: foodTypeId,
+        timestamp: '2026-05-01T11:00:00+00:00',
+        labelIds,
+        focusId: focusAId,
+      });
+      raw
+        .prepare(`INSERT INTO entry_focus (entry_id, focus_id) VALUES (?, ?)`)
+        .run(entryBothId, focusBId);
+    });
+
+    // Guards the WHERE EXISTS semi-join decision (docs/decisions.md).
+    // A widening `JOIN entry_focus ... IN (?,?)` returns one row per
+    // entry×focus×label — 2 focuses × 3 labels = 6 rows — and collapseTraceRows
+    // appends labels unconditionally, so the entry comes back with 6 duplicated
+    // labels. Only a real SQL engine can catch this; the mocked test cannot.
+    test('an entry matching two active focuses is returned once, with its labels unduplicated', async () => {
+      const entries = await getEntriesForTrace(db, { focusIds: [focusAId, focusBId] });
+
+      const matches = entries.filter((e) => e.id === entryBothId);
+      expect(matches).toHaveLength(1);
+      expect(matches[0].labels).toHaveLength(3);
+      expect(matches[0].labels.map((l) => l.id).sort()).toEqual([...labelIds].sort());
+    });
+
+    test('multiple focus ids combine with OR semantics', async () => {
+      const ids = (await getEntriesForTrace(db, { focusIds: [focusAId, focusBId] })).map((e) => e.id);
+
+      expect(ids).toContain(entryXId);
+      expect(ids).toContain(entryYId);
+      expect(ids).not.toContain(entryZId);
+    });
+
+    test('a single focus id returns only that focus\'s entries', async () => {
+      const ids = (await getEntriesForTrace(db, { focusIds: [focusAId] })).map((e) => e.id);
+
+      expect(ids).toContain(entryXId);
+      expect(ids).not.toContain(entryYId);
+      expect(ids).not.toContain(entryZId);
+    });
+
+    test('focusIds: [] behaves identically to omitting the option', async () => {
+      // Guards against `IN ()`, which is a syntax error in SQLite.
+      const withEmpty = (await getEntriesForTrace(db, { focusIds: [] })).map((e) => e.id);
+      const withoutOption = (await getEntriesForTrace(db)).map((e) => e.id);
+
+      expect(withEmpty).toEqual(withoutOption);
+      expect(withEmpty).toContain(entryZId);
+    });
+  });
+
+  // ── routine_completion_id round-trip + getRoutineCompletions ────────────────
+
+  describe('routine grouping reads', () => {
+    let foodTypeId: number;
+    let sleepTypeId: number;
+    let routineId: number;
+    let completion1Id: number;
+    let completion2Id: number;
+    let member1Id: number;
+    let member2Id: number;
+    let member3Id: number;
+    let standaloneId: number;
+    let labelAId: number;
+    let labelBId: number;
+
+    beforeAll(() => {
+      foodTypeId = entryTypeId(raw, 'Food');
+      sleepTypeId = entryTypeId(raw, 'Sleep');
+      const labels = raw
+        .prepare(
+          `SELECT id FROM label WHERE entry_type_id = ? AND is_enabled = 1 ORDER BY sort_order LIMIT 2`
+        )
+        .all(foodTypeId) as { id: number }[];
+      [labelAId, labelBId] = labels.map((l) => l.id);
+
+      routineId = Number(
+        raw
+          .prepare(
+            `INSERT INTO routine (name, sort_order, archived, created_at, updated_at)
+             VALUES ('Evening Wind Down', 0, 0, '2026-06-01T08:00:00+00:00', '2026-06-01T08:00:00+00:00')`
+          )
+          .run().lastInsertRowid
+      );
+
+      const insertCompletion = raw.prepare(
+        `INSERT INTO routine_completion (routine_id, created_at) VALUES (?, ?)`
+      );
+      completion1Id = Number(insertCompletion.run(routineId, '2026-06-01T20:15:00-07:00').lastInsertRowid);
+      completion2Id = Number(insertCompletion.run(routineId, '2026-06-02T20:40:00-07:00').lastInsertRowid);
+
+      const insertEntry = raw.prepare(
+        `INSERT INTO entry (entry_type_id, source_type, timestamp, created_at, numeric_value, notes, routine_id, routine_completion_id)
+         VALUES (?, 'log', ?, ?, NULL, NULL, ?, ?)`
+      );
+      // Deliberately give the member entries timestamps that differ from the
+      // completion's created_at so `completedAt` cannot silently come from an entry.
+      member1Id = Number(
+        insertEntry.run(foodTypeId, '2026-06-01T20:16:00-07:00', '2026-06-01T20:16:00-07:00', routineId, completion1Id)
+          .lastInsertRowid
+      );
+      member2Id = Number(
+        insertEntry.run(sleepTypeId, '2026-06-01T20:17:00-07:00', '2026-06-01T20:17:00-07:00', routineId, completion1Id)
+          .lastInsertRowid
+      );
+      member3Id = Number(
+        insertEntry.run(foodTypeId, '2026-06-02T20:41:00-07:00', '2026-06-02T20:41:00-07:00', routineId, completion2Id)
+          .lastInsertRowid
+      );
+
+      const insertEntryLabel = raw.prepare(
+        `INSERT INTO entry_label (entry_id, label_id) VALUES (?, ?)`
+      );
+      insertEntryLabel.run(member1Id, labelAId);
+      insertEntryLabel.run(member1Id, labelBId);
+
+      standaloneId = Number(
+        raw
+          .prepare(
+            `INSERT INTO entry (entry_type_id, source_type, timestamp, created_at)
+             VALUES (?, 'log', '2026-06-01T21:00:00-07:00', '2026-06-01T21:00:00-07:00')`
+          )
+          .run(foodTypeId).lastInsertRowid
+      );
+    });
+
+    test('getEntriesForTrace round-trips routine_completion_id', async () => {
+      const entries = await getEntriesForTrace(db);
+
+      expect(entries.find((e) => e.id === member1Id)!.routineCompletionId).toBe(completion1Id);
+      expect(entries.find((e) => e.id === standaloneId)!.routineCompletionId).toBeNull();
+    });
+
+    test('returns one group per completion with the routine name and canonical timestamp', async () => {
+      const groups = await getRoutineCompletions(db, [completion1Id]);
+
+      expect(groups).toHaveLength(1);
+      expect(groups[0].completionId).toBe(completion1Id);
+      expect(groups[0].routineId).toBe(routineId);
+      expect(groups[0].routineName).toBe('Evening Wind Down');
+      expect(groups[0].completedAt).toBe('2026-06-01T20:15:00-07:00');
+      expect(groups[0].localDate).toBe('2026-06-01');
+    });
+
+    test('group carries all member entries oldest-first, with labels intact', async () => {
+      const [group] = await getRoutineCompletions(db, [completion1Id]);
+
+      expect(group.entries.map((e) => e.id)).toEqual([member1Id, member2Id]);
+      expect(group.entries[0].labels).toHaveLength(2);
+      expect(group.entries.map((e) => e.id)).not.toContain(standaloneId);
+    });
+
+    test('two completions of the same routine come back as distinct groups', async () => {
+      const groups = await getRoutineCompletions(db, [completion1Id, completion2Id]);
+
+      expect(groups).toHaveLength(2);
+      const byId = new Map(groups.map((g) => [g.completionId, g]));
+      expect(byId.get(completion1Id)!.entries.map((e) => e.id)).toEqual([member1Id, member2Id]);
+      expect(byId.get(completion2Id)!.entries.map((e) => e.id)).toEqual([member3Id]);
+    });
+
+    test('returns [] for an empty id list', async () => {
+      expect(await getRoutineCompletions(db, [])).toEqual([]);
     });
   });
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { FlatList, SectionList, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen, ChipTray } from '@/components';
@@ -8,11 +8,13 @@ import { useTraceEntries } from '@/hooks/useTraceEntries';
 import { summariseEntry, shouldShowAreaPrefix } from '@/lib/utils/traceUtils';
 import { formatEntryTime } from '@/lib/utils/timestamp';
 import { colors, typeScale, lineHeight, spacing } from '@/constants/theme';
-import type { EntryWithLabels } from '@/lib/db/query-types';
-import type { TraceSection } from '@/lib/utils/traceUtils';
+import type { EntryWithLabels, RoutineCompletionGroup } from '@/lib/db/query-types';
+import type { TraceItem, TraceSection } from '@/lib/utils/traceUtils';
 import { messages } from '@/constants/messages';
 import { useFocuses } from '@/hooks/useFocuses';
 import { FocusPill } from '@/components/FocusPill';
+import { toggleFilter, focusIdsOf } from '@/lib/utils/traceFilters';
+import type { TraceFilter } from '@/lib/utils/traceFilters';
 import { getTypedDb } from '@/lib/db/typed-db';
 import { getContextEntries } from '@/lib/db/queries';
 import dayjs from 'dayjs';
@@ -23,6 +25,23 @@ function formatTraceChipLabel(label: EntryWithLabels['labels'][number], entry: E
   if (entry.entryTypeName !== 'Physical') return label.name;
   const base = shouldShowAreaPrefix(label.parentName) ? `${label.parentName}: ${label.name}` : label.name;
   return entry.numericValue != null ? `${base} (${entry.numericValue}/5)` : base;
+}
+
+// Entry IDs and completion IDs are different key spaces, so the keys are
+// namespaced to keep a group and an entry with the same numeric ID distinct.
+function traceItemKey(item: TraceItem): string {
+  return item.kind === 'group' ? `g-${item.group.completionId}` : `e-${item.entry.id}`;
+}
+
+/** Returns a new Set with `id` removed if present, added if not. Never mutates. */
+function toggleInSet(set: Set<number>, id: number): Set<number> {
+  const next = new Set(set);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  return next;
 }
 
 // ─── Shared icon ──────────────────────────────────────────────────────────────
@@ -40,6 +59,43 @@ function EntryIcon({ icon, testID }: { icon: string | null | undefined; testID?:
     );
   }
   return <View style={styles.iconPlaceholder} testID={testID} />;
+}
+
+// ─── Shared expanded body ─────────────────────────────────────────────────────
+
+interface EntryDetailProps {
+  entry: EntryWithLabels;
+  chipsTestID: string;
+  notesTestID: string;
+}
+
+/**
+ * The chips-and-notes body shown when an entry is expanded.
+ *
+ * Shared by the standalone row and by each member of an expanded Routine group
+ * so the Physical severity/area chip rules (formatTraceChipLabel) and the
+ * empty-notes guard live in exactly one place.
+ */
+function EntryDetail({ entry, chipsTestID, notesTestID }: EntryDetailProps) {
+  return (
+    <>
+      {entry.labels.length > 0 && (
+        <ChipTray
+          chips={entry.labels.map((label) => ({
+            id: label.id,
+            label: formatTraceChipLabel(label, entry),
+            color: colors.surfaceVariant,
+          }))}
+          testID={chipsTestID}
+        />
+      )}
+      {entry.notes != null && entry.notes !== '' && (
+        <Text style={styles.expandedNotes} testID={notesTestID}>
+          {entry.notes}
+        </Text>
+      )}
+    </>
+  );
 }
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
@@ -73,24 +129,11 @@ function EntryRow({ entry, expanded, onToggle, filterActive, onShowContext }: En
 
       {expanded && (
         <View style={styles.expandedContainer}>
-          {entry.labels.length > 0 && (
-            <ChipTray
-              chips={entry.labels.map((label) => ({
-                id: label.id,
-                label: formatTraceChipLabel(label, entry),
-                color: colors.surfaceVariant,
-              }))}
-              testID="trace-expanded"
-            />
-          )}
-          {entry.notes != null && entry.notes !== '' && (
-            <Text
-              style={styles.expandedNotes}
-              testID={`trace-notes-${entry.id}`}
-            >
-              {entry.notes}
-            </Text>
-          )}
+          <EntryDetail
+            entry={entry}
+            chipsTestID="trace-expanded"
+            notesTestID={`trace-notes-${entry.id}`}
+          />
         </View>
       )}
 
@@ -109,16 +152,95 @@ function EntryRow({ entry, expanded, onToggle, filterActive, onShowContext }: En
   );
 }
 
+// ─── Routine group row ────────────────────────────────────────────────────────
+
+interface RoutineGroupRowProps {
+  group: RoutineCompletionGroup;
+  /** IDs of every entry matching the active filter, across the whole list. */
+  matchedIds: Set<number>;
+  expanded: boolean;
+  onToggle: (completionId: number) => void;
+  filterActive: boolean;
+}
+
+/**
+ * One Routine completion, collapsed into a single row.
+ *
+ * Expanding reveals every member entry — including entries the active filter
+ * excluded, which render muted so it is clear why the Routine surfaced at all.
+ *
+ * No "Show context" affordance here: a group has N entries and no single focal
+ * one, so the ±2h window would be ambiguous.
+ */
+function RoutineGroupRow({ group, matchedIds, expanded, onToggle, filterActive }: RoutineGroupRowProps) {
+  const time = formatEntryTime(group.completedAt);
+  const itemCount = group.entries.length;
+
+  return (
+    <View>
+      <Pressable
+        style={styles.row}
+        onPress={() => onToggle(group.completionId)}
+        accessibilityRole="button"
+        accessibilityLabel={`${group.routineName}, ${time}, ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
+        accessibilityState={{ expanded }}
+        testID={`trace-group-${group.completionId}`}
+      >
+        <EntryIcon
+          icon="format-list-checks"
+          testID={`trace-group-icon-${group.completionId}`}
+        />
+        <Text style={styles.summary} numberOfLines={1}>
+          {group.routineName}
+        </Text>
+        <Text style={styles.time}>{time}</Text>
+      </Pressable>
+
+      {expanded && (
+        // `gap` separates one member's last line from the next member's
+        // summary — without it two label-less, note-less members render as
+        // flush lines of body text.
+        <View style={[styles.expandedContainer, styles.expandedGroupContainer]}>
+          {group.entries.map((entry) => {
+            const muted = filterActive && !matchedIds.has(entry.id);
+            return (
+              <View
+                key={entry.id}
+                style={muted ? styles.rowMuted : undefined}
+                testID={
+                  muted
+                    ? `trace-group-item-muted-${entry.id}`
+                    : `trace-group-item-${entry.id}`
+                }
+              >
+                <Text style={styles.summary} numberOfLines={1}>
+                  {summariseEntry(entry)}
+                </Text>
+                <EntryDetail
+                  entry={entry}
+                  chipsTestID={`trace-group-item-chips-${entry.id}`}
+                  notesTestID={`trace-group-item-notes-${entry.id}`}
+                />
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+}
+
 // ─── Context View ─────────────────────────────────────────────────────────────
 
 interface ContextViewProps {
   focalEntry: EntryWithLabels;
   contextEntries: EntryWithLabels[];
-  focusName: string;
+  /** What the user returns to, e.g. "Knee PT filter" or "filters". */
+  backLabel: string;
   onDismiss: () => void;
 }
 
-function ContextView({ focalEntry, contextEntries, focusName, onDismiss }: ContextViewProps) {
+function ContextView({ focalEntry, contextEntries, backLabel, onDismiss }: ContextViewProps) {
   // Build the flat list: focal entry + all context entries, sorted by timestamp.
   // Context entries are all other entries in the ±2h window — they render muted
   // since they were not part of the active focus filter. The focal entry gets a
@@ -144,7 +266,7 @@ function ContextView({ focalEntry, contextEntries, focusName, onDismiss }: Conte
         style={styles.contextViewDismiss}
       >
         <Text style={styles.contextViewDismissText}>
-          {`← Back to ${focusName} filter`}
+          {`← Back to ${backLabel}`}
         </Text>
       </Pressable>
 
@@ -190,10 +312,18 @@ function ContextViewRow({ entry, isFocal, isMuted }: ContextViewRowProps) {
 
 export default function TraceScreen() {
   const router = useRouter();
-  const [selectedFocusId, setSelectedFocusId] = useState<number | undefined>(undefined);
+  const [activeFilters, setActiveFilters] = useState<TraceFilter[]>([]);
+  // Memoised so the array identity is stable across renders — useTraceEntries
+  // otherwise sees a fresh array on every entry/group toggle.
+  const focusIds = useMemo(() => focusIdsOf(activeFilters), [activeFilters]);
+  const filterCount = activeFilters.length;
+  const filterActive = filterCount > 0;
   const { focuses } = useFocuses({ includeArchived: true });
-  const { sections, loading, error } = useTraceEntries(selectedFocusId);
+  const { sections, loading, error } = useTraceEntries(focusIds);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  // Keyed by routine_completion.id — a separate set from expandedIds because
+  // entry IDs and completion IDs are different key spaces and would collide.
+  const [expandedGroupIds, setExpandedGroupIds] = useState<Set<number>>(new Set());
 
   // Context view mode: when set, the filtered SectionList is replaced by a
   // flat context view showing all entries around the focal entry.
@@ -205,6 +335,7 @@ export default function TraceScreen() {
   useFocusEffect(
     useCallback(() => {
       setExpandedIds(new Set());
+      setExpandedGroupIds(new Set());
       setContextState(undefined);
     }, [])
   );
@@ -216,8 +347,9 @@ export default function TraceScreen() {
       // Only reset if this screen is already focused (guards against first-visit
       // navigation from another tab also triggering a reset).
       if (navigation.isFocused()) {
-        setSelectedFocusId(undefined);
+        setActiveFilters([]);
         setExpandedIds(new Set());
+        setExpandedGroupIds(new Set());
         setContextState(undefined);
       }
     });
@@ -225,7 +357,7 @@ export default function TraceScreen() {
   }, [navigation]);
 
   const handleFocusPillPress = useCallback((id: number) => {
-    setSelectedFocusId((prev) => (prev === id ? undefined : id));
+    setActiveFilters((prev) => toggleFilter(prev, { type: 'focus', id }));
     setContextState(undefined);
   }, []);
 
@@ -234,15 +366,11 @@ export default function TraceScreen() {
   }, [router]);
 
   const handleToggle = useCallback((id: number) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    setExpandedIds((prev) => toggleInSet(prev, id));
+  }, []);
+
+  const handleToggleGroup = useCallback((completionId: number) => {
+    setExpandedGroupIds((prev) => toggleInSet(prev, completionId));
   }, []);
 
   const handleShowContext = useCallback(async (entry: EntryWithLabels) => {
@@ -276,16 +404,25 @@ export default function TraceScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: EntryWithLabels }) => (
-      <EntryRow
-        entry={item}
-        expanded={expandedIds.has(item.id)}
-        onToggle={handleToggle}
-        filterActive={selectedFocusId != null}
-        onShowContext={handleShowContext}
-      />
-    ),
-    [expandedIds, handleToggle, selectedFocusId, handleShowContext],
+    ({ item }: { item: TraceItem }) =>
+      item.kind === 'group' ? (
+        <RoutineGroupRow
+          group={item.group}
+          matchedIds={item.matchedIds}
+          expanded={expandedGroupIds.has(item.group.completionId)}
+          onToggle={handleToggleGroup}
+          filterActive={filterActive}
+        />
+      ) : (
+        <EntryRow
+          entry={item.entry}
+          expanded={expandedIds.has(item.entry.id)}
+          onToggle={handleToggle}
+          filterActive={filterActive}
+          onShowContext={handleShowContext}
+        />
+      ),
+    [expandedIds, expandedGroupIds, handleToggle, handleToggleGroup, filterActive, handleShowContext],
   );
 
   if (loading) {
@@ -305,7 +442,23 @@ export default function TraceScreen() {
   }
 
   const isEmpty = sections.length === 0;
-  const selectedFocusName = focuses.find((f) => f.id === selectedFocusId)?.name ?? 'Focus';
+  // With exactly one filter the back label names it, byte-identical to the
+  // single-filter behaviour before multi-select. With several, "filters" is the
+  // only honest label.
+  // Both key off `filterCount`, not `focusIds.length`, so a future non-focus
+  // filter variant still reads as "filtered" here rather than silently falling
+  // back to the unfiltered copy.
+  const contextBackLabel =
+    filterCount === 1 && focusIds.length === 1
+      ? `${focuses.find((f) => f.id === focusIds[0])?.name ?? 'Focus'} filter`
+      : 'filters';
+
+  const emptyMessage =
+    filterCount === 0
+      ? messages.traceEmpty
+      : filterCount === 1
+        ? messages.traceEmptyFiltered
+        : messages.traceEmptyFilteredPlural;
 
   return (
     <Screen>
@@ -321,7 +474,7 @@ export default function TraceScreen() {
             <FocusPill
               key={focus.id}
               label={focus.name}
-              selected={selectedFocusId === focus.id}
+              selected={focusIds.includes(focus.id)}
               onPress={() => handleFocusPillPress(focus.id)}
               onLongPress={() => handleFocusPillLongPress(focus.id)}
               testID={`focus-pill-${focus.id}`}
@@ -335,21 +488,17 @@ export default function TraceScreen() {
         <ContextView
           focalEntry={contextState.focalEntry}
           contextEntries={contextState.entries}
-          focusName={selectedFocusName}
+          backLabel={contextBackLabel}
           onDismiss={handleDismissContext}
         />
       ) : isEmpty ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            {selectedFocusId != null
-              ? 'No entries for this Focus yet.'
-              : 'Nothing logged yet.'}
-          </Text>
+          <Text style={styles.emptyText}>{emptyMessage}</Text>
         </View>
       ) : (
-        <SectionList<EntryWithLabels, TraceSection>
+        <SectionList<TraceItem, TraceSection>
           sections={sections}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={traceItemKey}
           stickySectionHeadersEnabled={false}
           contentContainerStyle={styles.listContent}
           renderSectionHeader={renderSectionHeader}
@@ -431,6 +580,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.pagePadding,
     paddingTop: spacing.elementGap,
     paddingBottom: 32,
+  },
+  expandedGroupContainer: {
+    gap: spacing.elementGap,
   },
   expandedNotes: {
     fontFamily: typeScale.bodyMedium.family,
