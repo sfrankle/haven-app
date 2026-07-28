@@ -1,6 +1,6 @@
 import { formatEntryDate } from './timestamp';
 import { energyLabel } from '@/constants/energyLevels';
-import type { EntryWithLabels } from '@/lib/db/query-types';
+import type { EntryWithLabels, RoutineCompletionGroup } from '@/lib/db/query-types';
 
 export const WHOLE_BODY_NAMES = ['whole body', 'body'];
 
@@ -9,10 +9,28 @@ export function shouldShowAreaPrefix(parentName: string | null | undefined): boo
   return parentName != null && !WHOLE_BODY_NAMES.includes(parentName.toLowerCase());
 }
 
+/**
+ * One row in the Trace list: either a standalone entry, or a Routine completion
+ * collapsed into a single expandable row.
+ */
+export type TraceItem =
+  | { kind: 'entry'; entry: EntryWithLabels }
+  | {
+      kind: 'group';
+      group: RoutineCompletionGroup;
+      /**
+       * IDs of every entry that matched the active filter, across the whole
+       * list — shared by reference between group items. The group row
+       * intersects it with its own members to decide what to mute. Never a
+       * per-group copy.
+       */
+      matchedIds: Set<number>;
+    };
+
 export interface TraceSection {
   /** Formatted date header, e.g. "Today", "Yesterday", "March 2". */
   title: string;
-  data: EntryWithLabels[];
+  data: TraceItem[];
 }
 
 /** Returns "Felt {label}" or "Felt" when no labels are present. */
@@ -74,21 +92,72 @@ export function summariseEntry(entry: EntryWithLabels): string {
 }
 
 /**
- * Groups entries (already newest-first from getEntriesForTrace) into SectionList
- * sections, preserving order.
+ * Merges the filtered entry stream with Routine completion groups into the list
+ * Trace actually renders.
  *
- * @param entries - Entries ordered newest-first.
+ * Entries sharing a `routineCompletionId` collapse into a single group item,
+ * emitted at the position of their first (newest) member so the chronology of
+ * the surrounding entries is preserved. Grouping is keyed strictly off
+ * `routineCompletionId` — never timestamp proximity, and never conditional on
+ * member count, so a one-item Routine still reads "Morning Flow · 08:12".
+ *
+ * An entry whose completion has no matching group is emitted as an individual
+ * row rather than dropped. Passing `groups: []` therefore renders everything
+ * ungrouped, which is exactly the behaviour required when the
+ * getRoutineCompletions enrichment query fails — one code path, two triggers.
+ *
+ * @param matched - Entries from getEntriesForTrace, newest-first.
+ * @param groups  - Completion groups from getRoutineCompletions; `[]` on failure.
+ */
+export function buildTraceItems(
+  matched: EntryWithLabels[],
+  groups: RoutineCompletionGroup[],
+): TraceItem[] {
+  const groupsById = new Map(groups.map((g) => [g.completionId, g]));
+  const matchedIds = new Set(matched.map((e) => e.id));
+  const emitted = new Set<number>();
+  const items: TraceItem[] = [];
+
+  for (const entry of matched) {
+    const completionId = entry.routineCompletionId;
+    if (completionId == null) {
+      items.push({ kind: 'entry', entry });
+      continue;
+    }
+
+    const group = groupsById.get(completionId);
+    if (group === undefined) {
+      items.push({ kind: 'entry', entry });
+      continue;
+    }
+
+    if (!emitted.has(completionId)) {
+      emitted.add(completionId);
+      items.push({ kind: 'group', group, matchedIds });
+    }
+  }
+
+  return items;
+}
+
+/**
+ * Groups Trace items (already newest-first) into SectionList sections,
+ * preserving order. A group is filed under its completion date, which may
+ * differ from a member entry's date around midnight.
+ *
+ * @param items - Items ordered newest-first.
  * @param today - Optional 'YYYY-MM-DD' override for "today" (injectable for tests).
  */
-export function groupEntriesByDate(entries: EntryWithLabels[], today?: string): TraceSection[] {
+export function groupTraceItemsByDate(items: TraceItem[], today?: string): TraceSection[] {
   const sectionMap = new Map<string, TraceSection>();
 
-  for (const entry of entries) {
-    const key = entry.localDate;
+  for (const item of items) {
+    const key = item.kind === 'group' ? item.group.localDate : item.entry.localDate;
+    const timestamp = item.kind === 'group' ? item.group.completedAt : item.entry.timestamp;
     if (!sectionMap.has(key)) {
-      sectionMap.set(key, { title: formatEntryDate(entry.timestamp, today), data: [] });
+      sectionMap.set(key, { title: formatEntryDate(timestamp, today), data: [] });
     }
-    sectionMap.get(key)!.data.push(entry);
+    sectionMap.get(key)!.data.push(item);
   }
 
   const sections = Array.from(sectionMap.values());
