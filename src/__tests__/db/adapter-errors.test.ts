@@ -121,6 +121,9 @@ describe('adapter error normalisation', () => {
     );
 
     expectRealmLocalError(err);
+    // Pins which failure rolled the transaction back — without this, any error
+    // at all satisfies the test, including a typo'd table name.
+    expect((err as Error).message).toMatch(/FOREIGN KEY/);
     expect(raw.inTransaction).toBe(false);
 
     // Asserted outside the transaction body: an expect() thrown inside would be
@@ -129,6 +132,23 @@ describe('adapter error normalisation', () => {
     // otherwise the rollback assertion would pass for the wrong reason.
     expect(countInside).toBe(countBefore + 1);
     expect(countEntries()).toBe(countBefore);
+  });
+
+  test('a failing ROLLBACK surfaces realm-local, keeping the transaction error as `cause`', async () => {
+    const original = new Error('deliberate failure from the body');
+
+    const err = (await capture(() =>
+      db.withTransactionAsync(async () => {
+        // Ends the transaction early, so the adapter's own ROLLBACK has nothing
+        // left to roll back and throws — the branch under test.
+        await db.runAsync('ROLLBACK');
+        throw original;
+      })
+    )) as Error;
+
+    expectRealmLocalError(err);
+    expect(err.message).toMatch(/no transaction is active/);
+    expect(err.cause).toBe(original);
   });
 
   test('an Error thrown by the transaction body passes through by identity', async () => {

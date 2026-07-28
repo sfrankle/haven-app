@@ -113,6 +113,9 @@ export function createAdapter(db: Database.Database): AdaptedDb {
           // unwrapped throw here would report as "did not throw", in the
           // hardest condition in this file to debug.
           const failure = toRealmError(rollbackErr);
+          // Deliberately displaces the `cause` toRealmError just set. Of the
+          // two, the transaction's error is the one worth reading; the ROLLBACK
+          // failure is already the thrown error's own message.
           failure.cause = toRealmError(err);
           throw failure;
         }
