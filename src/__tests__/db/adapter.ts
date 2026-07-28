@@ -104,11 +104,18 @@ export function createAdapter(db: Database.Database): AdaptedDb {
         // No rethrow needed: the catch below normalises whatever COMMIT throws.
         db.prepare('COMMIT').run();
       } catch (err) {
-        // ROLLBACK is wrapped like everything else. If it throws, its error
-        // replaces `err` and propagates — and it has to arrive realm-local,
-        // or the failure reports as "did not throw" in the hardest condition
-        // in this file to debug.
-        rethrow(() => db.prepare('ROLLBACK').run());
+        try {
+          db.prepare('ROLLBACK').run();
+        } catch (rollbackErr) {
+          // A failing ROLLBACK displaces the error that caused the rollback,
+          // so keep that one reachable as `cause` — it is the root cause, and
+          // it is the one worth reading. Normalised like everything else: an
+          // unwrapped throw here would report as "did not throw", in the
+          // hardest condition in this file to debug.
+          const failure = toRealmError(rollbackErr);
+          failure.cause = toRealmError(err);
+          throw failure;
+        }
         throw toRealmError(err);
       }
     },

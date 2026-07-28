@@ -24,7 +24,7 @@ async function capture(fn: () => unknown): Promise<unknown> {
 }
 
 /** Asserts a caught value is a real, realm-local Error — the contract under guard. */
-function expectRealmLocalError(err: unknown) {
+function expectRealmLocalError(err: unknown): void {
   expect(err).toBeInstanceOf(Error);
   expect(Object.prototype.toString.call(err)).toBe('[object Error]');
 }
@@ -84,12 +84,24 @@ describe('adapter error normalisation', () => {
     expect(err.name).toBe('SqliteError');
   });
 
+  test('the original SqliteError survives as `cause`', async () => {
+    const err = (await capture(() =>
+      db.runAsync('INSERT INTO no_such_table (a) VALUES (1)')
+    )) as Error;
+    // Normalisation replaces the thrown object, so the untouched original is
+    // kept on `cause` — without it, wrapping would discard debugging context.
+    expect(Object.prototype.toString.call(err.cause)).toBe('[object Object]');
+  });
+
   // ── transactions ─────────────────────────────────────────────────────────
 
   test('withTransactionAsync rejects with a realm-local Error and rolls back', async () => {
     const typeId = entryTypeId(raw, 'Food');
     const labelId = anyLabelId(raw, 'Food');
-    const countBefore = (raw.prepare(`SELECT COUNT(*) AS n FROM entry`).get() as { n: number }).n;
+    const countEntries = () =>
+      (raw.prepare(`SELECT COUNT(*) AS n FROM entry`).get() as { n: number }).n;
+    const countBefore = countEntries();
+    let countInside = -1;
 
     const err = await capture(() =>
       db.withTransactionAsync(async () => {
@@ -98,7 +110,9 @@ describe('adapter error normalisation', () => {
            VALUES (?, ?, ?, 'log')`,
           [typeId, TEST_TS, TEST_TS]
         );
-        // Violates the FK on label_id — 999999 does not exist.
+        // Read on the same connection, so uncommitted rows are visible.
+        countInside = countEntries();
+        // Violates the FK on entry_id — 999999 is not a real entry.
         await db.runAsync(`INSERT INTO entry_label (entry_id, label_id) VALUES (?, ?)`, [
           999999,
           labelId,
@@ -109,8 +123,12 @@ describe('adapter error normalisation', () => {
     expectRealmLocalError(err);
     expect(raw.inTransaction).toBe(false);
 
-    const countAfter = (raw.prepare(`SELECT COUNT(*) AS n FROM entry`).get() as { n: number }).n;
-    expect(countAfter).toBe(countBefore);
+    // Asserted outside the transaction body: an expect() thrown inside would be
+    // caught by capture() and silently satisfy the assertions below. If a new
+    // NOT NULL column ever makes the first INSERT fail, this catches it —
+    // otherwise the rollback assertion would pass for the wrong reason.
+    expect(countInside).toBe(countBefore + 1);
+    expect(countEntries()).toBe(countBefore);
   });
 
   test('an Error thrown by the transaction body passes through by identity', async () => {
