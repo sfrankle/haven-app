@@ -182,7 +182,7 @@ function RoutineGroupRow({ group, matchedIds, expanded, onToggle, filterActive }
         style={styles.row}
         onPress={() => onToggle(group.completionId)}
         accessibilityRole="button"
-        accessibilityLabel={`${group.routineName}, ${time}, ${itemCount} items`}
+        accessibilityLabel={`${group.routineName}, ${time}, ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
         accessibilityState={{ expanded }}
         testID={`trace-group-${group.completionId}`}
       >
@@ -197,7 +197,10 @@ function RoutineGroupRow({ group, matchedIds, expanded, onToggle, filterActive }
       </Pressable>
 
       {expanded && (
-        <View style={styles.expandedContainer}>
+        // `gap` separates one member's last line from the next member's
+        // summary — without it two label-less, note-less members render as
+        // flush lines of body text.
+        <View style={[styles.expandedContainer, styles.expandedGroupContainer]}>
           {group.entries.map((entry) => {
             const muted = filterActive && !matchedIds.has(entry.id);
             return (
@@ -577,6 +580,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.pagePadding,
     paddingTop: spacing.elementGap,
     paddingBottom: 32,
+  },
+  expandedGroupContainer: {
+    gap: spacing.elementGap,
   },
   expandedNotes: {
     fontFamily: typeScale.bodyMedium.family,

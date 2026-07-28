@@ -344,6 +344,21 @@ describe('TraceScreen', () => {
       fireEvent.press(row);
       expect(getByTestId('trace-group-1').props.accessibilityState.expanded).toBe(true);
     });
+
+    it('says "1 item", not "1 items", for a single-member routine', () => {
+      const group = makeGroup({ entries: [MEMBER_A] });
+      mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
+      mockUseTraceEntries.mockReturnValue({
+        sections: [sectionWith([{ kind: 'group', group, matchedIds: new Set([101]) }])],
+        loading: false,
+        error: null,
+      });
+
+      const { getByTestId } = render(<TraceScreen />);
+      expect(getByTestId('trace-group-1').props.accessibilityLabel).toBe(
+        'Morning Flow, 8:12 AM, 1 item',
+      );
+    });
   });
 
   describe('Multi-focus filter selection', () => {
