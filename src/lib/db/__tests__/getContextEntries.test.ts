@@ -16,6 +16,7 @@ const BASE_ROW = {
   timestamp: '2026-04-14T11:00:00-07:00',
   numeric_value: null,
   notes: null,
+  routine_completion_id: null,
   entry_type_name: 'Food',
   entry_type_title: 'Food',
   entry_type_icon: null,
@@ -119,6 +120,35 @@ describe('getContextEntries', () => {
     expect(calls[0][1]).toContain(afterIso);
     expect(calls[0][1]).toContain(beforeIso);
     expect(calls[0][1]).toContain(excludeEntryId);
+  });
+
+  // getContextEntries shares EntryTraceRaw and the row collapser with
+  // getEntriesForTrace. Adding a column to only one of the two SELECTs
+  // type-checks cleanly and yields `undefined` at runtime — these two tests pin
+  // that hazard for routine_completion_id.
+  it('selects e.routine_completion_id', async () => {
+    const db = makeDb([]);
+
+    await getContextEntries(db, {
+      excludeEntryId: 1,
+      afterIso: '2026-04-14T08:00:00-07:00',
+      beforeIso: '2026-04-14T12:00:00-07:00',
+    });
+
+    const calls = (db.getAllAsync as jest.Mock).mock.calls;
+    expect(calls[0][0]).toContain('e.routine_completion_id');
+  });
+
+  it('maps routine_completion_id onto the returned entry', async () => {
+    const db = makeDb([{ ...BASE_ROW, id: 6, routine_completion_id: 12 }]);
+
+    const result = await getContextEntries(db, {
+      excludeEntryId: 1,
+      afterIso: '2026-04-14T08:00:00-07:00',
+      beforeIso: '2026-04-14T12:00:00-07:00',
+    });
+
+    expect(result[0].routineCompletionId).toBe(12);
   });
 
   it('orders results ASC by timestamp', async () => {

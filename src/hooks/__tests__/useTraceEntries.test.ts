@@ -34,6 +34,7 @@ const FIXTURE_ENTRIES: EntryWithLabels[] = [
     numericValue: null,
     notes: null,
     labels: [],
+    routineCompletionId: null,
   },
 ];
 

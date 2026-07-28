@@ -14,6 +14,7 @@ function makeEntry(overrides: Partial<EntryWithLabels> = {}): EntryWithLabels {
     numericValue: null,
     notes: null,
     labels: [],
+    routineCompletionId: null,
     ...overrides,
   };
 }

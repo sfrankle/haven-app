@@ -52,6 +52,7 @@ function makeEntry(overrides: Partial<EntryWithLabels> = {}): EntryWithLabels {
     numericValue: 7,
     notes: null,
     labels: [],
+    routineCompletionId: null,
     ...overrides,
   };
 }
