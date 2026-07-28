@@ -436,7 +436,7 @@ describe('TraceScreen', () => {
       mockIsFocused.mockReturnValue(true);
     });
 
-    it('tabPress while focused resets selectedFocusId', async () => {
+    it('tabPress while focused resets the active filters', async () => {
       const FOCUS = { id: 9, name: 'My Focus', description: null, archived: false, sortOrder: 0, createdAt: '2026-01-01T00:00:00-07:00' };
       mockUseFocuses.mockReturnValue({ focuses: [FOCUS], loading: false, error: null });
 
