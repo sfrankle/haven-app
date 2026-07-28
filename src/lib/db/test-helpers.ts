@@ -63,7 +63,15 @@ export function applyAllMigrations(db: Database.Database): void {
   }
 }
 
-/** Opens an in-memory DB with FK enforcement on and returns it. */
+/**
+ * Opens an in-memory DB with FK enforcement on and returns it.
+ *
+ * The handle is raw: errors it throws are better-sqlite3 `SqliteError`s, which
+ * are not realm-local `Error`s and so fail `rejects.toThrow()` with a
+ * misleading "did not throw" (see #179 and the header of
+ * `src/__tests__/db/adapter.ts`). Sync `expect(fn).toThrow()` is unaffected.
+ * Route any *async* throw assertion through `createAdapter`, which normalises.
+ */
 export function openTestDb(): Database.Database {
   const db = new Database(':memory:');
   db.pragma('foreign_keys = ON');
