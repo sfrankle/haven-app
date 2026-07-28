@@ -504,15 +504,14 @@ export async function getRoutineCompletions(
     completionIds
   );
 
+  // Insertion-ordered, so the ORDER BY above carries through to the result.
   const groups = new Map<number, RoutineCompletionGroup>();
-  const orderedCompletionIds: number[] = [];
   // Entry IDs are unique across the whole result, so one map is enough to
   // dedupe the entry×label fan-out before bucketing by completion.
   const entries = new Map<number, EntryWithLabels>();
 
   for (const row of rows) {
     if (!groups.has(row.completion_id)) {
-      orderedCompletionIds.push(row.completion_id);
       groups.set(row.completion_id, {
         completionId: row.completion_id,
         routineId: row.routine_id,
@@ -535,7 +534,7 @@ export async function getRoutineCompletions(
     }
   }
 
-  return orderedCompletionIds.map((id) => groups.get(id)!);
+  return [...groups.values()];
 }
 
 /**
@@ -1282,10 +1281,9 @@ export async function getRoutineDayProgress(
 ): Promise<Record<number, RoutineDayProgress>> {
   if (routineIds.length === 0) return {};
 
-  const placeholders = routineIds.map(() => '?').join(',');
   const rows = await db.getAllAsync<{ routine_id: number; created_at: string }>(
     `SELECT routine_id, created_at FROM routine_completion
-     WHERE routine_id IN (${placeholders}) AND substr(created_at, 1, 10) = ?`,
+     WHERE routine_id IN (${placeholders(routineIds.length)}) AND substr(created_at, 1, 10) = ?`,
     [...routineIds, today]
   );
 

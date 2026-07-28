@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { FlatList, SectionList, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen, ChipTray } from '@/components';
@@ -27,6 +27,23 @@ function formatTraceChipLabel(label: EntryWithLabels['labels'][number], entry: E
   return entry.numericValue != null ? `${base} (${entry.numericValue}/5)` : base;
 }
 
+// Entry IDs and completion IDs are different key spaces, so the keys are
+// namespaced to keep a group and an entry with the same numeric ID distinct.
+function traceItemKey(item: TraceItem): string {
+  return item.kind === 'group' ? `g-${item.group.completionId}` : `e-${item.entry.id}`;
+}
+
+/** Returns a new Set with `id` removed if present, added if not. Never mutates. */
+function toggleInSet(set: Set<number>, id: number): Set<number> {
+  const next = new Set(set);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  return next;
+}
+
 // ─── Shared icon ──────────────────────────────────────────────────────────────
 
 function EntryIcon({ icon, testID }: { icon: string | null | undefined; testID?: string }) {
@@ -42,6 +59,43 @@ function EntryIcon({ icon, testID }: { icon: string | null | undefined; testID?:
     );
   }
   return <View style={styles.iconPlaceholder} testID={testID} />;
+}
+
+// ─── Shared expanded body ─────────────────────────────────────────────────────
+
+interface EntryDetailProps {
+  entry: EntryWithLabels;
+  chipsTestID: string;
+  notesTestID: string;
+}
+
+/**
+ * The chips-and-notes body shown when an entry is expanded.
+ *
+ * Shared by the standalone row and by each member of an expanded Routine group
+ * so the Physical severity/area chip rules (formatTraceChipLabel) and the
+ * empty-notes guard live in exactly one place.
+ */
+function EntryDetail({ entry, chipsTestID, notesTestID }: EntryDetailProps) {
+  return (
+    <>
+      {entry.labels.length > 0 && (
+        <ChipTray
+          chips={entry.labels.map((label) => ({
+            id: label.id,
+            label: formatTraceChipLabel(label, entry),
+            color: colors.surfaceVariant,
+          }))}
+          testID={chipsTestID}
+        />
+      )}
+      {entry.notes != null && entry.notes !== '' && (
+        <Text style={styles.expandedNotes} testID={notesTestID}>
+          {entry.notes}
+        </Text>
+      )}
+    </>
+  );
 }
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
@@ -75,24 +129,11 @@ function EntryRow({ entry, expanded, onToggle, filterActive, onShowContext }: En
 
       {expanded && (
         <View style={styles.expandedContainer}>
-          {entry.labels.length > 0 && (
-            <ChipTray
-              chips={entry.labels.map((label) => ({
-                id: label.id,
-                label: formatTraceChipLabel(label, entry),
-                color: colors.surfaceVariant,
-              }))}
-              testID="trace-expanded"
-            />
-          )}
-          {entry.notes != null && entry.notes !== '' && (
-            <Text
-              style={styles.expandedNotes}
-              testID={`trace-notes-${entry.id}`}
-            >
-              {entry.notes}
-            </Text>
-          )}
+          <EntryDetail
+            entry={entry}
+            chipsTestID="trace-expanded"
+            notesTestID={`trace-notes-${entry.id}`}
+          />
         </View>
       )}
 
@@ -145,10 +186,8 @@ function RoutineGroupRow({ group, matchedIds, expanded, onToggle, filterActive }
         accessibilityState={{ expanded }}
         testID={`trace-group-${group.completionId}`}
       >
-        <MaterialCommunityIcons
-          name="format-list-checks"
-          size={20}
-          color={colors.chrome}
+        <EntryIcon
+          icon="format-list-checks"
           testID={`trace-group-icon-${group.completionId}`}
         />
         <Text style={styles.summary} numberOfLines={1}>
@@ -174,21 +213,11 @@ function RoutineGroupRow({ group, matchedIds, expanded, onToggle, filterActive }
                 <Text style={styles.summary} numberOfLines={1}>
                   {summariseEntry(entry)}
                 </Text>
-                {entry.labels.length > 0 && (
-                  <ChipTray
-                    chips={entry.labels.map((label) => ({
-                      id: label.id,
-                      label: formatTraceChipLabel(label, entry),
-                      color: colors.surfaceVariant,
-                    }))}
-                    testID={`trace-group-item-chips-${entry.id}`}
-                  />
-                )}
-                {entry.notes != null && entry.notes !== '' && (
-                  <Text style={styles.expandedNotes} testID={`trace-group-item-notes-${entry.id}`}>
-                    {entry.notes}
-                  </Text>
-                )}
+                <EntryDetail
+                  entry={entry}
+                  chipsTestID={`trace-group-item-chips-${entry.id}`}
+                  notesTestID={`trace-group-item-notes-${entry.id}`}
+                />
               </View>
             );
           })}
@@ -281,8 +310,11 @@ function ContextViewRow({ entry, isFocal, isMuted }: ContextViewRowProps) {
 export default function TraceScreen() {
   const router = useRouter();
   const [activeFilters, setActiveFilters] = useState<TraceFilter[]>([]);
-  const focusIds = focusIdsOf(activeFilters);
-  const filterActive = activeFilters.length > 0;
+  // Memoised so the array identity is stable across renders — useTraceEntries
+  // otherwise sees a fresh array on every entry/group toggle.
+  const focusIds = useMemo(() => focusIdsOf(activeFilters), [activeFilters]);
+  const filterCount = activeFilters.length;
+  const filterActive = filterCount > 0;
   const { focuses } = useFocuses({ includeArchived: true });
   const { sections, loading, error } = useTraceEntries(focusIds);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
@@ -331,27 +363,11 @@ export default function TraceScreen() {
   }, [router]);
 
   const handleToggle = useCallback((id: number) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    setExpandedIds((prev) => toggleInSet(prev, id));
   }, []);
 
   const handleToggleGroup = useCallback((completionId: number) => {
-    setExpandedGroupIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(completionId)) {
-        next.delete(completionId);
-      } else {
-        next.add(completionId);
-      }
-      return next;
-    });
+    setExpandedGroupIds((prev) => toggleInSet(prev, completionId));
   }, []);
 
   const handleShowContext = useCallback(async (entry: EntryWithLabels) => {
@@ -406,14 +422,6 @@ export default function TraceScreen() {
     [expandedIds, expandedGroupIds, handleToggle, handleToggleGroup, filterActive, handleShowContext],
   );
 
-  // Entry IDs and completion IDs are different key spaces, so the keys are
-  // namespaced to keep a group and an entry with the same numeric ID distinct.
-  const keyExtractor = useCallback(
-    (item: TraceItem) =>
-      item.kind === 'group' ? `g-${item.group.completionId}` : `e-${item.entry.id}`,
-    [],
-  );
-
   if (loading) {
     return null;
   }
@@ -434,15 +442,18 @@ export default function TraceScreen() {
   // With exactly one filter the back label names it, byte-identical to the
   // single-filter behaviour before multi-select. With several, "filters" is the
   // only honest label.
+  // Both key off `filterCount`, not `focusIds.length`, so a future non-focus
+  // filter variant still reads as "filtered" here rather than silently falling
+  // back to the unfiltered copy.
   const contextBackLabel =
-    focusIds.length === 1
+    filterCount === 1 && focusIds.length === 1
       ? `${focuses.find((f) => f.id === focusIds[0])?.name ?? 'Focus'} filter`
       : 'filters';
 
   const emptyMessage =
-    focusIds.length === 0
+    filterCount === 0
       ? messages.traceEmpty
-      : focusIds.length === 1
+      : filterCount === 1
         ? messages.traceEmptyFiltered
         : messages.traceEmptyFilteredPlural;
 
@@ -484,7 +495,7 @@ export default function TraceScreen() {
       ) : (
         <SectionList<TraceItem, TraceSection>
           sections={sections}
-          keyExtractor={keyExtractor}
+          keyExtractor={traceItemKey}
           stickySectionHeadersEnabled={false}
           contentContainerStyle={styles.listContent}
           renderSectionHeader={renderSectionHeader}

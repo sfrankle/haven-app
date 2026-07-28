@@ -27,11 +27,11 @@ export function useTraceEntries(focusIds: number[]): UseTraceEntriesResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // `focusIds` is an array, so its identity changes on every render of the
-  // caller — depending on it directly would refire the effect in a loop. Derive
-  // a stable primitive key instead and rebuild the list from it inside the
-  // effect. Ugly, but it keeps the invariant here rather than pushing a
-  // useMemo obligation onto every caller.
+  // `focusIds` is an array, so a caller that rebuilds it inline would change its
+  // identity on every render and refire the effect in a loop. Depend on a stable
+  // primitive key instead. The effect still reads `focusIds` directly: the
+  // callback is only rebuilt when the key changes, so the captured array always
+  // has the members the key describes.
   const focusKey = [...focusIds].sort((a, b) => a - b).join(',');
 
   useFocusEffect(
@@ -41,8 +41,7 @@ export function useTraceEntries(focusIds: number[]): UseTraceEntriesResult {
       async function load() {
         try {
           const db = await getTypedDb();
-          const ids = focusKey === '' ? [] : focusKey.split(',').map(Number);
-          const entries = await getEntriesForTrace(db, { focusIds: ids });
+          const entries = await getEntriesForTrace(db, { focusIds });
 
           const completionIds = [
             ...new Set(
@@ -84,6 +83,8 @@ export function useTraceEntries(focusIds: number[]): UseTraceEntriesResult {
       return () => {
         cancelled = true;
       };
+      // `focusIds` is intentionally omitted — `focusKey` is its stable proxy.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [focusKey])
   );
 

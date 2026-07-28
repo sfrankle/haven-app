@@ -120,13 +120,10 @@ export function buildTraceItems(
 
   for (const entry of matched) {
     const completionId = entry.routineCompletionId;
-    if (completionId == null) {
-      items.push({ kind: 'entry', entry });
-      continue;
-    }
-
-    const group = groupsById.get(completionId);
-    if (group === undefined) {
+    // No completion, or a completion the enrichment query didn't return —
+    // either way the entry stands alone rather than disappearing.
+    const group = completionId == null ? undefined : groupsById.get(completionId);
+    if (group === undefined || completionId == null) {
       items.push({ kind: 'entry', entry });
       continue;
     }
