@@ -1,0 +1,92 @@
+# Trace — Routine grouping
+#
+# Completing a Routine writes one entry per checked item, all sharing a
+# routine_completion_id. Trace collapses them into a single row showing the
+# Routine name and completion time; tapping it reveals the individual items.
+#
+# Self-contained by design: this flow builds its own two-item Routine rather
+# than reusing maestro/subflows/create-morning-routine.yaml. That subflow
+# creates a *one*-item Routine — which demonstrates nothing about collapsing —
+# and has three other consumers whose assertions would shift if its item count
+# changed.
+#
+# Time-of-day stability: the Routine is deliberately given the *Morning* block.
+# The dashboard treats a Routine as due-now once any configured block has
+# started, and Morning is the first block of the day, so the card is reachable
+# at any hour. Do not "simplify" this to a later block.
+appId: com.haven.app
+name: Trace — Routine entries collapse into one group row
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "tab-tend"
+
+# --- Create a two-item Routine (first routine after clearState, so id 1) ---
+- tapOn:
+    id: "routine-section-add-button"
+
+- assertVisible:
+    id: "routine-name-input"
+- tapOn:
+    id: "routine-name-input"
+- inputText: "Trace Group Test"
+
+- tapOn:
+    id: "routine-time-block-Morning"
+
+# Item 0 — Food, which summarises as "Nourish" with no labels selected
+- tapOn:
+    id: "routine-add-item-button"
+- tapOn:
+    id: "routine-item-0-name-input"
+- inputText: "Breakfast"
+- tapOn:
+    id: "routine-item-0-entry-type-1"   # Food
+
+# Item 1 — Activity, which summarises as "Journey" with no labels selected
+- tapOn:
+    id: "routine-add-item-button"
+- tapOn:
+    id: "routine-item-1-name-input"
+- inputText: "Morning walk"
+- tapOn:
+    id: "routine-item-1-entry-type-6"   # Activity
+
+- tapOn:
+    id: "routine-save-button"
+
+- assertVisible:
+    id: "routine-section-add-button"
+
+# --- Complete it: both items are checked by default ---
+- tapOn:
+    id: "routine-card-1"
+- assertVisible:
+    id: "routine-complete-item-0-checkbox"
+- tapOn:
+    id: "routine-complete-submit-button"
+- assertVisible: "Saved."
+
+# --- Trace shows one grouped row, not two individual entries ---
+- tapOn:
+    id: "tab-trace"
+
+- assertVisible:
+    text: "Today"
+- assertVisible: "Trace Group Test"
+- assertNotVisible: "Nourish"
+- assertNotVisible: "Journey"
+
+# --- Expanding reveals the individual items ---
+- tapOn:
+    id: "trace-group-1"
+- assertVisible: "Nourish"
+- assertVisible: "Journey"
+
+# --- Collapsing hides them again ---
+- tapOn:
+    id: "trace-group-1"
+- assertNotVisible: "Nourish"
+- assertNotVisible: "Journey"
