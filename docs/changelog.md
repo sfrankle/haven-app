@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#182](https://github.com/sfrankle/haven-app/pull/182) | Trace now shows a completed Routine as one row you can tap open, and lets you filter by several Focuses at once | 2026-07-28 |
 | [#181](https://github.com/sfrankle/haven-app/pull/181) | Fixed an intermittent test-suite failure that made database rollback tests look broken when they weren't | 2026-07-28 |
 | [#178](https://github.com/sfrankle/haven-app/pull/178) | Tend dashboard now opens with your Routines — what's due now up top, completed and later ones tucked behind a tap | 2026-07-27 |
 | [#177](https://github.com/sfrankle/haven-app/pull/177) | Extracted a `getTypedDb()` helper so DB call sites no longer repeat the `as unknown as Db` cast | 2026-07-27 |
