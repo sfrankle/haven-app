@@ -1,0 +1,91 @@
+# Milestone-autonomy pipeline — STAGE 1 (#170)
+#
+# SAFETY INVARIANTS (Stage 1 — do not change without an explicit decision):
+#   * workflow_dispatch ONLY — there is deliberately NO `schedule:` trigger yet.
+#   * AUTO-MERGE IS OFF — this pipeline only ever opens a DRAFT PR and stops.
+#     A human reviews every run. Nothing reaches `main` unattended.
+#   * The interactive `@claude` mention-responder (claude.yml) is untouched and
+#     stays read-only; write permissions live here, scoped to this workflow.
+#
+# STAGE 2 (later, explicit flip — see docs/plans/170-milestone-pipeline-stage1.md):
+#   * add `schedule:` + a PR-merge `pull_request` trigger,
+#   * add the data-safety-aware auto-merge gate (schema paths always escalate),
+#   * remove the in-repo complete-ticket orchestrator.
+
+name: Milestone Pipeline (Stage 1)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Resolve the next task and stop (no Claude run)'
+        type: boolean
+        default: false
+
+# One ticket in flight at a time (belt-and-suspenders with the DAG's status serialization).
+concurrency:
+  group: milestone-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+  actions: read
+
+jobs:
+  run-next-ticket:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history — the per-ticket flow branches and opens a PR
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.19'
+
+      - name: Resolve next unblocked task
+        id: resolve
+        run: |
+          TASK_JSON="$(node .github/scripts/next-task.mjs docs/tasks.json)"
+          if [ -z "$TASK_JSON" ]; then
+            echo "No unblocked task in an approved milestone — milestone complete or serialized."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "task_id=$(echo "$TASK_JSON" | jq -r .id)" >> "$GITHUB_OUTPUT"
+            echo "issue=$(echo "$TASK_JSON" | jq -r .issue)" >> "$GITHUB_OUTPUT"
+            echo "title=$(echo "$TASK_JSON" | jq -r .title)" >> "$GITHUB_OUTPUT"
+            echo "Resolved: $TASK_JSON"
+          fi
+
+      - name: Milestone complete — notify and stop
+        if: steps.resolve.outputs.found == 'false'
+        run: |
+          echo "::notice::No unblocked task. Milestone complete (or a ticket is blocked-on-human). Approve the next milestone in docs/tasks.json to continue."
+
+      - name: Run ticket (open a DRAFT PR, then STOP — no merge)
+        if: steps.resolve.outputs.found == 'true' && inputs.dry_run == false
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          prompt: |
+            You are running the Haven autonomous ticket pipeline (Stage 1) for GitHub issue
+            #${{ steps.resolve.outputs.issue }} ("${{ steps.resolve.outputs.title }}").
+
+            Execute the complete-ticket flow end-to-end on this fresh checkout: plan, plan-critic,
+            implement with TDD, the parallel implementation critics, /simplify, and /code-review.
+            Re-derive all context from the GitHub issue and repo — do not assume local plan files.
+
+            STAGE 1 HARD RULES:
+            - Open the PR as a DRAFT and then STOP. Do NOT merge. Do NOT mark it ready.
+            - If the plan-critic BLOCKs, the ticket is ambiguous, or any change touches the
+              migrations/schema directory, STOP and post the question as a comment on issue
+              #${{ steps.resolve.outputs.issue }} instead of proceeding.
+            - A human reviews the draft PR. You are not the merge gate.
+          claude_args: '--allowed-tools "Bash,Read,Edit,Write,Glob,Grep"'

@@ -53,4 +53,4 @@ Commit after each fix or self-contained change. Do not leave work uncommitted be
 ## Plan and spec locations
 
 - `docs/plans/` — ephemeral per-ticket implementation plans. Gitignored. Deleted by `wrap-up-pr` after merge. Never commit files from here.
-- `docs/superpowers/specs/` — committed design docs for significant workflow or architecture decisions. These are committed and persist.
+- `docs/superpowers/specs/` — design docs for significant workflow or architecture decisions. **Local-only (gitignored), never committed** — like plans. The durable record of a decision lives in its GitHub issue/PR; the spec file is a local working doc.

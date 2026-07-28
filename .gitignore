@@ -1,5 +1,6 @@
-# Implementation plans are local-only — never committed
+# Implementation plans and design specs are local-only — never committed
 docs/plans/
+docs/superpowers/specs/
 
 # Local
 local/

@@ -34,6 +34,9 @@ jobs:
       - name: Unit tests
         run: npm test -- --ci --coverage=false
 
+      - name: Pipeline resolver tests
+        run: node --test .github/scripts/
+
   # E2E flow tests with Maestro require a device or simulator.
   # macOS runners (needed for iOS simulator) are expensive on GitHub Actions.
   # Options when ready to enable:

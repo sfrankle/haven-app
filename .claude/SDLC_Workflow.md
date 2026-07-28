@@ -1,3 +1,11 @@
+> ## ⚠️ Workflow in transition (2026-06-05)
+>
+> **Two flows exist.** Today, **use `complete-ticket`** — it is canonical and the fallback (see *Technical Task Lifecycle → Current flow*). In parallel we are building a **milestone-autonomy pipeline** (*Technical Task Lifecycle → Pipeline flow*) that runs a ticket end-to-end as a GitHub Actions job, with the pipeline — not Claude — as orchestrator, and the human gate moved from per-ticket plan-approval to the **milestone boundary + genuine escalations**.
+>
+> **Status:** the Stage-1 scaffold (DAG + resolver + an inert workflow) is in **PR #176**; the per-ticket orchestration is designed (`docs/superpowers/specs/2026-06-05-pipeline-orchestration-design.md`) and planned (`docs/plans/170-pipeline-orchestration.md`) but **not yet operational**. All redesign decisions are tracked on **#170** (umbrella — no separate epic). Specs and plans are local-only (gitignored); the durable record lives on the issue/PR.
+>
+> The **Agents** table below reflects **current** state, not the target — e.g. under the redesign model assignments shift (see the spec).
+
 ## Starting work
 
 Natural language triggers for skills:
@@ -49,20 +57,43 @@ Haven uses an issue-driven development workflow. All work flows through GitHub I
 
 ### Technical Task Lifecycle
 
-Run **`complete-ticket`** — the skill orchestrates all steps autonomously. See `.claude/skills/complete-ticket/SKILL.md` for the full flow.
+Two flows, one in transition (see the banner). Both take **one technical task → one PR**.
 
-Summary of what complete-ticket does:
-1. Determines next task (`next-task`)
-2. Plans (`haven-technical-planner`)
-3. Critiques plan (`haven-plan-critic`)
+#### Current flow — `complete-ticket` (canonical today)
+
+Run **`complete-ticket`** — the skill orchestrates every step; **Claude is the orchestrator**. See `.claude/skills/complete-ticket/SKILL.md` for the full flow.
+
+1. Determine next task (`next-task`)
+2. Plan (`haven-technical-planner`)
+3. Critique plan (`haven-plan-critic`)
 4. **Human approves plan** (only mandatory checkpoint)
-5. Implements (`haven-implementer`)
-6. Creates PR (`haven-create-pr`)
-7. Simplifies code (`/simplify`)
-8. Critiques implementation in parallel: `haven-code-quality-critic`, `haven-product-vision-critic`, `haven-safety-critic`
-9. Processes feedback autonomously; escalates blocks to human
-10. Wraps up (`/wrap-up-pr`)
+5. Implement (`haven-implementer`)
+6. Create draft PR (`haven-create-pr`)
+7. Simplify (`/simplify`)
+8. Critique in parallel: `haven-conventions-critic`, `haven-product-vision-critic`, `haven-safety-critic`
+9. Process feedback autonomously; escalate blocks to human
+10. Wrap up (`/wrap-up-pr`)
 11. **Human merges**
+
+#### Pipeline flow — milestone-autonomy (in development, #170)
+
+Here the **pipeline is the orchestrator** (deterministic bash + YAML in a GitHub Actions job), *not* Claude. Each cognitive step is a separate, focused, least-privilege `claude-code-action` call; bash owns sequencing and every gate decision. Human gates move to: **milestone/DAG approval up front**, **genuine escalations**, and the **milestone boundary** (the pipeline never auto-advances to the next milestone).
+
+Per-ticket sequence (one job, shared checkout; `.pipeline/` holds run-local artifacts, the **branch + GitHub state are the durable record**):
+
+1. **Resolve** the next unblocked task from the DAG (`docs/tasks.json` + `.github/scripts/next-task.mjs`).
+2. **Locate** the resume point from durable signals (**branch-as-checkpoint**) — a re-run continues from the first unfinished phase, it does not redo completed work.
+3. **Plan → plan-critic** (both shell-less: `Read,Grep,Glob,Write`; bash pre-fetches the issue and posts their findings — the AI judges, bash fetches and posts).
+4. **GATE-1** (bash): plan BLOCK / ambiguous / **touches schema** → label `blocked-on-human`, comment, and **stop before spending implement tokens**. Schema/migration changes are a data-safety escalation, **always**.
+5. **Implement** (TDD) → **`/code-review`** → **`/simplify`** — each its own commit.
+6. Open a **draft PR**.
+7. **Critics** — conventions, product-vision, safety (shell-less: read a pre-built `diff.patch`, write a verdict + findings; bash posts each as a PR comment).
+8. **GATE-2** (bash): any critic BLOCK → one round of `receiving-code-review` fixes; else stop.
+9. **Stage 1:** stop at the **draft PR** — a human reviews every run (auto-merge OFF). **Stage 2 (later flip):** data-safety-aware auto-merge — all-PASS + CI-green + non-schema merges itself; schema always escalates.
+
+**Escalation & resume:** a stopped Actions run can't pause — it posts, stops, and resumes on a fresh run. You answer in the thread (optionally via `@claude`), then re-run with input `resume_task: <task_id>`. Because the branch is the checkpoint, a resume with no branch yet **always re-plans and re-runs GATE-1**, so a schema/ambiguity/scope escalation can never be slipped past on a resume.
+
+**Stage-1 invariants:** `workflow_dispatch`-only (no `schedule:`), auto-merge OFF, and the `@claude` responder (`claude.yml`) stays read-only. **Don't run `complete-ticket` against a milestone the pipeline owns** — two walkers can grab the same task.
 
 ---
 
@@ -74,7 +105,7 @@ Summary of what complete-ticket does:
 | `haven-implementer` | Executes plan with TDD, commits; stops before PR creation | sonnet |
 | `haven-create-pr` | Creates draft PR, fills template, writes changelog row | sonnet |
 | `haven-plan-critic` | Reviews plan before implementation; posts findings to issue | opus |
-| `haven-code-quality-critic` | Reviews code against RN/Expo/TS patterns and Haven conventions | sonnet |
+| `haven-conventions-critic` | Reviews code against Haven conventions (`docs/decisions.md` patterns + RN/Expo/TS idioms); generic quality is `/code-review` + `/simplify` | sonnet |
 | `haven-product-vision-critic` | Reviews product vision fit, UX, and user story fulfillment | opus |
 | `haven-safety-critic` | Reviews privacy, data safety, tone, workflow artifacts | sonnet |
 | `haven-technical-health` | Scans for tech debt and architecture gaps; run between milestones | sonnet |
