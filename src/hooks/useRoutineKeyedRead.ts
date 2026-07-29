@@ -1,8 +1,8 @@
 /**
  * Shared shell for the dashboard's per-Routine reads.
  *
- * Both useRoutineCompletionStates and useRoutineDayProgress answer "what is
- * true about these Routines today?" and need the same three awkward things:
+ * A read that answers "what is true about these Routines today?" needs the same
+ * three awkward things wherever it appears:
  *
  * 1. A stable effect dep. Passing `routines` directly would re-read on every
  *    parent render, because the caller produces a new array each time. We

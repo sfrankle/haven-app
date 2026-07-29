@@ -29,12 +29,8 @@ jest.mock('@/hooks/useRoutines', () => ({
   useRoutines: jest.fn(),
 }));
 
-jest.mock('@/hooks/useRoutineCompletionStates', () => ({
-  useRoutineCompletionStates: jest.fn(),
-}));
-
-jest.mock('@/hooks/useRoutineDayProgress', () => ({
-  useRoutineDayProgress: jest.fn(),
+jest.mock('@/hooks/useRoutineDayState', () => ({
+  useRoutineDayState: jest.fn(),
 }));
 
 // eslint-disable-next-line import/first
@@ -42,14 +38,11 @@ import { getTimeBlock } from '@/lib/utils/timestamp';
 // eslint-disable-next-line import/first
 import { useRoutines } from '@/hooks/useRoutines';
 // eslint-disable-next-line import/first
-import { useRoutineCompletionStates } from '@/hooks/useRoutineCompletionStates';
-// eslint-disable-next-line import/first
-import { useRoutineDayProgress } from '@/hooks/useRoutineDayProgress';
+import { useRoutineDayState } from '@/hooks/useRoutineDayState';
 
 const mockGetTimeBlock = jest.mocked(getTimeBlock);
 const mockUseRoutines = jest.mocked(useRoutines);
-const mockUseStates = jest.mocked(useRoutineCompletionStates);
-const mockUseProgress = jest.mocked(useRoutineDayProgress);
+const mockUseDayState = jest.mocked(useRoutineDayState);
 
 // ─── fixtures ────────────────────────────────────────────────────────────────
 
@@ -85,15 +78,13 @@ function setup(opts: {
     loading: opts.loading ?? false,
     error: null,
   });
-  mockUseStates.mockReturnValue({
+  // States and progress now come from one hook, one read. The option names are
+  // unchanged so no test body below has to care.
+  mockUseDayState.mockReturnValue({
     states: opts.states ?? {},
-    loading: false,
-    error: opts.statesError ?? null,
-  });
-  mockUseProgress.mockReturnValue({
     progress: opts.progress ?? {},
     loading: false,
-    error: null,
+    error: opts.statesError ?? null,
   });
 }
 
@@ -296,15 +287,15 @@ describe('RoutineSection — loading and failure', () => {
 
 describe('RoutineSection — Night', () => {
   it('asks for completion state against Evening, the nearest scheduleable block', () => {
-    // getRoutineCompletionState only accepts a ScheduleableBlock, and Night is
-    // not one. Passing Night through would be a type error at best and a
+    // deriveRoutineCompletionState only accepts a ScheduleableBlock, and Night
+    // is not one. Passing Night through would be a type error at best and a
     // missing window at worst.
     mockGetTimeBlock.mockReturnValue('Night');
     setup({ routines: [makeRoutine(1, 'Wind Down', ['Evening'])], states: { 1: 'due' } });
 
     render(<RoutineSection />);
 
-    expect(mockUseStates).toHaveBeenCalledWith(
+    expect(mockUseDayState).toHaveBeenCalledWith(
       expect.anything(),
       'Evening',
       expect.any(String)

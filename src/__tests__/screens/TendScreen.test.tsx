@@ -23,12 +23,8 @@ jest.mock('@/hooks/useRoutines', () => ({
   useRoutines: () => ({ routines: [], loading: false, error: null }),
 }));
 
-jest.mock('@/hooks/useRoutineCompletionStates', () => ({
-  useRoutineCompletionStates: () => ({ states: {}, loading: false, error: null }),
-}));
-
-jest.mock('@/hooks/useRoutineDayProgress', () => ({
-  useRoutineDayProgress: () => ({ progress: {}, loading: false, error: null }),
+jest.mock('@/hooks/useRoutineDayState', () => ({
+  useRoutineDayState: () => ({ states: {}, progress: {}, loading: false, error: null }),
 }));
 
 // Mock the hooks so we control data without a real DB.

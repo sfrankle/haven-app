@@ -156,12 +156,13 @@ export interface RoutineCompletionGroup {
 export type RoutineCompletionState = 'due' | 'completed_this_block' | 'fully_done';
 
 /**
- * Display-only view of a Routine's completions for a single day.
+ * A Routine's completions for a single day — the raw day fact read from the
+ * database, and the dashboard's only source of it.
  *
- * Deliberately separate from RoutineCompletionState: that enum answers "which
- * dashboard bucket does this Routine go in", this answers "what do we print on
- * the card". Keeping them apart leaves getRoutineCompletionState's tested API
- * untouched. A future refactor could derive one from the other.
+ * RoutineCompletionState is derived from this plus the Routine's configured
+ * blocks and the current block (deriveRoutineCompletionState), so any new
+ * dashboard fact about today's completions belongs on this shape rather than in
+ * a second read.
  */
 export interface RoutineDayProgress {
   /** Total routine_completion rows for this routine today. Never clamped. */
