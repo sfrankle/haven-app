@@ -5,7 +5,12 @@
 import type Database from 'better-sqlite3';
 import { applyAllMigrations, openTestDb } from '../../lib/db/test-helpers';
 import { createAdapter, type AdaptedDb } from './adapter';
-import { getPhysicalStateLabels, getPhysicalParentLabels } from '../../lib/db/queries';
+import {
+  getPhysicalStateLabels,
+  getPhysicalParentLabels,
+  saveEntry,
+  saveEntryBatch,
+} from '../../lib/db/queries';
 
 describe('physical query functions', () => {
   let raw: Database.Database;
@@ -184,6 +189,60 @@ describe('physical query functions', () => {
 
       const parentNames = allParents.map((l) => l.name);
       expect(parentNames).not.toContain(childRow.name);
+    });
+  });
+
+  // ── multi-sensation save ────────────────────────────────────────────────────
+
+  describe('saving several sensations at once', () => {
+    async function stateLabelIds(count: number): Promise<number[]> {
+      const labels = await getPhysicalStateLabels(db, physicalEntryTypeId());
+      return labels.slice(0, count).map((l) => l.id);
+    }
+
+    test('every sensation is persisted with its own severity', async () => {
+      const etId = physicalEntryTypeId();
+      const [firstId, secondId] = await stateLabelIds(2);
+      const ts = '2026-07-29T09:15:00-07:00';
+
+      const ids = await saveEntryBatch(db, [
+        { entryTypeId: etId, timestamp: ts, numericValue: 4, labelIds: [firstId] },
+        { entryTypeId: etId, timestamp: ts, numericValue: 2, labelIds: [secondId] },
+      ]);
+
+      expect(ids).toHaveLength(2);
+
+      const rows = raw
+        .prepare(
+          `SELECT e.id, e.numeric_value, el.label_id
+             FROM entry e
+             JOIN entry_label el ON el.entry_id = e.id
+            WHERE e.id IN (?, ?)
+            ORDER BY e.id`
+        )
+        .all(ids[0], ids[1]) as { id: number; numeric_value: number; label_id: number }[];
+
+      expect(rows).toEqual([
+        { id: ids[0], numeric_value: 4, label_id: firstId },
+        { id: ids[1], numeric_value: 2, label_id: secondId },
+      ]);
+    });
+
+    // The bug behind this file's batch usage: expo-sqlite hands out one
+    // connection, so two overlapping withTransactionAsync calls issue a second
+    // BEGIN inside an open transaction. Logging two sensations used to do
+    // exactly that. Pinned so nobody reintroduces a per-chip save loop.
+    test('overlapping single saves collide on the shared connection', async () => {
+      const etId = physicalEntryTypeId();
+      const [firstId, secondId] = await stateLabelIds(2);
+      const ts = '2026-07-29T09:20:00-07:00';
+
+      await expect(
+        Promise.all([
+          saveEntry(db, { entryTypeId: etId, timestamp: ts, numericValue: 4, labelIds: [firstId] }),
+          saveEntry(db, { entryTypeId: etId, timestamp: ts, numericValue: 2, labelIds: [secondId] }),
+        ])
+      ).rejects.toThrow(/transaction within a transaction/i);
     });
   });
 });
