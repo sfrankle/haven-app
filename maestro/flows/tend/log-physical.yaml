@@ -19,11 +19,11 @@ appId: com.haven.app
     id: "physical-search"
 - inputText: "Cramp"
 - assertVisible:
-    id: "physical-suggestion-*"    # at least one result
+    id: "physical-suggestion-.*"    # at least one result
 - tapOn:
-    id: "physical-suggestion-*"
+    id: "physical-suggestion-.*"
 - assertVisible:
-    id: "physical-chip-*"          # state chip added with area prefix
+    id: "physical-chip-.*"          # state chip added with area prefix
 # Save
 - tapOn:
     id: "physical-save-button"

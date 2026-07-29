@@ -20,17 +20,17 @@ appId: com.haven.app
     id: "food-search"
 - inputText: "Oats"
 - assertVisible:
-    id: "food-suggestion-*"
+    id: "food-suggestion-.*"
 - tapOn: "Oats"
 - assertVisible:
-    id: "food-chip-*"
+    id: "food-chip-.*"
 # Expand focus field and select the focus
 - tapOn:
     id: "focus-toggle"
 - assertVisible:
     id: "focus-new"
 - tapOn:
-    id: "focus-option-*"
+    id: "focus-option-.*"
 # Save the entry
 - assertVisible:
     id: "food-save-button"

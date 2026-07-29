@@ -9,10 +9,10 @@ appId: com.haven.app
     id: "activity-search"
 - inputText: "Walk"
 - assertVisible:
-    id: "activity-suggestion-*"     # at least one result
+    id: "activity-suggestion-.*"     # at least one result
 - tapOn: "Walk"
 - assertVisible:
-    id: "activity-chip-*"           # chip added
+    id: "activity-chip-.*"           # chip added
 - assertVisible:
     id: "activity-save-button"
 - tapOn:

@@ -41,7 +41,7 @@ appId: com.haven.app
 
 # Assert archived focus row is visible
 - assertVisible:
-    id: "settings-focus-archived-row-*"
+    id: "settings-focus-archived-row-.*"
 
 # Tap Unarchive
 - tapOn:

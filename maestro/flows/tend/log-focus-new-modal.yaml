@@ -9,10 +9,10 @@ appId: com.haven.app
     id: "food-search"
 - inputText: "Eggs"
 - assertVisible:
-    id: "food-suggestion-*"
+    id: "food-suggestion-.*"
 - tapOn: "Eggs"
 - assertVisible:
-    id: "food-chip-*"
+    id: "food-chip-.*"
 # Open focus dropdown
 - tapOn:
     id: "focus-toggle"

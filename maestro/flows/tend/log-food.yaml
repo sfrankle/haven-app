@@ -9,10 +9,10 @@ appId: com.haven.app
     id: "food-search"
 - inputText: "Oats"
 - assertVisible:
-    id: "food-suggestion-*"
+    id: "food-suggestion-.*"
 - tapOn: "Oats"
 - assertVisible:
-    id: "food-chip-*"
+    id: "food-chip-.*"
 - assertVisible:
     id: "food-save-button"
 - tapOn:

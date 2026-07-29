@@ -8,15 +8,15 @@ appId: com.haven.app
 - assertVisible:
     id: "emotion-screen-1"
 - tapOn:
-    id: "emotion-tier1-*"             # tap first Tier-1 row
+    id: "emotion-tier1-.*"             # tap first Tier-1 row
 - assertVisible:
     id: "emotion-screen-2"
 - tapOn:
-    id: "emotion-tier1-left-*"        # pivot left column to another Tier-1
+    id: "emotion-tier1-left-.*"        # pivot left column to another Tier-1
 - assertVisible:
-    id: "emotion-tier2-right-*"       # Tier-2 children load
+    id: "emotion-tier2-right-.*"       # Tier-2 children load
 - tapOn:
-    id: "emotion-tier2-right-*"       # tap Tier-2 — pushes to Screen 3
+    id: "emotion-tier2-right-.*"       # tap Tier-2 — pushes to Screen 3
 - assertVisible:
     id: "emotion-screen-3"
 - assertVisible:
@@ -34,9 +34,9 @@ appId: com.haven.app
 - launchApp
 - tapOn: "Unveil"
 - tapOn:
-    id: "emotion-tier1-*"
+    id: "emotion-tier1-.*"
 - tapOn:
-    id: "emotion-tier2-right-*"       # advances to Screen 3 with chip set
+    id: "emotion-tier2-right-.*"       # advances to Screen 3 with chip set
 - assertVisible:
     id: "emotion-screen-3"
 - pressKey: Back                      # return to Screen 2
@@ -56,13 +56,13 @@ appId: com.haven.app
 - launchApp
 - tapOn: "Unveil"
 - tapOn:
-    id: "emotion-tier1-*"
+    id: "emotion-tier1-.*"
 - tapOn:
-    id: "emotion-tier2-right-*"       # arrives at Screen 3
+    id: "emotion-tier2-right-.*"       # arrives at Screen 3
 - assertVisible:
-    id: "emotion-tier3-right-*"
+    id: "emotion-tier3-right-.*"
 - tapOn:
-    id: "emotion-tier3-right-*"       # replace chip with Tier-3 label
+    id: "emotion-tier3-right-.*"       # replace chip with Tier-3 label
 - assertVisible:
     id: "emotion-chip"
 - assertVisible:
@@ -76,9 +76,9 @@ appId: com.haven.app
 - launchApp
 - tapOn: "Unveil"
 - tapOn:
-    id: "emotion-tier1-*"
+    id: "emotion-tier1-.*"
 - tapOn:
-    id: "emotion-tier2-right-*"
+    id: "emotion-tier2-right-.*"
 - assertVisible:
     id: "emotion-chip"
 - tapOn:
@@ -86,7 +86,7 @@ appId: com.haven.app
 - assertNotVisible:
     id: "emotion-save-button"        # submit disappears
 - tapOn:
-    id: "emotion-tier3-right-*"      # reselect a Tier-3 item
+    id: "emotion-tier3-right-.*"      # reselect a Tier-3 item
 - assertVisible:
     id: "emotion-save-button"        # submit reappears
 
@@ -95,15 +95,15 @@ appId: com.haven.app
 - launchApp
 - tapOn: "Unveil"
 - tapOn:
-    id: "emotion-tier1-*"
+    id: "emotion-tier1-.*"
 - tapOn:
-    id: "emotion-tier2-right-*"       # arrives at Screen 3 with chip set (Tier-2 label)
+    id: "emotion-tier2-right-.*"       # arrives at Screen 3 with chip set (Tier-2 label)
 - tapOn:
-    id: "emotion-tier3-right-*"       # select Tier-3, chip now shows Tier-3 label
+    id: "emotion-tier3-right-.*"       # select Tier-3, chip now shows Tier-3 label
 - assertVisible:
     id: "emotion-chip"
 - tapOn:
-    id: "emotion-tier2-left-*"        # tap Tier-2 in left column — chip should update to Tier-2
+    id: "emotion-tier2-left-.*"        # tap Tier-2 in left column — chip should update to Tier-2
 - assertVisible:
     id: "emotion-chip"                # chip updated to the tapped Tier-2 label
 - assertVisible:
@@ -114,9 +114,9 @@ appId: com.haven.app
 - launchApp
 - tapOn: "Unveil"
 - tapOn:
-    id: "emotion-tier1-*"
+    id: "emotion-tier1-.*"
 - tapOn:
-    id: "emotion-tier2-right-*"       # push to Screen 3
+    id: "emotion-tier2-right-.*"       # push to Screen 3
 - assertVisible:
     id: "emotion-screen-3"
 - pressKey: Back

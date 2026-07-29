@@ -12,9 +12,9 @@ appId: com.haven.app
     id: "physical-search"
 - inputText: "Cramp"
 - assertVisible:
-    id: "physical-suggestion-*"
+    id: "physical-suggestion-.*"
 - tapOn:
-    id: "physical-suggestion-*"
+    id: "physical-suggestion-.*"
 # SeverityRow should appear after selecting a chip
 - assertVisible:
     id: "physical-severity-row"
