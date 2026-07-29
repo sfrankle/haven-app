@@ -19,6 +19,7 @@ jest.mock('@/lib/db/queries', () => ({
   getPhysicalStateLabels: jest.fn(),
   getPhysicalParentLabels: jest.fn(),
   saveEntry: jest.fn(),
+  saveEntryBatch: jest.fn(),
   createLabel: jest.fn(),
   createFocus: jest.fn(),
 }));
@@ -96,6 +97,7 @@ describe('LogPhysicalScreen', () => {
   const mockGetPhysicalStateLabels = jest.mocked(queries.getPhysicalStateLabels);
   const mockGetPhysicalParentLabels = jest.mocked(queries.getPhysicalParentLabels);
   const mockSaveEntry = jest.mocked(queries.saveEntry);
+  const mockSaveEntryBatch = jest.mocked(queries.saveEntryBatch);
   const mockCreateLabel = jest.mocked(queries.createLabel);
   const mockNowLocalIso = jest.mocked(timestamp.nowLocalIso);
 
@@ -110,6 +112,7 @@ describe('LogPhysicalScreen', () => {
     mockGetPhysicalStateLabels.mockResolvedValue([CRAMPING_LABEL, BLOATING_LABEL, ACHY_LABEL]);
     mockGetPhysicalParentLabels.mockResolvedValue([ENERGY_PARENT, GUT_PARENT]);
     mockSaveEntry.mockResolvedValue(1);
+    mockSaveEntryBatch.mockResolvedValue([1]);
     mockCreateLabel.mockResolvedValue({
       id: 99,
       entryTypeId: 7,
@@ -227,7 +230,7 @@ describe('LogPhysicalScreen', () => {
     expect(getByTestId('physical-save-button')).toBeTruthy();
   });
 
-  it('energy-only submit calls saveEntry once with Energy label and numeric_value', async () => {
+  it('energy-only submit saves one entry with Energy label and numeric_value', async () => {
     const { getByTestId, getByLabelText } = render(<LogPhysicalScreen />);
     act(() => { jest.advanceTimersByTime(200); });
     await waitFor(() => {});
@@ -235,19 +238,18 @@ describe('LogPhysicalScreen', () => {
     await act(async () => {
       fireEvent.press(getByTestId('physical-save-button'));
     });
-    expect(mockSaveEntry).toHaveBeenCalledTimes(1);
-    expect(mockSaveEntry).toHaveBeenCalledWith(
-      expect.anything(),
+    expect(mockSaveEntryBatch).toHaveBeenCalledTimes(1);
+    expect(mockSaveEntryBatch).toHaveBeenCalledWith(expect.anything(), [
       expect.objectContaining({
         entryTypeId: PHYSICAL_ENTRY_TYPE.id,
         numericValue: 2,
         labelIds: [ENERGY_PARENT.id],
         timestamp: FIXED_ISO,
-      })
-    );
+      }),
+    ]);
   });
 
-  it('state-only submit calls saveEntry once per chip', async () => {
+  it('state-only submit saves one entry carrying that chip label', async () => {
     const { getByTestId } = render(<LogPhysicalScreen />);
     act(() => { jest.advanceTimersByTime(200); });
     await waitFor(() => getByTestId(`physical-suggestion-${CRAMPING_LABEL.id}`));
@@ -255,31 +257,44 @@ describe('LogPhysicalScreen', () => {
     await act(async () => {
       fireEvent.press(getByTestId('physical-save-button'));
     });
-    expect(mockSaveEntry).toHaveBeenCalledTimes(1);
-    expect(mockSaveEntry).toHaveBeenCalledWith(
-      expect.anything(),
+    expect(mockSaveEntryBatch).toHaveBeenCalledTimes(1);
+    expect(mockSaveEntryBatch).toHaveBeenCalledWith(expect.anything(), [
       expect.objectContaining({
         entryTypeId: PHYSICAL_ENTRY_TYPE.id,
         labelIds: [CRAMPING_LABEL.id],
         timestamp: FIXED_ISO,
-      })
-    );
+      }),
+    ]);
   });
 
-  it('multiple chips each produce a separate saveEntry call sharing the same timestamp', async () => {
+  // Regression: multiple chips used to fire one saveEntry per chip through
+  // Promise.all. Each opened its own transaction on the shared connection, so
+  // the second BEGIN threw "cannot start a transaction within a transaction"
+  // and the whole save failed. One batch call, one transaction.
+  it('multiple chips save in a single batched call sharing one timestamp', async () => {
     const { getByTestId, getByLabelText } = render(<LogPhysicalScreen />);
     act(() => { jest.advanceTimersByTime(200); });
     await waitFor(() => getByTestId(`physical-suggestion-${CRAMPING_LABEL.id}`));
-    // Select energy + 1 state chip
+    // Select energy + 2 state chips
     fireEvent(getByLabelText('Energy level'), 'onValueChange', 1);
     fireEvent.press(getByTestId(`physical-suggestion-${CRAMPING_LABEL.id}`));
+    await waitFor(() => getByTestId(`physical-suggestion-${BLOATING_LABEL.id}`));
+    fireEvent.press(getByTestId(`physical-suggestion-${BLOATING_LABEL.id}`));
     await act(async () => {
       fireEvent.press(getByTestId('physical-save-button'));
     });
-    expect(mockSaveEntry).toHaveBeenCalledTimes(2);
-    const calls = mockSaveEntry.mock.calls;
-    const timestamps = calls.map((c) => (c[1] as { timestamp: string }).timestamp);
-    expect(timestamps[0]).toBe(timestamps[1]);
+
+    expect(mockSaveEntry).not.toHaveBeenCalled();
+    expect(mockSaveEntryBatch).toHaveBeenCalledTimes(1);
+
+    const inputs = mockSaveEntryBatch.mock.calls[0][1];
+    expect(inputs).toHaveLength(3);
+    expect(inputs.map((i) => i.labelIds)).toEqual([
+      [ENERGY_PARENT.id],
+      [CRAMPING_LABEL.id],
+      [BLOATING_LABEL.id],
+    ]);
+    expect(inputs.every((i) => i.timestamp === FIXED_ISO)).toBe(true);
   });
 
   it('shows save confirmation after submit', async () => {

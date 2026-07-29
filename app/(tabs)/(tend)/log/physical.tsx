@@ -20,7 +20,7 @@ import { useEntryTypes } from '@/hooks';
 import {
   getPhysicalStateLabels,
   getPhysicalParentLabels,
-  saveEntry,
+  saveEntryBatch,
   createLabel,
 } from '@/lib/db/queries';
 import { getTypedDb } from '@/lib/db/typed-db';
@@ -183,27 +183,31 @@ export default function LogPhysicalScreen() {
     const db = await getTypedDb();
     const ts = nowLocalIso();
 
-    await Promise.all(chips.map((chip) => {
-      if (chip.kind === 'energy') {
-        return saveEntry(db, {
-          entryTypeId: physicalEntryType.id,
-          timestamp: ts,
-          numericValue: chip.value,
-          labelIds: energyLabelIdRef.current !== null ? [energyLabelIdRef.current] : [],
-          notes: extras.notes,
-          focusId: extras.focusId,
-        });
-      } else {
-        return saveEntry(db, {
-          entryTypeId: physicalEntryType.id,
-          timestamp: ts,
-          numericValue: chip.severity ?? undefined,
-          labelIds: [chip.id],
-          notes: extras.notes,
-          focusId: extras.focusId,
-        });
-      }
-    }));
+    // One entry per chip, but all of them in a single transaction. Firing a
+    // saveEntry per chip concurrently opened competing transactions on the
+    // shared connection, and the second BEGIN threw — so logging two or more
+    // sensations at once always failed.
+    const inputs = chips.map((chip) =>
+      chip.kind === 'energy'
+        ? {
+            entryTypeId: physicalEntryType.id,
+            timestamp: ts,
+            numericValue: chip.value,
+            labelIds: energyLabelIdRef.current !== null ? [energyLabelIdRef.current] : [],
+            notes: extras.notes,
+            focusId: extras.focusId,
+          }
+        : {
+            entryTypeId: physicalEntryType.id,
+            timestamp: ts,
+            numericValue: chip.severity ?? undefined,
+            labelIds: [chip.id],
+            notes: extras.notes,
+            focusId: extras.focusId,
+          }
+    );
+
+    await saveEntryBatch(db, inputs);
   }
 
   useEffect(() => {
