@@ -13,16 +13,19 @@
  */
 
 import { useMemo } from 'react';
-import type { Routine, RoutineCompletionState } from '@/lib/db/query-types';
-import { deriveRoutineCompletionStates } from '@/lib/utils/routine-dashboard';
+import type { Routine } from '@/lib/db/query-types';
+import {
+  deriveRoutineCompletionStates,
+  type RoutineCompletionState,
+} from '@/lib/utils/routine-dashboard';
 import type { ScheduleableBlock } from '@/lib/utils/timestamp';
-import { useRoutineDayProgress, type RoutineDayProgressMap } from './useRoutineDayProgress';
+import {
+  useRoutineDayProgress,
+  type UseRoutineDayProgressResult,
+} from './useRoutineDayProgress';
 
-export interface UseRoutineDayStateResult {
-  progress: RoutineDayProgressMap;
+export interface UseRoutineDayStateResult extends UseRoutineDayProgressResult {
   states: Record<number, RoutineCompletionState>;
-  loading: boolean;
-  error: Error | null;
 }
 
 export function useRoutineDayState(
@@ -32,9 +35,9 @@ export function useRoutineDayState(
 ): UseRoutineDayStateResult {
   const { progress, loading, error } = useRoutineDayProgress(routines, today);
 
-  // `routines` is a new array identity on every parent render, so this
-  // recomputes often. That is fine — it is a pure loop over a handful of items
-  // with no I/O, and an id-string dep would cost more indirection than it saves.
+  // Cheap enough to be indifferent to `routines` identity: a pure loop over a
+  // handful of items with no I/O. An id-string dep would cost more indirection
+  // than it saves.
   const states = useMemo(
     () => deriveRoutineCompletionStates(routines, progress, currentTimeBlock),
     [routines, progress, currentTimeBlock]

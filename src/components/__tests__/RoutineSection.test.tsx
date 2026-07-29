@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { RoutineSection } from '../RoutineSection';
-import type { Routine, RoutineCompletionState, RoutineDayProgress } from '@/lib/db/query-types';
+import type { Routine, RoutineDayProgress } from '@/lib/db/query-types';
+import type { RoutineCompletionState } from '@/lib/utils/routine-dashboard';
 import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 
 const mockPush = jest.fn();

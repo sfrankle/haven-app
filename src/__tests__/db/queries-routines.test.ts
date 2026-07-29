@@ -430,8 +430,12 @@ describe('routine query layer', () => {
   //   Evening:   18:00–21:59  → [18, 22)
 
   describe('completion state, end to end from the database', () => {
-    // Helper: insert a routine with given time blocks and return its ID.
-    function insertRoutineWithBlocks(blocks: ScheduleableBlock[]): number {
+    type TestRoutine = { id: number; blocks: ScheduleableBlock[] };
+
+    // Helper: insert a routine with given time blocks. Returns the blocks
+    // alongside the id so a caller states them once — restating the literal at
+    // the completionState call site would let the two drift silently.
+    function insertRoutineWithBlocks(blocks: ScheduleableBlock[]): TestRoutine {
       const now = `${TEST_TODAY}T09:00:00-07:00`;
       const result = raw
         .prepare(
@@ -444,13 +448,12 @@ describe('routine query layer', () => {
           .prepare(`INSERT INTO routine_time_block (routine_id, time_block) VALUES (?, ?)`)
           .run(id, b);
       }
-      return id;
+      return { id, blocks };
     }
 
     // Runs the real dashboard pipeline: one batched read, then derive.
     async function completionState(
-      id: number,
-      blocks: ScheduleableBlock[],
+      { id, blocks }: TestRoutine,
       currentBlock: ScheduleableBlock
     ) {
       const progress = await getRoutineDayProgress(db, [id], TEST_TODAY);
@@ -470,15 +473,15 @@ describe('routine query layer', () => {
     });
 
     test('returns due when no completions today', async () => {
-      const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
-      const state = await completionState(id, ['Morning', 'Afternoon'], 'Morning');
+      const routine = insertRoutineWithBlocks(['Morning', 'Afternoon']);
+      const state = await completionState(routine, 'Morning');
       expect(state).toBe('due');
     });
 
     test('completed at 08:55, checked at 11:55 (still morning) — completed_this_block', async () => {
-      const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
-      insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
-      const state = await completionState(id, ['Morning', 'Afternoon'], 'Morning');
+      const routine = insertRoutineWithBlocks(['Morning', 'Afternoon']);
+      insertCompletion(routine.id, `${TEST_TODAY}T08:55:00-07:00`);
+      const state = await completionState(routine, 'Morning');
       expect(state).toBe('completed_this_block');
     });
 
@@ -488,7 +491,7 @@ describe('routine query layer', () => {
       // same thing: blocks are read back through getRoutines rather than
       // restated in the test body, so a divergence in how getRoutines collapses
       // routine_time_block rows would fail here.
-      const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
+      const { id } = insertRoutineWithBlocks(['Morning', 'Afternoon']);
       insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
       insertCompletion(id, `${TEST_TODAY}T15:10:00-07:00`);
 
@@ -498,7 +501,7 @@ describe('routine query layer', () => {
         .get(id) as { cnt: number };
       expect(routine.timeBlocks).toHaveLength(cnt);
 
-      const state = await completionState(id, routine.timeBlocks, 'Evening');
+      const state = await completionState({ id, blocks: routine.timeBlocks }, 'Evening');
       expect(state).toBe('fully_done');
     });
 
@@ -506,9 +509,9 @@ describe('routine query layer', () => {
       // Example 2 from issue #125 AC:
       // Completion at 08:55, now checking at 12:05 (Midday block).
       // The morning completion doesn't count for Midday → 'due'.
-      const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
-      insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
-      const state = await completionState(id, ['Morning', 'Afternoon'], 'Midday');
+      const routine = insertRoutineWithBlocks(['Morning', 'Afternoon']);
+      insertCompletion(routine.id, `${TEST_TODAY}T08:55:00-07:00`);
+      const state = await completionState(routine, 'Midday');
       expect(state).toBe('due');
     });
 
@@ -516,11 +519,11 @@ describe('routine query layer', () => {
       // Example 3 from issue #125 AC:
       // Routine has Morning + Afternoon. Two completions exist today.
       // Any check returns 'fully_done' because completionCount >= blockCount.
-      const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
-      insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
+      const routine = insertRoutineWithBlocks(['Morning', 'Afternoon']);
+      insertCompletion(routine.id, `${TEST_TODAY}T08:55:00-07:00`);
       // Second completion at 12:30 — falls in Midday window (not Afternoon)
-      insertCompletion(id, `${TEST_TODAY}T12:30:00-07:00`);
-      const state = await completionState(id, ['Morning', 'Afternoon'], 'Midday');
+      insertCompletion(routine.id, `${TEST_TODAY}T12:30:00-07:00`);
+      const state = await completionState(routine, 'Midday');
       expect(state).toBe('fully_done');
     });
 
@@ -531,11 +534,11 @@ describe('routine query layer', () => {
       // disclosure, never on a card presented as something to do now.
       // Relaxing the >= in deriveRoutineCompletionState to > would break this
       // silently.
-      const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
-      insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
-      insertCompletion(id, `${TEST_TODAY}T12:30:00-07:00`);
-      insertCompletion(id, `${TEST_TODAY}T15:10:00-07:00`);
-      const state = await completionState(id, ['Morning', 'Afternoon'], 'Evening');
+      const routine = insertRoutineWithBlocks(['Morning', 'Afternoon']);
+      insertCompletion(routine.id, `${TEST_TODAY}T08:55:00-07:00`);
+      insertCompletion(routine.id, `${TEST_TODAY}T12:30:00-07:00`);
+      insertCompletion(routine.id, `${TEST_TODAY}T15:10:00-07:00`);
+      const state = await completionState(routine, 'Evening');
       expect(state).toBe('fully_done');
     });
 
@@ -543,15 +546,15 @@ describe('routine query layer', () => {
       // Example 4 from issue #125 AC:
       // Routine has Morning + Afternoon. One completion at 08:55.
       // Evening block — only 1 of 2 blocks done, not in Evening window → 'due'.
-      const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
-      insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
-      const state = await completionState(id, ['Morning', 'Afternoon'], 'Evening');
+      const routine = insertRoutineWithBlocks(['Morning', 'Afternoon']);
+      insertCompletion(routine.id, `${TEST_TODAY}T08:55:00-07:00`);
+      const state = await completionState(routine, 'Evening');
       expect(state).toBe('due');
     });
 
     test('returns due when routine has no configured time blocks', async () => {
-      const id = insertRoutineWithBlocks([]);
-      const state = await completionState(id, [], 'Morning');
+      const routine = insertRoutineWithBlocks([]);
+      const state = await completionState(routine, 'Morning');
       // No configured blocks → the fully_done check is skipped entirely → 'due'
       expect(state).toBe('due');
     });
@@ -560,13 +563,12 @@ describe('routine query layer', () => {
       // Pins that getTimeBlock-derived completedBlocks put a 12:00 completion in
       // Midday, not Morning. Three blocks configured so the fully_done check
       // (1 >= 3) cannot mask the block comparison.
-      const id = insertRoutineWithBlocks(['Morning', 'Midday', 'Afternoon']);
-      const blocks: ScheduleableBlock[] = ['Morning', 'Midday', 'Afternoon'];
-      insertCompletion(id, `${TEST_TODAY}T12:00:00-07:00`);
+      const routine = insertRoutineWithBlocks(['Morning', 'Midday', 'Afternoon']);
+      insertCompletion(routine.id, `${TEST_TODAY}T12:00:00-07:00`);
       // 'completed_this_block' for Midday (hour 12 → Midday window [12,14))
-      expect(await completionState(id, blocks, 'Midday')).toBe('completed_this_block');
+      expect(await completionState(routine, 'Midday')).toBe('completed_this_block');
       // 'due' for Morning (hour 12 is NOT in Morning window [5,12))
-      expect(await completionState(id, blocks, 'Morning')).toBe('due');
+      expect(await completionState(routine, 'Morning')).toBe('due');
     });
   });
 

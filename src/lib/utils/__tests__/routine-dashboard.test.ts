@@ -5,8 +5,9 @@ import {
   deriveRoutineCompletionState,
   deriveRoutineCompletionStates,
   disclosureLabel,
+  type RoutineCompletionState,
 } from '../routine-dashboard';
-import type { Routine, RoutineCompletionState, RoutineDayProgress } from '@/lib/db/query-types';
+import type { Routine, RoutineDayProgress } from '@/lib/db/query-types';
 import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 
 // ─── fixtures ────────────────────────────────────────────────────────────────

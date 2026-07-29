@@ -153,13 +153,12 @@ export interface RoutineCompletionGroup {
   entries: EntryWithLabels[];
 }
 
-export type RoutineCompletionState = 'due' | 'completed_this_block' | 'fully_done';
-
 /**
  * A Routine's completions for a single day — the raw day fact read from the
  * database, and the dashboard's only source of it.
  *
- * RoutineCompletionState is derived from this plus the Routine's configured
+ * RoutineCompletionState (lib/utils/routine-dashboard.ts, where presentation
+ * state is owned) is derived from this plus the Routine's configured
  * blocks and the current block (deriveRoutineCompletionState), so any new
  * dashboard fact about today's completions belongs on this shape rather than in
  * a second read.

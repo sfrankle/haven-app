@@ -30,30 +30,21 @@ const mockGetProgress = jest.mocked(getRoutineDayProgress);
 
 const MOCK_DB = {};
 
-const FIXTURE_ROUTINES: Routine[] = [
-  {
-    id: 1,
-    name: 'Morning Reset',
+function makeRoutine(id: number, timeBlocks: ScheduleableBlock[]): Routine {
+  return {
+    id,
+    name: `Routine ${id}`,
     associatedFocusId: null,
     frequencyNote: null,
-    sortOrder: 0,
+    sortOrder: id,
     archived: false,
     createdAt: '2026-05-22T09:00:00-07:00',
     updatedAt: '2026-05-22T09:00:00-07:00',
-    timeBlocks: ['Morning'],
-  },
-  {
-    id: 2,
-    name: 'Evening Wind-Down',
-    associatedFocusId: null,
-    frequencyNote: null,
-    sortOrder: 1,
-    archived: false,
-    createdAt: '2026-05-22T09:00:00-07:00',
-    updatedAt: '2026-05-22T09:00:00-07:00',
-    timeBlocks: ['Evening'],
-  },
-];
+    timeBlocks,
+  };
+}
+
+const FIXTURE_ROUTINES = [makeRoutine(1, ['Morning']), makeRoutine(2, ['Evening'])];
 
 const TODAY = '2026-05-22';
 
@@ -64,14 +55,10 @@ describe('useRoutineDayState', () => {
     mockGetProgress.mockResolvedValue({});
   });
 
-  it('returns empty maps and loading=false when routines is []', async () => {
-    const { result } = renderHook(() => useRoutineDayState([], 'Morning', TODAY));
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.states).toEqual({});
-    expect(result.current.progress).toEqual({});
-    expect(result.current.error).toBeNull();
-    expect(mockGetProgress).not.toHaveBeenCalled();
-  });
+  // The empty-routines short-circuit and the query-rejection path belong to
+  // useRoutineDayProgress and are pinned in its own suite. Tested here too they
+  // would give one contract two owners, so what follows is only what this hook
+  // adds: the derivation, and its independence from the read.
 
   it('derives both halves from a single batched read', async () => {
     mockGetProgress.mockResolvedValue({
@@ -94,20 +81,6 @@ describe('useRoutineDayState', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('sets error and leaves both maps empty when the read fails', async () => {
-    const err = new Error('db failed');
-    mockGetProgress.mockRejectedValue(err);
-
-    const { result } = renderHook(() =>
-      useRoutineDayState(FIXTURE_ROUTINES, 'Morning', TODAY)
-    );
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(result.current.error).toBe(err);
-    expect(result.current.states).toEqual({});
-    expect(result.current.progress).toEqual({});
-  });
-
   it('re-derives without a second read when the current block changes', async () => {
     // The reason for the refactor: completion state is a pure function of
     // progress, so moving between blocks costs nothing. getRoutineDayProgress
@@ -118,7 +91,7 @@ describe('useRoutineDayState', () => {
 
     const { result, rerender } = renderHook(
       ({ block }: { block: ScheduleableBlock }) =>
-        useRoutineDayState([{ ...FIXTURE_ROUTINES[0], timeBlocks: ['Morning', 'Evening'] }], block, TODAY),
+        useRoutineDayState([makeRoutine(1, ['Morning', 'Evening'])], block, TODAY),
       { initialProps: { block: 'Morning' as ScheduleableBlock } }
     );
 

@@ -9,12 +9,18 @@
  * day ends. The vocabulary in this file reflects that.
  */
 
-import type { Routine, RoutineCompletionState, RoutineDayProgress } from '@/lib/db/query-types';
+import type { Routine, RoutineDayProgress } from '@/lib/db/query-types';
 import {
   getScheduleableBlocks,
   type ScheduleableBlock,
   type TimeBlock,
 } from '@/lib/utils/timestamp';
+
+/**
+ * How a Routine card presents today. Derived, never stored and never read — it
+ * lives here rather than in the query types because no query produces it.
+ */
+export type RoutineCompletionState = 'due' | 'completed_this_block' | 'fully_done';
 
 export type RoutineGroup = 'dueNow' | 'later' | 'completed';
 
