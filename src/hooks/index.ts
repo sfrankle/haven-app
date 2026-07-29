@@ -3,6 +3,6 @@ export { useEntryTypes } from './useEntryTypes';
 export { useTraceEntries } from './useTraceEntries';
 export { useFocuses } from './useFocuses';
 export { useRoutines } from './useRoutines';
-export { useRoutineCompletionStates } from './useRoutineCompletionStates';
+export { useRoutineDayState } from './useRoutineDayState';
 export { useRoutineDayProgress } from './useRoutineDayProgress';
 export { useRoutineForm } from './useRoutineForm';

@@ -4,8 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Surface } from './Surface';
 import { RoutineCard } from './RoutineCard';
 import { useRoutines } from '@/hooks/useRoutines';
-import { useRoutineCompletionStates } from '@/hooks/useRoutineCompletionStates';
-import { useRoutineDayProgress } from '@/hooks/useRoutineDayProgress';
+import { useRoutineDayState } from '@/hooks/useRoutineDayState';
 import {
   groupRoutinesForDashboard,
   formatRoutineProgress,
@@ -57,22 +56,23 @@ export function RoutineSection() {
   // default changes.
   const routines = useMemo(() => allRoutines.filter((r) => !r.archived), [allRoutines]);
 
-  // getRoutineCompletionState needs a scheduleable block, and Night is not one.
-  // Evening is the nearest preceding window.
+  // deriveRoutineCompletionState needs a scheduleable block, and Night is not
+  // one. Evening is the nearest preceding window.
   //
   // Known edge case, accepted: a Routine with zero configured blocks completed
   // between 22:00 and 04:59 falls outside the Evening window (18:00–21:59) and
   // reads as due again. Block-scheduled Routines are unaffected because the
   // fully_done check counts all of today's completions regardless of block.
-  // Fixing it properly means teaching getRoutineCompletionState about Night.
+  // Fixing it properly means teaching RoutineDayProgress about Night.
   const stateBlock = nowBlock === 'Night' ? 'Evening' : nowBlock;
 
-  const { states, loading: statesLoading } = useRoutineCompletionStates(
+  // One read of routine_completion; the progress line and the group placement
+  // below are both derived from it, so they cannot disagree.
+  const { states, progress, loading: dayStateLoading } = useRoutineDayState(
     routines,
     stateBlock,
     today
   );
-  const { progress } = useRoutineDayProgress(routines, today);
 
   const { dueNow, later, completed } = useMemo(
     () => groupRoutinesForDashboard(routines, states, nowBlock),
@@ -124,7 +124,7 @@ export function RoutineSection() {
           "later", so an unstated section would flash a Later row that is
           simply wrong. Costs the cards nothing — dueNow is empty until this
           read resolves either way. */}
-      {!loading && !statesLoading && label !== null && (
+      {!loading && !dayStateLoading && label !== null && (
         <>
           <Pressable
             onPress={() => setExpanded((e) => !e)}

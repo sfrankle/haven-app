@@ -9,12 +9,18 @@
  * day ends. The vocabulary in this file reflects that.
  */
 
-import type { Routine, RoutineCompletionState, RoutineDayProgress } from '@/lib/db/query-types';
+import type { Routine, RoutineDayProgress } from '@/lib/db/query-types';
 import {
   getScheduleableBlocks,
   type ScheduleableBlock,
   type TimeBlock,
 } from '@/lib/utils/timestamp';
+
+/**
+ * How a Routine card presents today. Derived, never stored and never read — it
+ * lives here rather than in the query types because no query produces it.
+ */
+export type RoutineCompletionState = 'due' | 'completed_this_block' | 'fully_done';
 
 export type RoutineGroup = 'dueNow' | 'later' | 'completed';
 
@@ -51,6 +57,53 @@ function blockIndex(block: TimeBlock): number {
 function inBlockOrder(blocks: ScheduleableBlock[]): ScheduleableBlock[] {
   const present = new Set(blocks);
   return blockOrder().filter((b): b is ScheduleableBlock => b !== 'Night' && present.has(b));
+}
+
+/**
+ * Completion state for one Routine, derived from today's progress.
+ *
+ *   'fully_done'           — completions today >= configured blocks (blocks > 0)
+ *   'completed_this_block' — a completion landed in the current block
+ *   'due'                  — neither
+ *
+ * Pure: every fact this needs is already in the batched getRoutineDayProgress
+ * read plus the Routine's configured blocks, so the dashboard reads
+ * routine_completion once per refresh. The >= boundary is load-bearing — see
+ * "three completions against two blocks" in routine-dashboard.test.ts.
+ */
+export function deriveRoutineCompletionState(
+  progress: RoutineDayProgress,
+  timeBlocks: ScheduleableBlock[],
+  currentBlock: ScheduleableBlock
+): RoutineCompletionState {
+  // Order matters: fully_done wins over completed_this_block. The length guard
+  // stops a zero-block "anytime" Routine from satisfying 0 >= 0.
+  if (timeBlocks.length > 0 && progress.completionCount >= timeBlocks.length) {
+    return 'fully_done';
+  }
+  if (progress.completedBlocks.includes(currentBlock)) return 'completed_this_block';
+  return 'due';
+}
+
+/**
+ * deriveRoutineCompletionState across a set of Routines.
+ *
+ * A Routine absent from the progress map is skipped, not defaulted to 'due':
+ * groupRoutinesForDashboard deliberately parks a stateless Routine in "later"
+ * rather than presenting an unverified one as due now.
+ */
+export function deriveRoutineCompletionStates(
+  routines: Routine[],
+  progress: Record<number, RoutineDayProgress>,
+  currentBlock: ScheduleableBlock
+): Record<number, RoutineCompletionState> {
+  const states: Record<number, RoutineCompletionState> = {};
+  for (const routine of routines) {
+    const p = progress[routine.id];
+    if (p === undefined) continue;
+    states[routine.id] = deriveRoutineCompletionState(p, routine.timeBlocks, currentBlock);
+  }
+  return states;
 }
 
 /**
@@ -118,10 +171,12 @@ export function formatTimeBlocks(blocks: ScheduleableBlock[]): string {
  * configured block count: a Routine completed three times against two blocks
  * reads "3 of 2". Showing "2 of 2" would quietly hide something the user did.
  *
- * An over-count is disclosure-only, never on a due-now card: getRoutineCompletionState
- * returns fully_done once completions >= configured blocks, so anything that
- * could read "3 of 2" has already been grouped as completed. Pinned by
- * "three completions against two blocks" in queries-routines.test.ts.
+ * An over-count is disclosure-only, never on a due-now card:
+ * deriveRoutineCompletionState returns fully_done once completions >=
+ * configured blocks, so anything that could read "3 of 2" has already been
+ * grouped as completed. Both come from the same progress read. Pinned by
+ * "three completions against two blocks" in routine-dashboard.test.ts and its
+ * database-backed twin in queries-routines.test.ts.
  */
 export function formatRoutineProgress(
   progress: RoutineDayProgress | undefined,
