@@ -40,10 +40,9 @@ appId: com.haven.app
     text: "Apple"
 
 # Also pin a Physical label so we can test severity 0 in quick-log
-- clearText:
-    id: "focus-edit-label-search"
 - tapOn:
     id: "focus-edit-label-search"
+- eraseText
 - inputText: "Cramp"
 
 - tapOn:

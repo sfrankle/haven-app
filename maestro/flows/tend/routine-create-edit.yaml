@@ -31,8 +31,9 @@ appId: com.haven.app
 
 - assertVisible:
     id: "routine-edit-name-input"
-- clearText:
+- tapOn:
     id: "routine-edit-name-input"
+- eraseText
 - inputText: "Updated Morning Flow"
 
 # Add a second item to the existing Routine. The subflow creates one item, so

@@ -7,7 +7,7 @@ appId: com.haven.app
 - assertVisible: "Today: 0 oz"
 - tapOn:
     id: "hydration-oz-input"
-- clearText
+- eraseText
 - inputText: "24"
 - assertVisible:
     id: "hydration-save-button"

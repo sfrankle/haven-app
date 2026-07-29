@@ -28,10 +28,9 @@ appId: com.haven.app
     id: "focus-edit-name-input"
 
 # Clear name and type a new one
-- clearText:
-    id: "focus-edit-name-input"
 - tapOn:
     id: "focus-edit-name-input"
+- eraseText
 - inputText: "Renamed Focus"
 
 # Tap save

@@ -57,7 +57,7 @@ appId: com.haven.app
 
 - tapOn:
     id: "hydration-oz-input"
-- clearText
+- eraseText
 - inputText: "32"
 
 - back
