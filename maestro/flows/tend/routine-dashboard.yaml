@@ -58,6 +58,15 @@ appId: com.haven.app
     id: "routine-collapsed-row-1"
 - assertVisible: "Morning Flow"
 
+# The progress line on the row that the completion just moved here. Group
+# placement and progress text are derived from the same read, so this asserts
+# end to end that the two agree — the point of the single-read refactor.
+#
+# Matched partially on purpose: the trailing block name is whatever block the
+# flow happens to run in ("1 of 1 · Morning done" before noon, "· Afternoon
+# done" later), so only the count is time-stable. See formatRoutineProgress.
+- assertVisible: ".*1 of 1.*"
+
 - tapOn:
     id: "routine-section-disclosure"
 - assertNotVisible:
