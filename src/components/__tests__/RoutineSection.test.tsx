@@ -71,7 +71,7 @@ function setup(opts: {
   routines?: Routine[];
   loading?: boolean;
   states?: Record<number, RoutineCompletionState>;
-  statesError?: Error | null;
+  dayStateError?: Error | null;
   progress?: Record<number, RoutineDayProgress>;
 }) {
   mockUseRoutines.mockReturnValue({
@@ -85,7 +85,7 @@ function setup(opts: {
     states: opts.states ?? {},
     progress: opts.progress ?? {},
     loading: false,
-    error: opts.statesError ?? null,
+    error: opts.dayStateError ?? null,
   });
 }
 
@@ -274,7 +274,7 @@ describe('RoutineSection — loading and failure', () => {
     setup({
       routines: [makeRoutine(1, 'Morning Flow', ['Morning'])],
       states: {},
-      statesError: new Error('db failed'),
+      dayStateError: new Error('db failed'),
     });
 
     const { getByTestId, queryByTestId } = render(<RoutineSection />);

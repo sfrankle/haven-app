@@ -266,7 +266,7 @@ describe('deriveRoutineCompletionState', () => {
     ).toBe('fully_done');
   });
 
-  test('a Routine with no configured blocks is never fully_done', () => {
+  test('a Routine with no configured blocks is completed_this_block, not fully_done', () => {
     // The timeBlocks.length > 0 guard is load-bearing: without it 0 >= 0 would
     // make every "anytime" Routine fully_done the moment it was created.
     expect(deriveRoutineCompletionState(progress(1, ['Morning']), [], 'Morning')).toBe(

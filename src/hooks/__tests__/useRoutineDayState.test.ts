@@ -51,6 +51,9 @@ const TODAY = '2026-05-22';
 describe('useRoutineDayState', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // clearAllMocks does not touch module-level state, and a callback left over
+    // from a previous test closes over an unmounted hook.
+    mockFocusCallback = null;
     mockGetDb.mockResolvedValue(MOCK_DB as never);
     mockGetProgress.mockResolvedValue({});
   });
