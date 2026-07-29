@@ -6,7 +6,7 @@ appId: com.haven.app
 - assertVisible: "Replenish"        # on Tend home
 
 - tapOn: "Replenish"
-- assertVisible: "How much water have you had?"
+- assertVisible: "How much water did you take in?"
 
 - back                              # swipe back to Tend
 - assertVisible: "Replenish"        # tile visible — on Tend home
@@ -23,11 +23,11 @@ appId: com.haven.app
 - assertVisible: "Replenish"
 
 - tapOn: "Replenish"
-- assertVisible: "How much water have you had?"
+- assertVisible: "How much water did you take in?"
 
 - tapOn: "Tend"
 - assertVisible: "Replenish"        # tile visible — on Tend home
-- assertNotVisible: "How much water have you had?"
+- assertNotVisible: "How much water did you take in?"
 
 ---
 # Scenario: sequential multi-type log — open A, back, open B, back; land on Tend each time
@@ -35,7 +35,7 @@ appId: com.haven.app
 - assertVisible: "Replenish"
 
 - tapOn: "Replenish"
-- assertVisible: "How much water have you had?"
+- assertVisible: "How much water did you take in?"
 
 - back
 - assertVisible: "Replenish"        # on Tend home after first back
@@ -53,7 +53,7 @@ appId: com.haven.app
 - assertVisible: "Replenish"
 
 - tapOn: "Replenish"
-- assertVisible: "How much water have you had?"
+- assertVisible: "How much water did you take in?"
 
 - tapOn:
     id: "hydration-oz-input"
@@ -64,5 +64,5 @@ appId: com.haven.app
 - assertVisible: "Replenish"        # on Tend home
 
 - tapOn: "Replenish"
-- assertVisible: "How much water have you had?"
+- assertVisible: "How much water did you take in?"
 - assertVisible: "16"               # input reset to default — no cached state from prior visit

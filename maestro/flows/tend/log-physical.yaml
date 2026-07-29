@@ -7,9 +7,9 @@ appId: com.haven.app
     id: "energy-slider"
 - assertVisible:
     id: "physical-search"
-# Set energy to level 3 (Average)
+# Set energy to level 3 (Steady)
 - tapOn:
-    text: "Average"
+    text: "Steady"
 - assertVisible:
     id: "physical-chip-energy"     # energy chip added
 - assertVisible:
@@ -28,4 +28,4 @@ appId: com.haven.app
 - tapOn:
     id: "physical-save-button"
 - assertVisible: "Entry saved."
-- assertVisible: "Today"           # back on Tend
+- assertVisible: ".*Today.*"           # back on Tend

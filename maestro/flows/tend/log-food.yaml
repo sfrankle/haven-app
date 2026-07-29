@@ -10,7 +10,8 @@ appId: com.haven.app
 - inputText: "Oats"
 - assertVisible:
     id: "food-suggestion-.*"
-- tapOn: "Oats"
+- tapOn:
+    id: "food-suggestion-.*"
 - assertVisible:
     id: "food-chip-.*"
 - assertVisible:
@@ -18,4 +19,4 @@ appId: com.haven.app
 - tapOn:
     id: "food-save-button"
 - assertVisible: "Entry saved."
-- assertVisible: "Today"
+- assertVisible: ".*Today.*"

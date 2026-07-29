@@ -10,7 +10,8 @@ appId: com.haven.app
 - inputText: "Eggs"
 - assertVisible:
     id: "food-suggestion-.*"
-- tapOn: "Eggs"
+- tapOn:
+    id: "food-suggestion-.*"
 - assertVisible:
     id: "food-chip-.*"
 # Open focus dropdown

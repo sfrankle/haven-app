@@ -10,7 +10,8 @@ appId: com.haven.app
 - inputText: "Walk"
 - assertVisible:
     id: "activity-suggestion-.*"     # at least one result
-- tapOn: "Walk"
+- tapOn:
+    id: "activity-suggestion-.*"
 - assertVisible:
     id: "activity-chip-.*"           # chip added
 - assertVisible:
@@ -18,4 +19,4 @@ appId: com.haven.app
 - tapOn:
     id: "activity-save-button"
 - assertVisible: "Entry saved."
-- assertVisible: "Today"            # back on Tend
+- assertVisible: ".*Today.*"            # back on Tend

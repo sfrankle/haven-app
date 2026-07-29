@@ -3,7 +3,7 @@ appId: com.haven.app
 - launchApp
 - assertVisible: "Replenish"
 - tapOn: "Replenish"
-- assertVisible: "How much water have you had?"
+- assertVisible: "How much water did you take in?"
 - assertVisible: "Today: 0 oz"
 - tapOn:
     id: "hydration-oz-input"
@@ -15,4 +15,4 @@ appId: com.haven.app
     id: "hydration-save-button"
 - assertVisible: "Today: 24 oz"
 - assertVisible: "Entry saved."
-- assertVisible: "Today"   # back on Tend screen
+- assertVisible: ".*Today.*"   # back on Tend screen

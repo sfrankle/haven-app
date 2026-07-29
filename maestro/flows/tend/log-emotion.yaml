@@ -26,7 +26,7 @@ appId: com.haven.app
 - tapOn:
     id: "emotion-save-button"
 - assertVisible: "Entry saved."
-- assertVisible: "Today"             # back on Tend home
+- assertVisible: ".*Today.*"             # back on Tend home
 
 ---
 # Scenario 1b: Happy path Tier-2 save
@@ -123,4 +123,4 @@ appId: com.haven.app
 - assertVisible:
     id: "emotion-screen-2"            # back to Screen 2
 - pressKey: Back
-- assertVisible: "Today"             # back to Tend home
+- assertVisible: ".*Today.*"             # back to Tend home

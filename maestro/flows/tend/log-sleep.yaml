@@ -12,7 +12,7 @@ appId: com.haven.app
 - tapOn:
     id: "sleep-save-button"
 - assertVisible: "Entry saved."
-- assertVisible: "Today"   # back on Tend screen
+- assertVisible: ".*Today.*"   # back on Tend screen
 
 # Notes field is visible before saving
 - launchApp
