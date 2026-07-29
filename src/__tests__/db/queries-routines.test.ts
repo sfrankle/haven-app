@@ -13,14 +13,15 @@ import {
   updateRoutine,
   setRoutineArchived,
   getRoutineItems,
-  getRoutineCompletionState,
   getRoutineDayProgress,
   createRoutineItems,
   replaceRoutineItems,
   completeRoutine,
   saveEntryBatch,
 } from '../../lib/db/queries';
+import { deriveRoutineCompletionState } from '../../lib/utils/routine-dashboard';
 import type { RoutineItemInput, SaveEntryInput } from '../../lib/db/query-types';
+import type { ScheduleableBlock } from '../../lib/utils/timestamp';
 
 const TEST_TODAY = '2026-05-22';
 
@@ -415,23 +416,28 @@ describe('routine query layer', () => {
     });
   });
 
-  // ── getRoutineCompletionState ────────────────────────────────────────────────
+  // ── completion state, end to end from the database ──────────────────────────
   //
-  // Time-block windows (mirrors getTimeBlock in timestamp.ts):
-  //   Morning:   05:00–11:59  → timeBlockWindow: [5, 12]
-  //   Midday:    12:00–13:59  → timeBlockWindow: [12, 14]
-  //   Afternoon: 14:00–17:59  → timeBlockWindow: [14, 18]
-  //   Evening:   18:00–21:59  → timeBlockWindow: [18, 22]
+  // The dashboard derives completion state from getRoutineDayProgress plus the
+  // Routine's configured blocks (deriveRoutineCompletionState). These tests run
+  // that whole pipeline against real routine_completion rows, so the pure
+  // function stays verified against the database and not only against fixtures.
+  //
+  // Time-block windows (owned by getTimeBlock in timestamp.ts):
+  //   Morning:   05:00–11:59  → [5, 12)
+  //   Midday:    12:00–13:59  → [12, 14)
+  //   Afternoon: 14:00–17:59  → [14, 18)
+  //   Evening:   18:00–21:59  → [18, 22)
 
-  describe('getRoutineCompletionState', () => {
+  describe('completion state, end to end from the database', () => {
     // Helper: insert a routine with given time blocks and return its ID.
-    function insertRoutineWithBlocks(blocks: string[]): number {
+    function insertRoutineWithBlocks(blocks: ScheduleableBlock[]): number {
       const now = `${TEST_TODAY}T09:00:00-07:00`;
       const result = raw
         .prepare(
           `INSERT INTO routine (name, sort_order, archived, created_at, updated_at) VALUES (?, 0, 0, ?, ?)`
         )
-        .run(`CompletionTest-${Date.now()}`, now, now);
+        .run(`CompletionTest-${Date.now()}-${Math.random()}`, now, now);
       const id = Number(result.lastInsertRowid);
       for (const b of blocks) {
         raw
@@ -439,6 +445,16 @@ describe('routine query layer', () => {
           .run(id, b);
       }
       return id;
+    }
+
+    // Runs the real dashboard pipeline: one batched read, then derive.
+    async function completionState(
+      id: number,
+      blocks: ScheduleableBlock[],
+      currentBlock: ScheduleableBlock
+    ) {
+      const progress = await getRoutineDayProgress(db, [id], TEST_TODAY);
+      return deriveRoutineCompletionState(progress[id], blocks, currentBlock);
     }
 
     // Helper: insert a routine_completion row with a given created_at ISO string.
@@ -455,15 +471,35 @@ describe('routine query layer', () => {
 
     test('returns due when no completions today', async () => {
       const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
-      const state = await getRoutineCompletionState(db, id, 'Morning', TEST_TODAY);
+      const state = await completionState(id, ['Morning', 'Afternoon'], 'Morning');
       expect(state).toBe('due');
     });
 
     test('completed at 08:55, checked at 11:55 (still morning) — completed_this_block', async () => {
       const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
       insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
-      const state = await getRoutineCompletionState(db, id, 'Morning', TEST_TODAY);
+      const state = await completionState(id, ['Morning', 'Afternoon'], 'Morning');
       expect(state).toBe('completed_this_block');
+    });
+
+    test('the configured block count comes from getRoutines, matching routine_time_block', async () => {
+      // The derivation replaced a SELECT COUNT(*) FROM routine_time_block with
+      // Routine.timeBlocks.length. This is the test that keeps those two the
+      // same thing: blocks are read back through getRoutines rather than
+      // restated in the test body, so a divergence in how getRoutines collapses
+      // routine_time_block rows would fail here.
+      const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
+      insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
+      insertCompletion(id, `${TEST_TODAY}T15:10:00-07:00`);
+
+      const routine = (await getRoutines(db)).find((r) => r.id === id)!;
+      const { cnt } = raw
+        .prepare(`SELECT COUNT(*) AS cnt FROM routine_time_block WHERE routine_id = ?`)
+        .get(id) as { cnt: number };
+      expect(routine.timeBlocks).toHaveLength(cnt);
+
+      const state = await completionState(id, routine.timeBlocks, 'Evening');
+      expect(state).toBe('fully_done');
     });
 
     test('at 12:05 after one morning completion — Midday not yet done (due)', async () => {
@@ -472,7 +508,7 @@ describe('routine query layer', () => {
       // The morning completion doesn't count for Midday → 'due'.
       const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
       insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
-      const state = await getRoutineCompletionState(db, id, 'Midday', TEST_TODAY);
+      const state = await completionState(id, ['Morning', 'Afternoon'], 'Midday');
       expect(state).toBe('due');
     });
 
@@ -484,7 +520,7 @@ describe('routine query layer', () => {
       insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
       // Second completion at 12:30 — falls in Midday window (not Afternoon)
       insertCompletion(id, `${TEST_TODAY}T12:30:00-07:00`);
-      const state = await getRoutineCompletionState(db, id, 'Midday', TEST_TODAY);
+      const state = await completionState(id, ['Morning', 'Afternoon'], 'Midday');
       expect(state).toBe('fully_done');
     });
 
@@ -493,13 +529,13 @@ describe('routine query layer', () => {
       // completions exceed the configured blocks the Routine is fully_done, so
       // an unclamped "3 of 2" can only ever appear inside the collapsed
       // disclosure, never on a card presented as something to do now.
-      // Relaxing the >= in getRoutineCompletionState to > would break this
+      // Relaxing the >= in deriveRoutineCompletionState to > would break this
       // silently.
       const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
       insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
       insertCompletion(id, `${TEST_TODAY}T12:30:00-07:00`);
       insertCompletion(id, `${TEST_TODAY}T15:10:00-07:00`);
-      const state = await getRoutineCompletionState(db, id, 'Evening', TEST_TODAY);
+      const state = await completionState(id, ['Morning', 'Afternoon'], 'Evening');
       expect(state).toBe('fully_done');
     });
 
@@ -509,26 +545,28 @@ describe('routine query layer', () => {
       // Evening block — only 1 of 2 blocks done, not in Evening window → 'due'.
       const id = insertRoutineWithBlocks(['Morning', 'Afternoon']);
       insertCompletion(id, `${TEST_TODAY}T08:55:00-07:00`);
-      const state = await getRoutineCompletionState(db, id, 'Evening', TEST_TODAY);
+      const state = await completionState(id, ['Morning', 'Afternoon'], 'Evening');
       expect(state).toBe('due');
     });
 
     test('returns due when routine has no configured time blocks', async () => {
       const id = insertRoutineWithBlocks([]);
-      const state = await getRoutineCompletionState(db, id, 'Morning', TEST_TODAY);
-      // blockCount = 0 → fully_done check fails (0 > 0 is false) → 'due'
+      const state = await completionState(id, [], 'Morning');
+      // No configured blocks → the fully_done check is skipped entirely → 'due'
       expect(state).toBe('due');
     });
 
     test('completion exactly at block boundary 12:00:00 counts as Midday not Morning', async () => {
-      const id = insertRoutineWithBlocks(['Morning', 'Midday']);
+      // Pins that getTimeBlock-derived completedBlocks put a 12:00 completion in
+      // Midday, not Morning. Three blocks configured so the fully_done check
+      // (1 >= 3) cannot mask the block comparison.
+      const id = insertRoutineWithBlocks(['Morning', 'Midday', 'Afternoon']);
+      const blocks: ScheduleableBlock[] = ['Morning', 'Midday', 'Afternoon'];
       insertCompletion(id, `${TEST_TODAY}T12:00:00-07:00`);
-      // Should be 'completed_this_block' for Midday (hour = 12 → Midday window [12,14])
-      const middayState = await getRoutineCompletionState(db, id, 'Midday', TEST_TODAY);
-      expect(middayState).toBe('completed_this_block');
-      // Should be 'due' for Morning (hour 12 is NOT in Morning window [5,12])
-      const morningState = await getRoutineCompletionState(db, id, 'Morning', TEST_TODAY);
-      expect(morningState).toBe('due');
+      // 'completed_this_block' for Midday (hour 12 → Midday window [12,14))
+      expect(await completionState(id, blocks, 'Midday')).toBe('completed_this_block');
+      // 'due' for Morning (hour 12 is NOT in Morning window [5,12))
+      expect(await completionState(id, blocks, 'Morning')).toBe('due');
     });
   });
 
