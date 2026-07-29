@@ -9,7 +9,7 @@
  * No screen should call db.getAllAsync / db.runAsync / db.getFirstAsync directly.
  */
 
-import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem, Routine, RoutineItem, RoutineItemInput, RoutineCompletionGroup, RoutineCompletionState, RoutineDayProgress } from './query-types';
+import type { EntryType, Label, EntryWithLabels, SaveEntryInput, PhysicalStateLabel, Focus, FocusItem, Routine, RoutineItem, RoutineItemInput, RoutineCompletionGroup, RoutineDayProgress } from './query-types';
 import { nowLocalIso, getTimeBlock, getScheduleableBlocks } from '@/lib/utils/timestamp';
 import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 
@@ -960,26 +960,6 @@ interface RoutineItemRaw {
 }
 
 /**
- * Returns the [startHour, endHour) for a given ScheduleableBlock.
- * Mirrors the exact boundaries in getTimeBlock (timestamp.ts):
- *   Morning:   05:00–11:59 → [5, 12)
- *   Midday:    12:00–13:59 → [12, 14)
- *   Afternoon: 14:00–17:59 → [14, 18)
- *   Evening:   18:00–21:59 → [18, 22)
- *
- * This function is the canonical source of block hour boundaries for the query
- * layer. Keep it in sync with getTimeBlock in timestamp.ts.
- */
-function timeBlockWindow(block: ScheduleableBlock): [number, number] {
-  switch (block) {
-    case 'Morning':   return [5, 12];
-    case 'Midday':    return [12, 14];
-    case 'Afternoon': return [14, 18];
-    case 'Evening':   return [18, 22];
-  }
-}
-
-/**
  * Returns all routines, ordered by archived ASC, sort_order ASC.
  * Archived routines are excluded by default; pass `includeArchived: true` to include them.
  *
@@ -1203,70 +1183,13 @@ export async function getRoutineItems(db: Db, routineId: number): Promise<Routin
 }
 
 /**
- * Derives the completion state for a routine at a given time block and date.
+ * Batched read of today's completions for a set of routines — the single read
+ * of routine_completion the dashboard makes per refresh.
  *
- * @param db        - DB handle
- * @param routineId - Routine to check
- * @param timeBlock - Current ScheduleableBlock
- * @param today     - YYYY-MM-DD string (injectable for tests — same pattern as formatEntryDate)
- *
- * Returns:
- *   'fully_done'          — total completions today >= total configured blocks
- *   'completed_this_block' — a completion row exists today within this block's hour window
- *   'due'                 — none of the above
- *
- * Completions are counted from routine_completion rows directly (not via
- * entry.routine_completion_id join) to avoid N-per-item overcounting.
- * Hour comparison uses substr(created_at, 12, 2) to read wall-clock hour from
- * the stored ISO string — consistent with the wall-clock-preservation invariant
- * throughout Haven (immune to timezone re-interpretation).
- */
-export async function getRoutineCompletionState(
-  db: Db,
-  routineId: number,
-  timeBlock: ScheduleableBlock,
-  today: string
-): Promise<RoutineCompletionState> {
-  // 1. Count today's completions
-  const todayCompletions = await db.getFirstAsync<{ cnt: number }>(
-    `SELECT COUNT(*) AS cnt FROM routine_completion
-     WHERE routine_id = ? AND substr(created_at, 1, 10) = ?`,
-    [routineId, today]
-  );
-  const completionCount = todayCompletions?.cnt ?? 0;
-
-  // 2. Count configured time blocks
-  const configuredBlocks = await db.getFirstAsync<{ cnt: number }>(
-    `SELECT COUNT(*) AS cnt FROM routine_time_block WHERE routine_id = ?`,
-    [routineId]
-  );
-  const blockCount = configuredBlocks?.cnt ?? 0;
-
-  // 3. fully_done check: completions today >= configured block count (and blocks exist)
-  if (blockCount > 0 && completionCount >= blockCount) return 'fully_done';
-
-  // 4. completed_this_block: did any completion fall within this block's hour window?
-  const [startHour, endHour] = timeBlockWindow(timeBlock);
-  const blockCompletion = await db.getFirstAsync<{ cnt: number }>(
-    `SELECT COUNT(*) AS cnt FROM routine_completion
-     WHERE routine_id = ?
-       AND substr(created_at, 1, 10) = ?
-       AND CAST(substr(created_at, 12, 2) AS INTEGER) >= ?
-       AND CAST(substr(created_at, 12, 2) AS INTEGER) < ?`,
-    [routineId, today, startHour, endHour]
-  );
-  if ((blockCompletion?.cnt ?? 0) > 0) return 'completed_this_block';
-
-  return 'due';
-}
-
-/**
- * Batched, display-only read of today's completions for a set of routines.
- *
- * Answers "what do we print on the card" — the completion count and which
- * blocks are already done. getRoutineCompletionState answers the separate
- * question of which dashboard bucket a routine belongs in; the two are kept
- * apart so this ticket does not reshape that tested API.
+ * Both of the card's facts are derived from this one result: the progress line
+ * by formatRoutineProgress, and the group placement by
+ * deriveRoutineCompletionState (both in lib/utils/routine-dashboard.ts). They
+ * cannot disagree because there is nothing else to read.
  *
  * Night completions are counted in completionCount but excluded from
  * completedBlocks, because Night is not a scheduleable block.

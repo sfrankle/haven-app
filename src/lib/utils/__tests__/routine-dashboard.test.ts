@@ -2,9 +2,12 @@ import {
   groupRoutinesForDashboard,
   formatTimeBlocks,
   formatRoutineProgress,
+  deriveRoutineCompletionState,
+  deriveRoutineCompletionStates,
   disclosureLabel,
+  type RoutineCompletionState,
 } from '../routine-dashboard';
-import type { Routine, RoutineCompletionState, RoutineDayProgress } from '@/lib/db/query-types';
+import type { Routine, RoutineDayProgress } from '@/lib/db/query-types';
 import type { ScheduleableBlock } from '@/lib/utils/timestamp';
 
 // ─── fixtures ────────────────────────────────────────────────────────────────
@@ -193,6 +196,116 @@ describe('formatRoutineProgress', () => {
 
   test('renders "N times today" for repeat completions of an unscheduled Routine', () => {
     expect(formatRoutineProgress(progress(3, ['Morning']), [])).toBe('3 times today');
+  });
+});
+
+// ─── deriveRoutineCompletionState ────────────────────────────────────────────
+//
+// The worked examples from #125 also run against real routine_completion rows
+// in src/__tests__/db/queries-routines.test.ts, through
+// getRoutineDayProgress → derive. These are the same rules without a database.
+
+describe('deriveRoutineCompletionState', () => {
+  test('no completions today is due', () => {
+    expect(
+      deriveRoutineCompletionState(progress(0, []), ['Morning', 'Afternoon'], 'Morning')
+    ).toBe('due');
+  });
+
+  test('#125 ex. 1 — completed 08:55, checked 11:55 in Morning', () => {
+    expect(
+      deriveRoutineCompletionState(
+        progress(1, ['Morning']),
+        ['Morning', 'Afternoon'],
+        'Morning'
+      )
+    ).toBe('completed_this_block');
+  });
+
+  test('#125 ex. 2 — that same Morning completion does not satisfy Midday', () => {
+    expect(
+      deriveRoutineCompletionState(
+        progress(1, ['Morning']),
+        ['Morning', 'Afternoon'],
+        'Midday'
+      )
+    ).toBe('due');
+  });
+
+  test('#125 ex. 3 — two completions against two configured blocks is fully_done', () => {
+    expect(
+      deriveRoutineCompletionState(
+        progress(2, ['Morning', 'Midday']),
+        ['Morning', 'Afternoon'],
+        'Midday'
+      )
+    ).toBe('fully_done');
+  });
+
+  test('#125 ex. 4 — one of two blocks done, checked in Evening, is due not overdue', () => {
+    expect(
+      deriveRoutineCompletionState(
+        progress(1, ['Morning']),
+        ['Morning', 'Afternoon'],
+        'Evening'
+      )
+    ).toBe('due');
+  });
+
+  test('#178 invariant — three completions against two blocks stays fully_done', () => {
+    // Keeps an unclamped "3 of 2" off a due-now card: once completions reach
+    // the configured block count the Routine is grouped as completed, so the
+    // over-count can only ever appear inside the collapsed disclosure.
+    // Relaxing the >= below to > would break this silently.
+    expect(
+      deriveRoutineCompletionState(
+        progress(3, ['Morning', 'Midday', 'Afternoon']),
+        ['Morning', 'Afternoon'],
+        'Evening'
+      )
+    ).toBe('fully_done');
+  });
+
+  test('a Routine with no configured blocks is completed_this_block, not fully_done', () => {
+    // The timeBlocks.length > 0 guard is load-bearing: without it 0 >= 0 would
+    // make every "anytime" Routine fully_done the moment it was created.
+    expect(deriveRoutineCompletionState(progress(1, ['Morning']), [], 'Morning')).toBe(
+      'completed_this_block'
+    );
+  });
+
+  test('an unstarted "anytime" Routine is due', () => {
+    expect(deriveRoutineCompletionState(progress(0, []), [], 'Morning')).toBe('due');
+  });
+
+  test('a Night completion of an "anytime" Routine reads as due again', () => {
+    // Known and accepted, carried over unchanged: Night is not a scheduleable
+    // block, so a 23:00 completion is counted but leaves completedBlocks empty,
+    // and the dashboard checks against Evening. Pinned so that changing it is a
+    // deliberate choice. Fixing it means teaching RoutineDayProgress about Night.
+    expect(deriveRoutineCompletionState(progress(1, []), [], 'Evening')).toBe('due');
+  });
+});
+
+describe('deriveRoutineCompletionStates', () => {
+  test('returns one entry per Routine present in the progress map', () => {
+    const a = makeRoutine(1, ['Morning']);
+    const b = makeRoutine(2, ['Evening']);
+    const result = deriveRoutineCompletionStates(
+      [a, b],
+      { 1: progress(1, ['Morning']), 2: progress(0, []) },
+      'Morning'
+    );
+    expect(result).toEqual({ 1: 'fully_done', 2: 'due' });
+  });
+
+  test('omits a Routine missing from the progress map rather than defaulting to due', () => {
+    // groupRoutinesForDashboard parks a stateless Routine in "later". Inventing
+    // a 'due' here would present an unverified Routine as something to do now
+    // while the read is still in flight or after it failed.
+    expect(deriveRoutineCompletionStates([makeRoutine(1, ['Morning'])], {}, 'Morning')).toEqual(
+      {}
+    );
   });
 });
 
