@@ -1,6 +1,10 @@
 appId: com.haven.app
 ---
-- launchApp
+# clearState is required: add-focus-pill renders after every existing focus
+# pill in a horizontal ScrollView, so focuses left behind by an earlier flow
+# push it off-screen and it can no longer be tapped.
+- launchApp:
+    clearState: true
 
 # Ensure Tend tab is visible
 - assertVisible:
@@ -24,6 +28,10 @@ appId: com.haven.app
     text: "Archive Me"
 - assertVisible:
     id: "focus-edit-archive-button"
+
+# The edit screen's label SearchBar autoFocuses on mount, so the keyboard is up
+# without any typing and swallows taps aimed beneath it. See #195.
+- hideKeyboard
 
 # Tap archive button
 - tapOn:
