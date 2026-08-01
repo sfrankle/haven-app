@@ -22,7 +22,7 @@ name: Trace — focus filter show context (context view mode)
 
 # Log a Food entry linked to the focus
 - tapOn:
-    text: "Food"
+    id: "tile-food"
 - tapOn:
     text: "Oats"
 - tapOn:
@@ -36,7 +36,7 @@ name: Trace — focus filter show context (context view mode)
 
 # Log a Sleep entry in the same session (no focus link — will appear as context)
 - tapOn:
-    text: "Sleep"
+    id: "tile-sleep"
 - tapOn:
     id: "sleep-hours-input"
 - inputText: "7"

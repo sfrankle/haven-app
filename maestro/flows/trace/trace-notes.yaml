@@ -9,7 +9,7 @@ name: Trace — notes visible in expanded row
 - tapOn:
     id: "tab-tend"
 - tapOn:
-    text: "Sleep"
+    id: "tile-sleep"
 - tapOn:
     id: "sleep-hours-input"
 - inputText: "8"
