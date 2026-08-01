@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { colors, lineHeight, typeScale, spacing } from '@/constants/theme';
 
@@ -28,15 +28,26 @@ export function EnergySlider({ value, onChange, testID }: EnergySliderProps) {
         accessibilityLabel="Energy level"
         accessibilityValue={{ min: 1, max: 5, now: value ?? undefined, text: value != null ? (energyLabel(value) ?? undefined) : undefined }}
       />
+      {/* The labels are selectable, not decorative: they already shift colour and
+          weight on selection, so they read as interactive, and a label is a much
+          larger target than the slider thumb. */}
       <View style={styles.labels}>
         {ENERGY_LEVELS.map((level) => (
-          <Text
+          <Pressable
             key={level.value}
-            style={[styles.label, value === level.value && styles.labelSelected]}
-            numberOfLines={2}
+            style={styles.labelTarget}
+            onPress={() => onChange(level.value)}
+            accessibilityRole="button"
+            accessibilityLabel={level.label}
+            accessibilityState={{ selected: value === level.value }}
           >
-            {level.label}
-          </Text>
+            <Text
+              style={[styles.label, value === level.value && styles.labelSelected]}
+              numberOfLines={2}
+            >
+              {level.label}
+            </Text>
+          </Pressable>
         ))}
       </View>
     </View>
@@ -55,8 +66,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  label: {
+  labelTarget: {
     flex: 1,
+    paddingVertical: spacing.elementGap,
+  },
+  label: {
     fontFamily: typeScale.labelSmall.family,
     fontSize: typeScale.labelSmall.size,
     lineHeight: lineHeight(typeScale.labelSmall),
