@@ -1,0 +1,24 @@
+# Scenario: Tier-3 replace
+# Screen 3 → tap a Tier-3 item → chip updates → submit
+#
+# Split out of log-emotion.yaml — see the note at the top of that file.
+appId: com.haven.app
+---
+- launchApp
+- tapOn: "Unveil"
+- tapOn:
+    id: "emotion-tier1-.*"
+- tapOn:
+    id: "emotion-tier2-right-.*"       # arrives at Screen 3
+- assertVisible:
+    id: "emotion-tier3-right-.*"
+- tapOn:
+    id: "emotion-tier3-right-.*"       # replace chip with Tier-3 label
+- assertVisible:
+    id: "emotion-chip"
+- assertVisible:
+    id: "emotion-save-button"
+- tapOn:
+    id: "emotion-save-button"
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
