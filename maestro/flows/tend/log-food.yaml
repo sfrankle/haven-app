@@ -14,6 +14,7 @@ appId: com.haven.app
     id: "food-suggestion-.*"
 - assertVisible:
     id: "food-chip-.*"
+- hideKeyboard                # keyboard otherwise covers the save button
 - assertVisible:
     id: "food-save-button"
 - tapOn:

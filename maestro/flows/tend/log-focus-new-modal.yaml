@@ -27,12 +27,14 @@ appId: com.haven.app
 - tapOn:
     id: "focus-new-name-input"
 - inputText: "Digestion"
+- hideKeyboard                # keyboard otherwise covers the modal submit
 - tapOn:
     id: "focus-new-submit"
 # Modal should close; new focus name should appear as selected in toggle
 - assertNotVisible:
     id: "focus-new-modal"
 # Save the entry
+- hideKeyboard                # keyboard otherwise covers the save button
 - assertVisible:
     id: "food-save-button"
 - tapOn:
