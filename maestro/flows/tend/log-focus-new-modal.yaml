@@ -1,6 +1,11 @@
 appId: com.haven.app
 ---
-- launchApp
+# clearState is required, not incidental: log-focus-field.yaml also creates a
+# focus named "Digestion" and sorts earlier, so without a reset this flow hits
+# the duplicate-name error and the modal never closes. It passes standalone and
+# fails in a full sweep — the worst kind of flow to leave coupled.
+- launchApp:
+    clearState: true
 - assertVisible: "Nourish"
 - tapOn: "Nourish"
 - assertVisible:

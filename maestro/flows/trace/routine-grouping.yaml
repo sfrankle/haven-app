@@ -33,6 +33,11 @@ name: Trace — Routine entries collapse into one group row
     id: "routine-name-input"
 - inputText: "Trace Group Test"
 
+# routine-name-input autoFocuses; occluded taps are silently swallowed by the
+# IME window while Maestro still reports them COMPLETED. See
+# maestro/subflows/create-morning-routine.yaml for the full note.
+- hideKeyboard
+
 - tapOn:
     id: "routine-time-block-Morning"
 
@@ -42,8 +47,9 @@ name: Trace — Routine entries collapse into one group row
 - tapOn:
     id: "routine-item-0-name-input"
 - inputText: "Breakfast"
+- hideKeyboard
 - tapOn:
-    id: "routine-item-0-entry-type-1"   # Food
+    id: "routine-item-0-entry-type-3"   # Food — seed order is Sleep,Hydration,Food,… (v2__seed-base.sql)
 
 # Item 1 — Activity, which summarises as "Journey" with no labels selected
 - tapOn:
@@ -51,6 +57,7 @@ name: Trace — Routine entries collapse into one group row
 - tapOn:
     id: "routine-item-1-name-input"
 - inputText: "Morning walk"
+- hideKeyboard
 - tapOn:
     id: "routine-item-1-entry-type-6"   # Activity
 
@@ -67,7 +74,11 @@ name: Trace — Routine entries collapse into one group row
     id: "routine-complete-item-0-checkbox"
 - tapOn:
     id: "routine-complete-submit-button"
-- assertVisible: "Saved."
+
+# Not "Saved." — that toast is replaced by router.back() after 800ms, well
+# inside Maestro's command latency. Assert the durable post-save state instead.
+- assertVisible:
+    id: "routine-section-disclosure"
 
 # --- Trace shows one grouped row, not two individual entries ---
 - tapOn:

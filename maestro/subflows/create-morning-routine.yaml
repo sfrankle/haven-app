@@ -23,6 +23,12 @@ appId: com.haven.app
     id: "routine-name-input"
 - inputText: "Morning Flow"
 
+# routine-name-input autoFocuses, so the keyboard covers the lower half of the
+# form. Maestro still finds occluded elements in the hierarchy and reports the
+# tap COMPLETED, but the IME window swallows it — the tap silently does
+# nothing. Dismiss the keyboard before every tap that follows a text entry.
+- hideKeyboard
+
 - tapOn:
     id: "routine-time-block-Morning"
 
@@ -31,8 +37,9 @@ appId: com.haven.app
 - tapOn:
     id: "routine-item-0-name-input"
 - inputText: "Breakfast"
+- hideKeyboard
 - tapOn:
-    id: "routine-item-0-entry-type-1"   # Food
+    id: "routine-item-0-entry-type-1"   # Sleep — see v2__seed-base.sql for id order
 
 - tapOn:
     id: "routine-save-button"

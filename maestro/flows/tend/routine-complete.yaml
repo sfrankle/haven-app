@@ -30,11 +30,15 @@ appId: com.haven.app
 - tapOn:
     id: "routine-complete-notes-input"
 - inputText: "Felt steady today"
+- hideKeyboard
 
-# Submit
+# Submit. The "Saved." confirmation is deliberately not asserted: complete.tsx
+# calls router.back() 800ms after showing it, and Maestro's post-tap latency on
+# an emulator ranges 2–12s, so the assertion races an animation it usually
+# loses. The durable outcome below proves the save instead — navigation only
+# happens on the success path.
 - tapOn:
     id: "routine-complete-submit-button"
-- assertVisible: "Saved."
 
 # Returns to Tend, where the completed Routine has moved behind the disclosure row
 - assertVisible:
@@ -51,4 +55,9 @@ appId: com.haven.app
     id: "routine-complete-item-0-checkbox"
 - tapOn:
     id: "routine-complete-submit-button"
-- assertVisible: "Saved."
+
+# Same durable-outcome assertion as above rather than the transient "Saved."
+- assertVisible:
+    id: "routine-section-disclosure"
+- assertNotVisible:
+    id: "routine-complete-submit-button"

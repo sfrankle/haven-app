@@ -7,11 +7,20 @@ appId: com.haven.app
     id: "energy-slider"
 - assertVisible:
     id: "physical-search"
-# Set energy to level 3 (Steady)
-- tapOn:
-    text: "Steady"
+# Set energy. The level labels under the slider are decorative Text with no
+# press handler (EnergySlider.tsx) — dragging the Slider is the only way to set
+# a value, per docs/design/wireframes/v1/Tend-page-physical.md. A RIGHT swipe
+# saturates at the maximum, so the resulting value is deterministic.
+- swipe:
+    from:
+      id: "energy-slider"
+    direction: RIGHT
 - assertVisible:
     id: "physical-chip-energy"     # energy chip added
+- assertVisible: "Energy: 5/5"
+# SearchBar autoFocuses on mount, so the keyboard is up on arrival and covers
+# the lower third of the form, including the save button.
+- hideKeyboard
 - assertVisible:
     id: "physical-save-button"
 # Search for a state
@@ -24,7 +33,8 @@ appId: com.haven.app
     id: "physical-suggestion-.*"
 - assertVisible:
     id: "physical-chip-.*"          # state chip added with area prefix
-# Save
+# Save — the keyboard is up again after typing into the search field.
+- hideKeyboard
 - tapOn:
     id: "physical-save-button"
 - assertVisible:
