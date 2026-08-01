@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npx eslint . --ext .ts,.tsx
 
+      - name: Lint Maestro flows
+        run: npm run lint:flows
+
       - name: Unit tests
         run: npm test -- --ci --coverage=false
 
