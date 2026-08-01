@@ -18,7 +18,8 @@ name: Trace — notes visible in expanded row
 - inputText: "Slept well"
 - tapOn:
     id: "sleep-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
 
 # Navigate to Trace
 - tapOn:

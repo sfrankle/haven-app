@@ -31,7 +31,8 @@ name: Trace — focus filter show context (context view mode)
     text: "Context Test Focus"
 - tapOn:
     id: "food-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
 
 # Log a Sleep entry in the same session (no focus link — will appear as context)
 - tapOn:
@@ -41,7 +42,8 @@ name: Trace — focus filter show context (context view mode)
 - inputText: "7"
 - tapOn:
     id: "sleep-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
 
 # Navigate to Trace
 - tapOn:

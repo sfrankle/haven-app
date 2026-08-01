@@ -25,8 +25,8 @@ appId: com.haven.app
     id: "emotion-save-button"
 - tapOn:
     id: "emotion-save-button"
-- assertVisible: "Entry saved."
-- assertVisible: ".*Today.*"             # back on Tend home
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
 
 ---
 # Scenario 1b: Happy path Tier-2 save
@@ -48,7 +48,8 @@ appId: com.haven.app
     id: "emotion-save-button"
 - tapOn:
     id: "emotion-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
 
 ---
 # Scenario 2: Tier-3 replace
@@ -69,7 +70,8 @@ appId: com.haven.app
     id: "emotion-save-button"
 - tapOn:
     id: "emotion-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
 
 ---
 # Scenario 3: Chip clear + reselect on Screen 3

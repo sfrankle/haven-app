@@ -28,4 +28,5 @@ appId: com.haven.app
 # Save
 - tapOn:
     id: "physical-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded

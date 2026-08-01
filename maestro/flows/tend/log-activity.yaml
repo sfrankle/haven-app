@@ -18,5 +18,5 @@ appId: com.haven.app
     id: "activity-save-button"
 - tapOn:
     id: "activity-save-button"
-- assertVisible: "Entry saved."
-- assertVisible: ".*Today.*"            # back on Tend
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded

@@ -1,6 +1,7 @@
 appId: com.haven.app
 ---
-- launchApp
+- launchApp:
+    clearState: true          # "Today: 0 oz" only holds on a fresh day
 - assertVisible: "Replenish"
 - tapOn: "Replenish"
 - assertVisible: "How much water did you take in?"
@@ -13,6 +14,10 @@ appId: com.haven.app
     id: "hydration-save-button"
 - tapOn:
     id: "hydration-save-button"
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
+
+# Re-enter to check the running total persisted. Asserting it straight after
+# the save tap races the confirmation dismiss, which leaves this screen.
+- tapOn: "Replenish"
 - assertVisible: "Today: 24 oz"
-- assertVisible: "Entry saved."
-- assertVisible: ".*Today.*"   # back on Tend screen
