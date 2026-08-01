@@ -39,17 +39,34 @@ appId: com.haven.app
 # anything beneath it. See maestro/subflows/create-morning-routine.yaml.
 - hideKeyboard
 
-# COVERAGE GAP — adding a second item on the edit screen is not covered here,
-# and cannot be until #195 is fixed. Two items make the form taller than the
-# viewport, and logScreenStyles.screenContent sets flex: 1 on the ScrollView's
-# contentContainerStyle, which disables scrolling outright. The save button is
-# then unreachable by any means: scrollUntilVisible scrolls zero pixels. This
-# is a real app defect, not a flow problem — a user cannot save a two-item
-# Routine from this screen either. Restore the add-item steps when #195 lands.
+# --- Add a second item on the edit screen ---
+# The subflow creates the Routine with one item, so the new one is index 1.
+# Two items push the form past the viewport; this is reachable only because the
+# ScrollView now uses flexGrow rather than flex: 1 (#195).
+- tapOn:
+    id: "routine-edit-add-item-button"
+- tapOn:
+    id: "routine-edit-item-1-name-input"
+- inputText: "Evening walk"
+- hideKeyboard
+- tapOn:
+    id: "routine-edit-item-1-entry-type-6"   # Activity
 
+- scrollUntilVisible:
+    element:
+      id: "routine-edit-save-button"
+    direction: DOWN
 - tapOn:
     id: "routine-edit-save-button"
 
 # --- The updated name is reflected back on Tend ---
 - tapOn: "Tend"
 - assertVisible: "Updated Morning Flow"
+
+# --- The added item survived the save ---
+# Re-open the edit screen: asserting on the form is what proves the second item
+# was persisted, not merely rendered before saving.
+- tapOn: "Settings"
+- tapOn:
+    id: "settings-routine-edit-1"
+- assertVisible: "Evening walk"

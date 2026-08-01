@@ -223,7 +223,7 @@ export default function LogPhysicalScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={logScreenStyles.screenContent}
+          contentContainerStyle={logScreenStyles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
           <Text style={logScreenStyles.prompt}>

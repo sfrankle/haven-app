@@ -1,19 +1,12 @@
 # Trace — Routine grouping
 #
-# ⚠ EXPECTED TO FAIL until #195 lands. This flow is excluded from
-# maestro/config.yaml for that reason — see the note there.
-#
 # It needs a two-item Routine, because one item demonstrates nothing about
-# collapsing. With two items the create form is taller than the viewport and the
-# save button sits below the fold, where it cannot be reached: sharedStyles.ts
-# sets flex: 1 on screenContent, which is passed as a ScrollView
-# contentContainerStyle and pins the content to the ScrollView's own height,
-# disabling scrolling entirely. scrollUntilVisible moves zero pixels.
-#
-# This is an app defect, not a flow defect — a user cannot save a two-item
-# Routine from that screen either. Do not "fix" this flow by reducing it to one
-# item; that would delete the only coverage of the behaviour it exists to test.
-# Re-include it in config.yaml when #195 is fixed.
+# collapsing. Two items make the create form taller than the viewport, so the
+# save button sits below the fold and the flow has to scroll to it. That scroll
+# was impossible until #195: screenContent set flex: 1 and was passed as a
+# ScrollView contentContainerStyle, pinning content to the ScrollView's own
+# height and disabling scrolling outright. Do not "fix" this flow by reducing it
+# to one item; that would delete the only coverage of the behaviour it tests.
 #
 # Completing a Routine writes one entry per checked item, all sharing a
 # routine_completion_id. Trace collapses them into a single row showing the
@@ -76,6 +69,13 @@ name: Trace — Routine entries collapse into one group row
 - tapOn:
     id: "routine-item-1-entry-type-6"   # Activity
 
+# Two items push the save button below the fold. This scroll is only possible
+# because the ScrollView's contentContainerStyle uses flexGrow rather than
+# flex: 1 — see logScreenStyles.scrollContent (#195).
+- scrollUntilVisible:
+    element:
+      id: "routine-save-button"
+    direction: DOWN
 - tapOn:
     id: "routine-save-button"
 

@@ -98,6 +98,19 @@ export const logScreenStyles = StyleSheet.create({
     paddingHorizontal: spacing.pagePadding,
     paddingTop: spacing.sectionGap,
   },
+  /**
+   * The ScrollView counterpart to screenContent. A contentContainerStyle must
+   * use flexGrow, not flex: `flex: 1` caps the content box at the viewport
+   * height, so the content can never exceed the scrollable area and the view
+   * silently stops scrolling — taller forms lose their save button off-screen
+   * with no way to reach it (#195). flexGrow fills the viewport when content is
+   * short and lets it grow past when content is tall.
+   */
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.pagePadding,
+    paddingTop: spacing.sectionGap,
+  },
   prompt: {
     fontFamily: typeScale.titleLarge.family,
     fontWeight: typeScale.titleLarge.weight,
