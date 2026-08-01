@@ -7,22 +7,18 @@ appId: com.haven.app
     id: "energy-slider"
 - assertVisible:
     id: "physical-search"
-# Set energy. The level labels under the slider are decorative Text with no
-# press handler (EnergySlider.tsx) — dragging the Slider is the only way to set
-# a value, per docs/design/wireframes/v1/Tend-page-physical.md. A RIGHT swipe
-# saturates at the maximum, so the resulting value is deterministic.
-- swipe:
-    from:
-      id: "energy-slider"
-    direction: RIGHT
-# Energy chip added, carrying the value the swipe produced. Anchored to the
-# chip's testID so this asserts the chip's own content, not a loose page match.
+# Set energy by tapping the topmost level label. The labels are now pressable
+# (EnergySlider.tsx), which is both a larger target than the slider thumb and
+# exact — a swipe only saturates at the maximum by luck of gesture distance.
+- tapOn: "Energised"
+# Energy chip added, carrying the tapped level. Anchored to the chip's testID so
+# this asserts the chip's own content, not a loose page match.
 - assertVisible:
     id: "physical-chip-energy"
     text: "Energy: 5/5"
-# SearchBar autoFocuses on mount, so the keyboard is up on arrival and covers
-# the lower third of the form, including the save button.
-- hideKeyboard
+# No hideKeyboard here: this screen deliberately does not autofocus its search
+# box, so no keyboard is up on arrival and the save button is already visible.
+# An unnecessary hideKeyboard is an Android back press and would pop the screen.
 - assertVisible:
     id: "physical-save-button"
 # Search for a state

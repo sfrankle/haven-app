@@ -244,10 +244,14 @@ export default function LogPhysicalScreen() {
 
           {/* Sensations section */}
           <Text style={styles.sectionHeader}>Sensations</Text>
+          {/* No autofocus here, unlike Food and Activity. Physical can be
+              submitted from Energy alone, so opening with the keyboard up would
+              presume symptom intent and cover the slider. */}
           <SearchBar
             value={search}
             onChangeText={setSearch}
             placeholder="Search sensations"
+            autoFocus={false}
             testID="physical-search"
           />
 

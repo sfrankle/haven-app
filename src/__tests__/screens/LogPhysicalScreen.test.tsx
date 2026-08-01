@@ -139,6 +139,15 @@ describe('LogPhysicalScreen', () => {
     expect(getByTestId('energy-slider')).toBeTruthy();
   });
 
+  // Unlike Food and Activity, where search is the only input, Physical can be
+  // submitted from Energy alone (docs/design/interaction.md). Autofocusing the
+  // search box would presume symptom intent and put the keyboard over the
+  // slider, so this screen opts out.
+  it('does not autofocus the search box, leaving the energy slider reachable', async () => {
+    const { getByTestId } = render(<LogPhysicalScreen />);
+    expect(getByTestId('physical-search').props.autoFocus).toBe(false);
+  });
+
   it('setting energy slider adds energy chip to tray', async () => {
     const { getByTestId, getByLabelText } = render(<LogPhysicalScreen />);
     fireEvent(getByLabelText('Energy level'), 'onValueChange', 3);
