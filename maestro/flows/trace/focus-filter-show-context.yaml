@@ -29,6 +29,7 @@ name: Trace — focus filter show context (context view mode)
     id: "focus-toggle"
 - tapOn:
     text: "Context Test Focus"
+- hideKeyboard                # keyboard otherwise covers the save button
 - tapOn:
     id: "food-save-button"
 - assertVisible:
