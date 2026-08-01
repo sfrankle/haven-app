@@ -34,19 +34,8 @@ jobs:
       - name: Unit tests
         run: npm test -- --ci --coverage=false
 
-  # E2E flow tests with Maestro require a device or simulator.
-  # macOS runners (needed for iOS simulator) are expensive on GitHub Actions.
-  # Options when ready to enable:
-  #   - Maestro Cloud (maestro.mobile.dev) — managed runners, pay per run
-  #   - Self-hosted macOS runner
-  #   - Android emulator on ubuntu-latest (cheaper, Android-only)
-  #
-  # e2e:
-  #   name: Flow Tests (Maestro)
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Install Maestro
-  #       run: curl -Ls "https://get.maestro.mobile.dev" | bash
-  #     - name: Run flows
-  #       run: maestro test .maestro/
+  # The Maestro E2E suite is not wired up here yet. The decision to run it in CI
+  # — on an Android emulator on ubuntu-latest, not a macOS runner — is recorded
+  # in docs/decisions.md (2026-08-01) and gated on every flow passing first.
+  # See #190. Note that Maestro does not recurse into subdirectories, so the job
+  # will need explicit paths or a config.yaml with inclusion patterns.
