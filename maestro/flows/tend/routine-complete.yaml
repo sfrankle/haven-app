@@ -56,8 +56,18 @@ appId: com.haven.app
 - tapOn:
     id: "routine-complete-submit-button"
 
-# Same durable-outcome assertion as above rather than the transient "Saved."
+# Durable outcome rather than the transient "Saved.". The progress count is what
+# distinguishes this from the first completion — asserting only that we are back
+# on Tend would pass whether or not the second completion recorded anything,
+# since handleSubmit navigates even with zero items checked.
 - assertVisible:
     id: "routine-section-disclosure"
 - assertNotVisible:
     id: "routine-complete-submit-button"
+
+# The disclosure is still expanded from the tap above — completing from within
+# it does not collapse it — so tapping again here would close it.
+- assertVisible:
+    id: "routine-collapsed-row-1"
+- assertVisible: ".*2 of 1.*"       # two completions against one configured block
+

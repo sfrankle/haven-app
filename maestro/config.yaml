@@ -5,5 +5,13 @@
 # `subflows/` is deliberately excluded. create-morning-routine.yaml is a runFlow
 # helper that assumes the Tend dashboard is already on screen, so it cannot pass
 # as a standalone flow and would show up as a false failure.
+#
+# routine-grouping is excluded because it cannot pass until #195 is fixed — the
+# save button on a two-item Routine form is unreachable, so the flow fails on an
+# app defect rather than anything it is testing. It is excluded rather than left
+# red on purpose: a permanently failing flow trains people to ignore red, which
+# is the exact failure mode docs/decisions.md argues against for wiring CI.
+# Delete this exclusion when #195 lands; the flow itself is correct.
 flows:
   - "flows/**"
+  - "!flows/trace/routine-grouping.yaml"

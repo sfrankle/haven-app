@@ -1,5 +1,20 @@
 # Trace — Routine grouping
 #
+# ⚠ EXPECTED TO FAIL until #195 lands. This flow is excluded from
+# maestro/config.yaml for that reason — see the note there.
+#
+# It needs a two-item Routine, because one item demonstrates nothing about
+# collapsing. With two items the create form is taller than the viewport and the
+# save button sits below the fold, where it cannot be reached: sharedStyles.ts
+# sets flex: 1 on screenContent, which is passed as a ScrollView
+# contentContainerStyle and pins the content to the ScrollView's own height,
+# disabling scrolling entirely. scrollUntilVisible moves zero pixels.
+#
+# This is an app defect, not a flow defect — a user cannot save a two-item
+# Routine from that screen either. Do not "fix" this flow by reducing it to one
+# item; that would delete the only coverage of the behaviour it exists to test.
+# Re-include it in config.yaml when #195 is fixed.
+#
 # Completing a Routine writes one entry per checked item, all sharing a
 # routine_completion_id. Trace collapses them into a single row showing the
 # Routine name and completion time; tapping it reveals the individual items.

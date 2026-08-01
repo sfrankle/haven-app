@@ -267,6 +267,47 @@ describe('LogPhysicalScreen', () => {
     ]);
   });
 
+  // Severity 0 means "symptom absent today" and is a real, meaningful value —
+  // not the absence of one. It is also falsy, so `chip.severity ?? undefined`
+  // in physical.tsx is load-bearing: switching it to `|| undefined` would
+  // silently drop every "absent" reading on the way to the database while every
+  // other test still passed. This is the only test that would catch that.
+  //
+  // It exists because maestro/flows/tend/log-physical-severity-zero.yaml was
+  // deleted — the severity row auto-dismisses after 2000ms by design
+  // (docs/design/interaction.md), which no E2E runner can reliably hit. The
+  // rendering and label are covered in SeverityRow.test.tsx and
+  // physical-chip-label.test.ts; this covers the save path they do not reach.
+  it('severity 0 reaches the save call as numericValue 0, not undefined', async () => {
+    const { getByTestId, getByText } = render(<LogPhysicalScreen />);
+    act(() => { jest.advanceTimersByTime(200); });
+    await waitFor(() => getByTestId(`physical-suggestion-${CRAMPING_LABEL.id}`));
+    fireEvent.press(getByTestId(`physical-suggestion-${CRAMPING_LABEL.id}`));
+
+    fireEvent.press(getByTestId(`physical-chip-${CRAMPING_LABEL.id}-severity-icon`));
+    await waitFor(() => getByTestId('physical-severity-row'));
+    fireEvent.press(getByText('0'));
+
+    await waitFor(() => {
+      const chip = getByTestId(`physical-chip-${CRAMPING_LABEL.id}`);
+      expect(chip.props.accessibilityLabel).toMatch(/\(absent\)/);
+    });
+
+    await act(async () => {
+      fireEvent.press(getByTestId('physical-save-button'));
+    });
+
+    expect(mockSaveEntryBatch).toHaveBeenCalledTimes(1);
+    expect(mockSaveEntryBatch).toHaveBeenCalledWith(expect.anything(), [
+      expect.objectContaining({
+        entryTypeId: PHYSICAL_ENTRY_TYPE.id,
+        numericValue: 0,
+        labelIds: [CRAMPING_LABEL.id],
+        timestamp: FIXED_ISO,
+      }),
+    ]);
+  });
+
   // Regression: multiple chips used to fire one saveEntry per chip through
   // Promise.all. Each opened its own transaction on the shared connection, so
   // the second BEGIN threw "cannot start a transaction within a transaction"

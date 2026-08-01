@@ -1,7 +1,17 @@
-appId: com.haven.app
----
 # Scenario: open a log screen, swipe back, switch tabs, swipe back again
 # Expected: never returns to a log screen after it has been dismissed
+#
+# NOTE ON FILE STRUCTURE: a Maestro flow file is exactly two YAML documents —
+# the config header, then one flow. Any further `---` sections are silently
+# ignored. This file previously held four scenarios separated by `---` and only
+# this first one ever ran, so it reported green while testing a quarter of what
+# it claimed. The other three now live in their own files:
+#   log-screen-tab-tap-returns-home.yaml
+#   log-screen-sequential-types.yaml
+#   log-screen-form-state-reset.yaml
+# Do not re-merge them.
+appId: com.haven.app
+---
 - launchApp
 - assertVisible: "Replenish"        # on Tend home
 
@@ -16,53 +26,3 @@ appId: com.haven.app
 
 - back                              # should stay on Tend, not return to log screen
 - assertVisible: "Replenish"        # tile visible — on Tend home, NOT on log screen
-
----
-# Scenario: tap Tend tab while on a log screen returns to Tend home
-- launchApp
-- assertVisible: "Replenish"
-
-- tapOn: "Replenish"
-- assertVisible: "How much water did you take in?"
-
-- tapOn: "Tend"
-- assertVisible: "Replenish"        # tile visible — on Tend home
-- assertNotVisible: "How much water did you take in?"
-
----
-# Scenario: sequential multi-type log — open A, back, open B, back; land on Tend each time
-- launchApp
-- assertVisible: "Replenish"
-
-- tapOn: "Replenish"
-- assertVisible: "How much water did you take in?"
-
-- back
-- assertVisible: "Replenish"        # on Tend home after first back
-
-- tapOn: "Journey"
-- assertVisible: "What did you do today?"
-
-- back
-- assertVisible: "Journey"          # on Tend home after second back
-- assertNotVisible: "What did you do today?"
-
----
-# Scenario: navigating back without saving resets form state on re-entry
-- launchApp
-- assertVisible: "Replenish"
-
-- tapOn: "Replenish"
-- assertVisible: "How much water did you take in?"
-
-- tapOn:
-    id: "hydration-oz-input"
-- eraseText
-- inputText: "32"
-
-- back
-- assertVisible: "Replenish"        # on Tend home
-
-- tapOn: "Replenish"
-- assertVisible: "How much water did you take in?"
-- assertVisible: "16"               # input reset to default — no cached state from prior visit

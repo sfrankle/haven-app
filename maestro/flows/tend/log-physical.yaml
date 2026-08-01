@@ -15,9 +15,11 @@ appId: com.haven.app
     from:
       id: "energy-slider"
     direction: RIGHT
+# Energy chip added, carrying the value the swipe produced. Anchored to the
+# chip's testID so this asserts the chip's own content, not a loose page match.
 - assertVisible:
-    id: "physical-chip-energy"     # energy chip added
-- assertVisible: "Energy: 5/5"
+    id: "physical-chip-energy"
+    text: "Energy: 5/5"
 # SearchBar autoFocuses on mount, so the keyboard is up on arrival and covers
 # the lower third of the form, including the save button.
 - hideKeyboard

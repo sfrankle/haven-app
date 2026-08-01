@@ -63,10 +63,9 @@ appId: com.haven.app
 - tapOn:
     id: "focus-edit-suggestion-.*"
 
-# No hideKeyboard here. Tapping a suggestion chip already dismisses the
-# keyboard, and Maestro implements hideKeyboard on Android as a back press —
-# with the keyboard already down it pops the screen instead, landing on Tend
-# before the save ever happens.
+# No hideKeyboard here: Maestro implements it on Android as a back press, and
+# the keyboard is already down by this point, so it would pop the screen and
+# land on Tend before the save ever happens.
 - tapOn:
     id: "focus-edit-save-button"
 
@@ -81,10 +80,19 @@ appId: com.haven.app
 - assertVisible:
     id: "submit-button"
 
-# The Physical item (Cramp) should show a severity row including button 0
-# SeverityRow renders with accessibility labels — assert the "0 — absent" button
+# The Physical item (Cramp) shows a severity row including the 0 ("absent")
+# button. This is the persistent variant — focus/[id]/index.tsx makes onDismiss
+# a no-op so the row stays while the item is checked — so unlike the Physical
+# log screen there is no 2s window to race, and severity 0 can actually be
+# exercised end to end here.
+#
+# Matched by accessibility label rather than `{text: "0", id: "severity-row-1"}`:
+# a combined text+id selector needs one node to carry both, but the testID is on
+# the row and "0" is a descendant Text, so that form never matches.
 - assertVisible:
-    text: "0"
+    id: "severity-row-.*"
+- tapOn:
+    text: "Severity 0 — symptom absent"
 
 # Tap Submit to log all items
 - tapOn:

@@ -39,7 +39,8 @@ appId: com.haven.app
 - inputText: "Breakfast"
 - hideKeyboard
 - tapOn:
-    id: "routine-item-0-entry-type-1"   # Sleep — see v2__seed-base.sql for id order
+    id: "routine-item-0-entry-type-3"   # Food. Seed order is Sleep,Hydration,Food,…
+                                        # (v2__seed-base.sql) — id 3, not 1.
 
 - tapOn:
     id: "routine-save-button"

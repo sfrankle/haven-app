@@ -31,7 +31,14 @@ npx expo start          # run the app
 npx tsc --noEmit        # type-check
 npx eslint . --ext .ts,.tsx  # lint
 npm test -- --ci        # unit tests
+maestro test maestro/   # E2E flow tests — needs an emulator AND Metro running
 ```
+
+`maestro test maestro/` is the canonical E2E invocation: it reads `maestro/config.yaml`,
+which is what makes Maestro find flows in subdirectories at all. Pointing it at a
+subdirectory directly (`maestro test maestro/flows/tend/`) bypasses that config. The
+installed build is a debug build, so **Metro must be running** (`npx expo start --dev-client`)
+or every flow dies at step 1 on "Unable to load script."
 
 ## Where things live
 
