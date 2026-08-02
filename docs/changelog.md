@@ -4,6 +4,7 @@ One row per PR. Most recent at the top.
 
 | PR | Description | Date |
 |----|-------------|------|
+| [#196](https://github.com/sfrankle/haven-app/pull/196) | Fixed forms that could not be scrolled — a Routine with more than one item can now be saved, and the Attune energy levels are tappable | 2026-08-01 |
 | [#193](https://github.com/sfrankle/haven-app/pull/193) | Fixed Attune so you can log several sensations at once — saving two or more used to fail | 2026-07-29 |
 | [#191](https://github.com/sfrankle/haven-app/pull/191) | Routine cards on Tend now take their status and their progress line from a single read, so the two can never disagree | 2026-07-29 |
 | [#182](https://github.com/sfrankle/haven-app/pull/182) | Trace now shows a completed Routine as one row you can tap open, and lets you filter by several Focuses at once | 2026-07-28 |
