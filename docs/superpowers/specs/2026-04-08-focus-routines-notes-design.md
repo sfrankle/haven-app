@@ -53,7 +53,7 @@ The entry type determines the inline control on the row:
 - **Food / Activity** — checkbox only. Checked = logged on submit.
 - **Physical** — checkbox + inline severity selector (1–5) on the same row.
 
-All items are pre-checked by default. The user unchecks anything that doesn't apply today, sets severity on Physical items, and submits. One tap per row at most.
+All items open unchecked. The user checks whatever applies right now, sets severity on Physical items, and submits. Until something is checked there is no Save button — that empty state is intended. This diverges deliberately from Routine completion, which opens checked; see the 2026-08-04 row in `docs/decisions.md` for why the two screens differ.
 
 Labels appear in two layers, unified and ordered by frequency:
 1. **Explicitly tracked** — labels the user pinned when creating or editing the Focus
