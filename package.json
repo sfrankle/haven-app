@@ -9,6 +9,7 @@
     "web": "expo start --web",
     "test": "jest",
     "lint": "eslint . --ext .ts,.tsx",
+    "lint:flows": "./scripts/lint-maestro-flows.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

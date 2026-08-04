@@ -1,6 +1,11 @@
 appId: com.haven.app
 ---
-- launchApp
+# clearState is required, not incidental: log-focus-field.yaml also creates a
+# focus named "Digestion" and sorts earlier, so without a reset this flow hits
+# the duplicate-name error and the modal never closes. It passes standalone and
+# fails in a full sweep — the worst kind of flow to leave coupled.
+- launchApp:
+    clearState: true
 - assertVisible: "Nourish"
 - tapOn: "Nourish"
 - assertVisible:
@@ -9,10 +14,11 @@ appId: com.haven.app
     id: "food-search"
 - inputText: "Eggs"
 - assertVisible:
-    id: "food-suggestion-*"
-- tapOn: "Eggs"
+    id: "food-suggestion-.*"
+- tapOn:
+    id: "food-suggestion-.*"
 - assertVisible:
-    id: "food-chip-*"
+    id: "food-chip-.*"
 # Open focus dropdown
 - tapOn:
     id: "focus-toggle"
@@ -26,14 +32,17 @@ appId: com.haven.app
 - tapOn:
     id: "focus-new-name-input"
 - inputText: "Digestion"
+- hideKeyboard                # keyboard otherwise covers the modal submit
 - tapOn:
     id: "focus-new-submit"
 # Modal should close; new focus name should appear as selected in toggle
 - assertNotVisible:
     id: "focus-new-modal"
 # Save the entry
+- hideKeyboard                # keyboard otherwise covers the save button
 - assertVisible:
     id: "food-save-button"
 - tapOn:
     id: "food-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded

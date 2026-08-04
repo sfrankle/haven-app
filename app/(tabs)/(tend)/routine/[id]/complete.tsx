@@ -144,7 +144,7 @@ export default function CompleteRoutineScreen() {
 
   return (
     <Screen showBack avoidKeyboard>
-      <ScrollView contentContainerStyle={logScreenStyles.screenContent}>
+      <ScrollView contentContainerStyle={logScreenStyles.scrollContent}>
         {routine && (
           <Text style={styles.routineName}>{routine.name}</Text>
         )}

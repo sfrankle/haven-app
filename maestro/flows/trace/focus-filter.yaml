@@ -1,0 +1,95 @@
+# Trace — filtering by Focus actually filters
+#
+# Self-contained. The previous version of this flow assumed "app has at least
+# one Focus" as a precondition and targeted a hardcoded focus-pill-1, so it only
+# passed because focus-filter-show-context.yaml sorts earlier, clears state, and
+# happens to leave exactly one focus behind. That is the ordering coupling this
+# suite was just cleaned of.
+#
+# It also asserted nothing behavioural: it tapped a pill and then checked the
+# pill still existed. Filtering was never verified. This version logs one entry
+# with a Focus and one without, then asserts the unrelated entry disappears when
+# the filter is on and returns when it is off.
+#
+# Archived focuses are listed after active ones in the filter row and are not
+# exercised here.
+appId: com.haven.app
+---
+- launchApp:
+    clearState: true
+
+# --- Create a Focus (first one after clearState, so id 1) ---
+- assertVisible:
+    id: "tile-food"
+- tapOn:
+    id: "add-focus-pill"
+- assertVisible:
+    id: "focus-name-input"
+- tapOn:
+    id: "focus-name-input"
+- inputText: "Filter Test"
+- tapOn:
+    id: "focus-save-button"
+- assertVisible: "Filter Test"
+
+# --- Log a Food entry attached to that Focus ---
+- tapOn:
+    id: "tile-food"
+- tapOn:
+    id: "food-search"
+- inputText: "Eggs"
+- assertVisible:
+    id: "food-suggestion-.*"
+- tapOn:
+    id: "food-suggestion-.*"
+- hideKeyboard
+- tapOn:
+    id: "focus-toggle"
+- tapOn:
+    id: "focus-option-1"
+- assertVisible:
+    id: "food-save-button"
+- tapOn:
+    id: "food-save-button"
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
+
+# --- Log a Sleep entry with no Focus ---
+- tapOn:
+    id: "tile-sleep"
+- tapOn:
+    id: "sleep-hours-input"
+- inputText: "7"                # save button only renders once hours are entered
+- hideKeyboard
+- tapOn:
+    id: "sleep-save-button"
+- assertVisible:
+    id: "tile-food"
+
+# --- Trace shows both entries unfiltered ---
+- tapOn:
+    id: "tab-trace"
+- assertVisible:
+    id: "focus-filter-row"
+- assertVisible: "Ate Eggs"
+- assertVisible: "Slept 7 hours"
+
+# --- Filtering by the Focus hides the unrelated entry ---
+- tapOn:
+    id: "focus-pill-1"
+- assertVisible: "Ate Eggs"
+- assertNotVisible: "Slept 7 hours"
+
+# --- Toggling the same pill off restores the unfiltered list ---
+- tapOn:
+    id: "focus-pill-1"
+- assertVisible: "Ate Eggs"
+- assertVisible: "Slept 7 hours"
+
+# --- Re-tapping the Trace tab while already on Trace resets an active filter ---
+- tapOn:
+    id: "focus-pill-1"
+- assertNotVisible: "Slept 7 hours"
+- tapOn:
+    id: "tab-trace"
+- assertVisible: "Slept 7 hours"

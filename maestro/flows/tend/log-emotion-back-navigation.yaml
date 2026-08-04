@@ -1,0 +1,25 @@
+# Scenario: Back navigation unwinds Screen 3 → Screen 2 → Screen 1 → Tend home
+#
+# The three tiers are three separate routes (log/emotion/index, tier2, tier3),
+# so escaping from Screen 3 takes three Backs. This scenario asserted two and
+# expected to land on Tend — it never ran to say otherwise until the file was
+# split, see the note at the top of log-emotion.yaml.
+appId: com.haven.app
+---
+- launchApp
+- tapOn: "Unveil"
+- tapOn:
+    id: "emotion-tier1-.*"
+- tapOn:
+    id: "emotion-tier2-right-.*"       # push to Screen 3
+- assertVisible:
+    id: "emotion-screen-3"
+- pressKey: Back
+- assertVisible:
+    id: "emotion-screen-2"            # back to Screen 2
+- pressKey: Back
+- assertVisible:
+    id: "emotion-screen-1"            # back to Screen 1
+- pressKey: Back
+- assertVisible:
+    id: "tile-food"                   # back on Tend home

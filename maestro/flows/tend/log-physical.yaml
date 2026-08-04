@@ -7,11 +7,18 @@ appId: com.haven.app
     id: "energy-slider"
 - assertVisible:
     id: "physical-search"
-# Set energy to level 3 (Average)
-- tapOn:
-    text: "Average"
+# Set energy by tapping the topmost level label. The labels are now pressable
+# (EnergySlider.tsx), which is both a larger target than the slider thumb and
+# exact — a swipe only saturates at the maximum by luck of gesture distance.
+- tapOn: "Energised"
+# Energy chip added, carrying the tapped level. Anchored to the chip's testID so
+# this asserts the chip's own content, not a loose page match.
 - assertVisible:
-    id: "physical-chip-energy"     # energy chip added
+    id: "physical-chip-energy"
+    text: "Energy: 5/5"
+# No hideKeyboard here: this screen deliberately does not autofocus its search
+# box, so no keyboard is up on arrival and the save button is already visible.
+# An unnecessary hideKeyboard is an Android back press and would pop the screen.
 - assertVisible:
     id: "physical-save-button"
 # Search for a state
@@ -19,13 +26,14 @@ appId: com.haven.app
     id: "physical-search"
 - inputText: "Cramp"
 - assertVisible:
-    id: "physical-suggestion-*"    # at least one result
+    id: "physical-suggestion-.*"    # at least one result
 - tapOn:
-    id: "physical-suggestion-*"
+    id: "physical-suggestion-.*"
 - assertVisible:
-    id: "physical-chip-*"          # state chip added with area prefix
-# Save
+    id: "physical-chip-.*"          # state chip added with area prefix
+# Save — the keyboard is up again after typing into the search field.
+- hideKeyboard
 - tapOn:
     id: "physical-save-button"
-- assertVisible: "Entry saved."
-- assertVisible: "Today"           # back on Tend
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded

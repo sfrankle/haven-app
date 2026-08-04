@@ -1,0 +1,25 @@
+# Scenario: Happy path Tier-2 save
+# Reach Screen 3, press back to Screen 2, save with chip still set
+#
+# Split out of log-emotion.yaml — see the note at the top of that file.
+appId: com.haven.app
+---
+- launchApp
+- tapOn: "Unveil"
+- tapOn:
+    id: "emotion-tier1-.*"
+- tapOn:
+    id: "emotion-tier2-right-.*"       # advances to Screen 3 with chip set
+- assertVisible:
+    id: "emotion-screen-3"
+- pressKey: Back                      # return to Screen 2
+- assertVisible:
+    id: "emotion-screen-2"
+- assertVisible:
+    id: "emotion-chip"                # chip persists on Screen 2
+- assertVisible:
+    id: "emotion-save-button"
+- tapOn:
+    id: "emotion-save-button"
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded

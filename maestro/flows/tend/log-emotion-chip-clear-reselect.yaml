@@ -1,0 +1,22 @@
+# Scenario: Chip clear + reselect on Screen 3
+# Clearing the only chip hides submit; reselecting brings it back.
+#
+# Split out of log-emotion.yaml — see the note at the top of that file.
+appId: com.haven.app
+---
+- launchApp
+- tapOn: "Unveil"
+- tapOn:
+    id: "emotion-tier1-.*"
+- tapOn:
+    id: "emotion-tier2-right-.*"
+- assertVisible:
+    id: "emotion-chip"
+- tapOn:
+    id: "emotion-chip"               # clear chip
+- assertNotVisible:
+    id: "emotion-save-button"        # submit disappears
+- tapOn:
+    id: "emotion-tier3-right-.*"      # reselect a Tier-3 item
+- assertVisible:
+    id: "emotion-save-button"        # submit reappears

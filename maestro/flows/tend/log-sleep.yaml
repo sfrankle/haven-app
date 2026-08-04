@@ -11,8 +11,8 @@ appId: com.haven.app
     id: "sleep-save-button"
 - tapOn:
     id: "sleep-save-button"
-- assertVisible: "Entry saved."
-- assertVisible: "Today"   # back on Tend screen
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
 
 # Notes field is visible before saving
 - launchApp
@@ -28,4 +28,5 @@ appId: com.haven.app
 - inputText: "slept well"
 - tapOn:
     id: "sleep-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded

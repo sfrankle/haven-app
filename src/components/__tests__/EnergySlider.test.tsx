@@ -56,6 +56,27 @@ describe('EnergySlider', () => {
     expect(getByText('Steady')).toBeTruthy();
   });
 
+  it('tapping a level label selects that level', () => {
+    const onChange = jest.fn();
+    const { getByText } = render(
+      <EnergySlider value={null} onChange={onChange} />
+    );
+    fireEvent.press(getByText('Rested'));
+    expect(onChange).toHaveBeenCalledWith(4);
+  });
+
+  it('each level label is an accessible button carrying its selected state', () => {
+    const { getByLabelText } = render(
+      <EnergySlider value={3} onChange={jest.fn()} />
+    );
+    expect(getByLabelText('Steady').props.accessibilityState).toEqual(
+      expect.objectContaining({ selected: true })
+    );
+    expect(getByLabelText('Weary').props.accessibilityState).toEqual(
+      expect.objectContaining({ selected: false })
+    );
+  });
+
   it('announces current level name via accessibilityValue.text for screen readers', () => {
     const { getByLabelText } = render(
       <EnergySlider value={3} onChange={jest.fn()} />

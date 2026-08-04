@@ -1,0 +1,136 @@
+appId: com.haven.app
+---
+# clearState is required: add-focus-pill renders after every existing focus
+# pill in a horizontal ScrollView, so focuses left behind by an earlier flow
+# push it off-screen and it can no longer be tapped.
+- launchApp:
+    clearState: true
+
+# Assert Tend tab is visible
+- assertVisible:
+    id: "tile-food"
+
+# Create a Focus with a pinned label so the quick-log screen has items.
+# Step 1: Create the Focus via the + Add Focus pill
+- tapOn:
+    id: "add-focus-pill"
+
+- assertVisible:
+    id: "focus-name-input"
+
+- tapOn:
+    id: "focus-name-input"
+- inputText: "Quick Log Test"
+
+- tapOn:
+    id: "focus-save-button"
+
+# Assert named pill now appears on Tend
+- assertVisible:
+    text: "Quick Log Test"
+
+# Step 2: Long-press the pill to open the edit screen and pin labels
+- longPressOn:
+    text: "Quick Log Test"
+
+# Search for and pin a Food label (e.g. "Apple").
+# Target the suggestion by testID, not by its display text: the search field
+# itself contains the same text once typed, so `text: "Apple"` at index 0
+# matches the input and the tap silently does nothing.
+- tapOn:
+    id: "focus-edit-label-search"
+- inputText: "Apple"
+
+- assertVisible:
+    id: "focus-edit-suggestion-.*"
+# This screen's ScrollView does not set keyboardShouldPersistTaps, so the first
+# tap while the keyboard is up is consumed dismissing it and never reaches the
+# suggestion. Dismiss it explicitly first — the keyboard is up here, so
+# hideKeyboard closes it rather than popping the screen. See #195.
+- hideKeyboard
+- tapOn:
+    id: "focus-edit-suggestion-.*"
+
+# Also pin a Physical label so we can test severity 0 in quick-log
+- tapOn:
+    id: "focus-edit-label-search"
+- eraseText
+- inputText: "Cramp"
+
+- assertVisible:
+    id: "focus-edit-suggestion-.*"
+- hideKeyboard
+- tapOn:
+    id: "focus-edit-suggestion-.*"
+
+# No hideKeyboard here: Maestro implements it on Android as a back press, and
+# the keyboard is already down by this point, so it would pop the screen and
+# land on Tend before the save ever happens.
+- tapOn:
+    id: "focus-edit-save-button"
+
+# Back on Tend — tap the Focus pill to open the quick-log screen
+- tapOn:
+    text: "Quick Log Test"
+
+# Assert quick-log screen is visible with at least one item row
+- assertVisible:
+    id: "section-heading-pinned"
+
+# Quick-log opens with every item UNCHECKED (#198), so there is nothing to save
+# yet and the button is absent rather than disabled. This is the regression
+# assertion for that ticket — if the pre-checked default ever returns, this is
+# the step that fails.
+- assertNotVisible:
+    id: "submit-button"
+
+# Severity rows are gated on the item being checked, so none is on screen yet.
+- assertNotVisible:
+    id: "severity-row-.*"
+
+# Check both pinned items. Tapping the row label works because the label sits
+# inside the same Pressable as the checkbox. Text selectors are used rather than
+# `item-checkbox-.*` with an index: label IDs are seed-dependent so a literal
+# testID cannot be hardcoded, and no other flow in this repo uses `index:`.
+# ItemRow renders `${entryTypeTitle}: ${labelName}`, and both label names are
+# unique across the seed migrations.
+- tapOn:
+    text: "Nourish: Apple"
+- tapOn:
+    text: "Attune: Cramping"
+
+# Save appears once at least one item is checked.
+- assertVisible:
+    id: "submit-button"
+
+# The Physical item (Cramping) shows a severity row including the 0 ("absent")
+# button, now that it is checked. This is the persistent variant —
+# focus/[id]/index.tsx makes onDismiss a no-op so the row stays while the item
+# is checked — so unlike the Physical log screen there is no 2s window to race,
+# and severity 0 can actually be exercised end to end here.
+#
+# Matched by accessibility label rather than `{text: "0", id: "severity-row-1"}`:
+# a combined text+id selector needs one node to carry both, but the testID is on
+# the row and "0" is a descendant Text, so that form never matches.
+- assertVisible:
+    id: "severity-row-.*"
+- tapOn:
+    text: "Severity 0 — symptom absent"
+
+# Tap Submit to log the checked items
+- tapOn:
+    id: "submit-button"
+
+# Assert navigated back to Tend
+- assertVisible:
+    id: "tile-food"
+
+# Navigate to Trace and assert the logged entries actually landed. There is no
+# "trace-screen" testID; asserting a real entry row is a stronger check anyway,
+# since it proves the quick-log submission persisted rather than just that the
+# tab rendered.
+- tapOn:
+    id: "tab-trace"
+
+- assertVisible:
+    id: "trace-row-icon-.*"
