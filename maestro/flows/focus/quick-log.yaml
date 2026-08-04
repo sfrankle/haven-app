@@ -77,14 +77,37 @@ appId: com.haven.app
 - assertVisible:
     id: "section-heading-pinned"
 
+# Quick-log opens with every item UNCHECKED (#198), so there is nothing to save
+# yet and the button is absent rather than disabled. This is the regression
+# assertion for that ticket — if the pre-checked default ever returns, this is
+# the step that fails.
+- assertNotVisible:
+    id: "submit-button"
+
+# Severity rows are gated on the item being checked, so none is on screen yet.
+- assertNotVisible:
+    id: "severity-row-.*"
+
+# Check both pinned items. Tapping the row label works because the label sits
+# inside the same Pressable as the checkbox. Text selectors are used rather than
+# `item-checkbox-.*` with an index: label IDs are seed-dependent so a literal
+# testID cannot be hardcoded, and no other flow in this repo uses `index:`.
+# ItemRow renders `${entryTypeTitle}: ${labelName}`, and both label names are
+# unique across the seed migrations.
+- tapOn:
+    text: "Nourish: Apple"
+- tapOn:
+    text: "Attune: Cramping"
+
+# Save appears once at least one item is checked.
 - assertVisible:
     id: "submit-button"
 
-# The Physical item (Cramp) shows a severity row including the 0 ("absent")
-# button. This is the persistent variant — focus/[id]/index.tsx makes onDismiss
-# a no-op so the row stays while the item is checked — so unlike the Physical
-# log screen there is no 2s window to race, and severity 0 can actually be
-# exercised end to end here.
+# The Physical item (Cramping) shows a severity row including the 0 ("absent")
+# button, now that it is checked. This is the persistent variant —
+# focus/[id]/index.tsx makes onDismiss a no-op so the row stays while the item
+# is checked — so unlike the Physical log screen there is no 2s window to race,
+# and severity 0 can actually be exercised end to end here.
 #
 # Matched by accessibility label rather than `{text: "0", id: "severity-row-1"}`:
 # a combined text+id selector needs one node to carry both, but the testID is on
@@ -94,7 +117,7 @@ appId: com.haven.app
 - tapOn:
     text: "Severity 0 — symptom absent"
 
-# Tap Submit to log all items
+# Tap Submit to log the checked items
 - tapOn:
     id: "submit-button"
 

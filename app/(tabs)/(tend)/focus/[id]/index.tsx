@@ -73,8 +73,13 @@ export default function QuickLogScreen() {
 
         setItems(focusItems);
         const initialState = new Map<number, ItemState>();
+        // Items start UNCHECKED. Quick-log answers "what am I experiencing right
+        // now?", so a pre-checked default would assert symptoms the user never
+        // reported — and the miss is silent. Routine completion
+        // (routine/[id]/complete.tsx) deliberately defaults to checked because it
+        // asks a different question. See docs/decisions.md (2026-08-04).
         for (const item of focusItems) {
-          initialState.set(item.labelId, { checked: true, severity: null });
+          initialState.set(item.labelId, { checked: false, severity: null });
         }
         setItemState(initialState);
       } catch {

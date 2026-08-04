@@ -82,22 +82,37 @@ describe('QuickLogScreen', () => {
     });
   });
 
-  // 4. All items pre-checked, Submit visible
-  test('all items start checked and Submit button is visible', async () => {
-    const { getByTestId } = render(<QuickLogScreen />);
+  // 4. All items start unchecked, Submit absent (primary regression guard for #198)
+  test('all items start unchecked and Submit button is absent', async () => {
+    const { getByTestId, queryByTestId } = render(<QuickLogScreen />);
     await waitFor(() => {
-      expect(getByTestId('submit-button')).toBeTruthy();
       expect(getByTestId('item-row-1')).toBeTruthy();
       expect(getByTestId('item-row-2')).toBeTruthy();
     });
+    expect(queryByTestId('submit-button')).toBeNull();
+    expect(getByTestId('item-checkbox-1').props.accessibilityState.checked).toBe(false);
+    expect(getByTestId('item-checkbox-2').props.accessibilityState.checked).toBe(false);
   });
 
-  // 5. Unchecking an item removes it from the save payload
-  test('unchecking an item excludes it from saveEntryBatch call', async () => {
-    const { getByTestId } = render(<QuickLogScreen />);
+  // 4b. Checking an item reveals the Submit button
+  test('checking an item reveals the Submit button', async () => {
+    const { getByTestId, queryByTestId } = render(<QuickLogScreen />);
     await waitFor(() => getByTestId('item-checkbox-1'));
+    expect(queryByTestId('submit-button')).toBeNull();
 
     fireEvent.press(getByTestId('item-checkbox-1'));
+
+    await waitFor(() => {
+      expect(getByTestId('submit-button')).toBeTruthy();
+    });
+  });
+
+  // 5. Only checked items are included in the save payload
+  test('only checked items are included in saveEntryBatch call', async () => {
+    const { getByTestId } = render(<QuickLogScreen />);
+    await waitFor(() => getByTestId('item-checkbox-2'));
+
+    fireEvent.press(getByTestId('item-checkbox-2'));
     await waitFor(() => getByTestId('submit-button'));
     fireEvent.press(getByTestId('submit-button'));
 
@@ -109,10 +124,34 @@ describe('QuickLogScreen', () => {
     });
   });
 
-  // 6. Unchecking all items hides the Submit button
+  // 5b. Toggling an item back off removes it from the save payload
+  test('unchecking a previously checked item excludes it from saveEntryBatch call', async () => {
+    const { getByTestId } = render(<QuickLogScreen />);
+    await waitFor(() => getByTestId('item-checkbox-1'));
+
+    fireEvent.press(getByTestId('item-checkbox-1'));
+    fireEvent.press(getByTestId('item-checkbox-2'));
+    fireEvent.press(getByTestId('item-checkbox-1'));
+
+    await waitFor(() => getByTestId('submit-button'));
+    fireEvent.press(getByTestId('submit-button'));
+
+    await waitFor(() => {
+      expect(mockSaveEntryBatch).toHaveBeenCalledTimes(1);
+      const [, inputs] = mockSaveEntryBatch.mock.calls[0] as [unknown, { labelIds?: number[] }[]];
+      expect(inputs).toHaveLength(1);
+      expect(inputs[0].labelIds).toEqual([2]);
+    });
+  });
+
+  // 6. Unchecking all items hides the Submit button again
   test('unchecking all items hides the Submit button', async () => {
     const { getByTestId, queryByTestId } = render(<QuickLogScreen />);
     await waitFor(() => getByTestId('item-checkbox-1'));
+
+    fireEvent.press(getByTestId('item-checkbox-1'));
+    fireEvent.press(getByTestId('item-checkbox-2'));
+    await waitFor(() => getByTestId('submit-button'));
 
     fireEvent.press(getByTestId('item-checkbox-1'));
     fireEvent.press(getByTestId('item-checkbox-2'));
@@ -122,12 +161,17 @@ describe('QuickLogScreen', () => {
     });
   });
 
-  // 7. Physical row renders severity selector including 0
-  test('Physical row renders severity buttons 0–5', async () => {
-    const { getByTestId, getAllByRole } = render(<QuickLogScreen />);
+  // 7. Physical row renders severity selector including 0, once checked
+  test('Physical row renders severity buttons 0–5 once checked', async () => {
+    const { getByTestId, queryByTestId, getAllByRole } = render(<QuickLogScreen />);
     await waitFor(() => getByTestId('item-row-2'));
-    // The severity container should be present for the physical item (labelId 2)
-    const severityContainer = getByTestId('severity-row-2');
+    // Severity is hidden until the item is checked
+    expect(queryByTestId('severity-row-2')).toBeNull();
+
+    fireEvent.press(getByTestId('item-checkbox-2'));
+
+    // The severity container should now be present for the physical item (labelId 2)
+    const severityContainer = await waitFor(() => getByTestId('severity-row-2'));
     expect(severityContainer).toBeTruthy();
     // SeverityRow renders 6 buttons (0-5)
     const buttons = getAllByRole('button');
@@ -141,6 +185,8 @@ describe('QuickLogScreen', () => {
   // 8. Severity value is included in save input (including 0)
   test('selected severity value is passed in numericValue', async () => {
     const { getByTestId, getAllByRole } = render(<QuickLogScreen />);
+    await waitFor(() => getByTestId('item-checkbox-2'));
+    fireEvent.press(getByTestId('item-checkbox-2'));
     await waitFor(() => getByTestId('severity-row-2'));
     const buttons = getAllByRole('button');
     const btn3 = buttons.find((b) => b.props.accessibilityLabel === 'Severity 3 of 5');
@@ -158,6 +204,8 @@ describe('QuickLogScreen', () => {
   // 8b. Severity 0 value is passed in numericValue
   test('severity 0 is passed in numericValue when selected', async () => {
     const { getByTestId, getByLabelText } = render(<QuickLogScreen />);
+    await waitFor(() => getByTestId('item-checkbox-2'));
+    fireEvent.press(getByTestId('item-checkbox-2'));
     await waitFor(() => getByTestId('severity-row-2'));
     fireEvent.press(getByLabelText('Severity 0 — symptom absent'));
     fireEvent.press(getByTestId('submit-button'));
@@ -173,6 +221,8 @@ describe('QuickLogScreen', () => {
   // 9. Submit calls saveEntryBatch, not saveEntry
   test('submit calls saveEntryBatch (not saveEntry)', async () => {
     const { getByTestId } = render(<QuickLogScreen />);
+    await waitFor(() => getByTestId('item-checkbox-1'));
+    fireEvent.press(getByTestId('item-checkbox-1'));
     await waitFor(() => getByTestId('submit-button'));
     fireEvent.press(getByTestId('submit-button'));
     await waitFor(() => {
@@ -194,6 +244,8 @@ describe('QuickLogScreen', () => {
   test('error message rendered when saveEntryBatch throws', async () => {
     mockSaveEntryBatch.mockRejectedValue(new Error('DB error'));
     const { getByTestId } = render(<QuickLogScreen />);
+    await waitFor(() => getByTestId('item-checkbox-1'));
+    fireEvent.press(getByTestId('item-checkbox-1'));
     await waitFor(() => getByTestId('submit-button'));
     fireEvent.press(getByTestId('submit-button'));
     await waitFor(() => {
