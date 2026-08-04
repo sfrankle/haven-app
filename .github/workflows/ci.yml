@@ -36,9 +36,3 @@ jobs:
 
       - name: Unit tests
         run: npm test -- --ci --coverage=false
-
-  # The Maestro E2E suite is not wired up here yet. The decision to run it in CI
-  # — on an Android emulator on ubuntu-latest, not a macOS runner — is recorded
-  # in docs/decisions.md (2026-08-01) and gated on every flow passing first.
-  # See #190. The job invocation is `maestro test maestro/`, which picks up
-  # maestro/config.yaml.
