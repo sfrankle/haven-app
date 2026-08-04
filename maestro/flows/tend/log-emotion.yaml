@@ -1,22 +1,35 @@
+# Scenario: save from Screen 3
+# Tap Unveil tile → Tier-1 → pivot Tier-1 → Tier-2 (advances to Screen 3) → submit
+#
+# NOTE ON FILE STRUCTURE: a Maestro flow file is exactly two YAML documents —
+# the config header, then one flow. Any further `---` sections are silently
+# ignored. This file previously held six scenarios separated by `---` and only
+# this first one ever ran, so it reported green while testing a sixth of what it
+# claimed — and the Emotion screen's chip-replacement model is the most
+# intricate interaction in the app. The other five now live in their own files:
+#   log-emotion-tier2-save.yaml
+#   log-emotion-tier3-replace.yaml
+#   log-emotion-chip-clear-reselect.yaml
+#   log-emotion-tier2-left-replace.yaml
+#   log-emotion-back-navigation.yaml
+# Do not re-merge them.
 appId: com.haven.app
 ---
-# Scenario 1: Happy path Tier-3 save
-# Tap Unveil tile → Tier-1 → Tier-2 (advances to Screen 3) → submit from Screen 3
 - launchApp
 - assertVisible: "Unveil"             # tile on Tend
 - tapOn: "Unveil"
 - assertVisible:
     id: "emotion-screen-1"
 - tapOn:
-    id: "emotion-tier1-*"             # tap first Tier-1 row
+    id: "emotion-tier1-.*"             # tap first Tier-1 row
 - assertVisible:
     id: "emotion-screen-2"
 - tapOn:
-    id: "emotion-tier1-left-*"        # pivot left column to another Tier-1
+    id: "emotion-tier1-left-.*"        # pivot left column to another Tier-1
 - assertVisible:
-    id: "emotion-tier2-right-*"       # Tier-2 children load
+    id: "emotion-tier2-right-.*"       # Tier-2 children load
 - tapOn:
-    id: "emotion-tier2-right-*"       # tap Tier-2 — pushes to Screen 3
+    id: "emotion-tier2-right-.*"       # tap Tier-2 — pushes to Screen 3
 - assertVisible:
     id: "emotion-screen-3"
 - assertVisible:
@@ -25,102 +38,5 @@ appId: com.haven.app
     id: "emotion-save-button"
 - tapOn:
     id: "emotion-save-button"
-- assertVisible: "Entry saved."
-- assertVisible: "Today"             # back on Tend home
-
----
-# Scenario 1b: Happy path Tier-2 save
-# Reach Screen 3, press back to Screen 2, save with chip still set
-- launchApp
-- tapOn: "Unveil"
-- tapOn:
-    id: "emotion-tier1-*"
-- tapOn:
-    id: "emotion-tier2-right-*"       # advances to Screen 3 with chip set
 - assertVisible:
-    id: "emotion-screen-3"
-- pressKey: Back                      # return to Screen 2
-- assertVisible:
-    id: "emotion-screen-2"
-- assertVisible:
-    id: "emotion-chip"                # chip persists on Screen 2
-- assertVisible:
-    id: "emotion-save-button"
-- tapOn:
-    id: "emotion-save-button"
-- assertVisible: "Entry saved."
-
----
-# Scenario 2: Tier-3 replace
-# Screen 3 → tap a Tier-3 item → chip updates → submit
-- launchApp
-- tapOn: "Unveil"
-- tapOn:
-    id: "emotion-tier1-*"
-- tapOn:
-    id: "emotion-tier2-right-*"       # arrives at Screen 3
-- assertVisible:
-    id: "emotion-tier3-right-*"
-- tapOn:
-    id: "emotion-tier3-right-*"       # replace chip with Tier-3 label
-- assertVisible:
-    id: "emotion-chip"
-- assertVisible:
-    id: "emotion-save-button"
-- tapOn:
-    id: "emotion-save-button"
-- assertVisible: "Entry saved."
-
----
-# Scenario 3: Chip clear + reselect on Screen 3
-- launchApp
-- tapOn: "Unveil"
-- tapOn:
-    id: "emotion-tier1-*"
-- tapOn:
-    id: "emotion-tier2-right-*"
-- assertVisible:
-    id: "emotion-chip"
-- tapOn:
-    id: "emotion-chip"               # clear chip
-- assertNotVisible:
-    id: "emotion-save-button"        # submit disappears
-- tapOn:
-    id: "emotion-tier3-right-*"      # reselect a Tier-3 item
-- assertVisible:
-    id: "emotion-save-button"        # submit reappears
-
----
-# Scenario 4: Tapping Tier-2 in left column replaces chip
-- launchApp
-- tapOn: "Unveil"
-- tapOn:
-    id: "emotion-tier1-*"
-- tapOn:
-    id: "emotion-tier2-right-*"       # arrives at Screen 3 with chip set (Tier-2 label)
-- tapOn:
-    id: "emotion-tier3-right-*"       # select Tier-3, chip now shows Tier-3 label
-- assertVisible:
-    id: "emotion-chip"
-- tapOn:
-    id: "emotion-tier2-left-*"        # tap Tier-2 in left column — chip should update to Tier-2
-- assertVisible:
-    id: "emotion-chip"                # chip updated to the tapped Tier-2 label
-- assertVisible:
-    id: "emotion-save-button"         # save still available
-
----
-# Scenario 5: Back navigation
-- launchApp
-- tapOn: "Unveil"
-- tapOn:
-    id: "emotion-tier1-*"
-- tapOn:
-    id: "emotion-tier2-right-*"       # push to Screen 3
-- assertVisible:
-    id: "emotion-screen-3"
-- pressKey: Back
-- assertVisible:
-    id: "emotion-screen-2"            # back to Screen 2
-- pressKey: Back
-- assertVisible: "Today"             # back to Tend home
+    id: "tile-food"        # back on Tend home — save succeeded

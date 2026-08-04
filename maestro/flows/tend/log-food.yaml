@@ -9,13 +9,15 @@ appId: com.haven.app
     id: "food-search"
 - inputText: "Oats"
 - assertVisible:
-    id: "food-suggestion-*"
-- tapOn: "Oats"
+    id: "food-suggestion-.*"
+- tapOn:
+    id: "food-suggestion-.*"
 - assertVisible:
-    id: "food-chip-*"
+    id: "food-chip-.*"
+- hideKeyboard                # keyboard otherwise covers the save button
 - assertVisible:
     id: "food-save-button"
 - tapOn:
     id: "food-save-button"
-- assertVisible: "Entry saved."
-- assertVisible: "Today"
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded

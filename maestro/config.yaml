@@ -1,0 +1,9 @@
+# Maestro does not recurse into subdirectories on its own: `maestro test maestro/`
+# finds nothing without this file, because every flow lives in
+# maestro/flows/{focus,navigation,settings,tend,trace}/.
+#
+# `subflows/` is deliberately excluded. create-morning-routine.yaml is a runFlow
+# helper that assumes the Tend dashboard is already on screen, so it cannot pass
+# as a standalone flow and would show up as a false failure.
+flows:
+  - "flows/**"

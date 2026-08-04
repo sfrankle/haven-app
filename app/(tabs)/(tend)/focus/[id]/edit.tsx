@@ -171,7 +171,7 @@ export default function EditFocusScreen() {
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={logScreenStyles.screenContent}>
+        <ScrollView contentContainerStyle={logScreenStyles.scrollContent}>
           <TextInput
             style={styles.nameInput}
             value={name}

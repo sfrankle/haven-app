@@ -1,0 +1,40 @@
+appId: com.haven.app
+---
+# clearState is required: add-focus-pill renders after every existing focus
+# pill in a horizontal ScrollView, so focuses left behind by an earlier flow
+# push it off-screen and it can no longer be tapped.
+- launchApp:
+    clearState: true
+
+# Assert Tend tab is visible
+- assertVisible:
+    id: "tile-food"
+
+# Tap the "+ Add Focus" pill
+- tapOn:
+    id: "add-focus-pill"
+
+# Assert the Create Focus screen is shown
+- assertVisible:
+    id: "focus-name-input"
+
+# Type a focus name
+- tapOn:
+    id: "focus-name-input"
+- inputText: "Morning Routine"
+
+# Tap Save
+- tapOn:
+    id: "focus-save-button"
+
+# Assert returned to Tend screen with named focus pill visible
+- assertVisible:
+    id: "add-focus-pill"
+- assertVisible:
+    text: "Morning Routine"
+
+# Note: the duplicate-name error flow (issue #149) is not tested here. State is
+# fresh only because of the clearState above — `launchApp` on its own preserves
+# app data between flows, which is what broke this flow in the first place. The
+# duplicate-name error path is covered by the Jest unit tests in
+# src/components/__tests__/FocusDropdown.test.tsx.

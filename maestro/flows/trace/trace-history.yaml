@@ -9,12 +9,12 @@ name: Trace — history list with expand/collapse
 - tapOn:
     id: "tab-tend"
 - tapOn:
-    text: "Sleep"
+    id: "tile-sleep"
 - tapOn:
     id: "sleep-hours-input"
 - inputText: "7"
 - tapOn:
-    text: "Log Sleep"
+    id: "sleep-save-button"
 
 # Navigate to Trace tab
 - tapOn:

@@ -31,24 +31,42 @@ appId: com.haven.app
 
 - assertVisible:
     id: "routine-edit-name-input"
-- clearText:
+- tapOn:
     id: "routine-edit-name-input"
+- eraseText
 - inputText: "Updated Morning Flow"
+# The keyboard covers the lower half of the form and swallows taps aimed at
+# anything beneath it. See maestro/subflows/create-morning-routine.yaml.
+- hideKeyboard
 
-# Add a second item to the existing Routine. The subflow creates one item, so
-# this covers the add-item path on the edit screen rather than repeating the
-# create screen's.
+# --- Add a second item on the edit screen ---
+# The subflow creates the Routine with one item, so the new one is index 1.
+# Two items push the form past the viewport; this is reachable only because the
+# ScrollView now uses flexGrow rather than flex: 1 (#195).
 - tapOn:
     id: "routine-edit-add-item-button"
 - tapOn:
     id: "routine-edit-item-1-name-input"
-- inputText: "Morning walk"
+- inputText: "Evening walk"
+- hideKeyboard
 - tapOn:
     id: "routine-edit-item-1-entry-type-6"   # Activity
 
+- scrollUntilVisible:
+    element:
+      id: "routine-edit-save-button"
+    direction: DOWN
 - tapOn:
     id: "routine-edit-save-button"
 
 # --- The updated name is reflected back on Tend ---
 - tapOn: "Tend"
 - assertVisible: "Updated Morning Flow"
+
+# --- The added item survived the save ---
+# Re-open the edit screen: asserting on the form is what proves the second item
+# was persisted, not merely rendered before saving.
+- tapOn: "Settings"
+- tapOn:
+    id: "settings-routine-edit-1"
+- assertVisible: "Evening walk"

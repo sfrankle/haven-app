@@ -1,0 +1,25 @@
+# Scenario: leaving a log screen without saving discards the draft — re-entering
+# shows the default, not the abandoned value.
+# Split out of log-screen-back-navigation.yaml — see the note in that file.
+appId: com.haven.app
+---
+- launchApp
+- assertVisible: "Replenish"
+
+- tapOn: "Replenish"
+- assertVisible: "How much water did you take in?"
+
+- tapOn:
+    id: "hydration-oz-input"
+- eraseText
+- inputText: "32"
+
+# Typing leaves the keyboard up, and a `back` press then dismisses the keyboard
+# rather than navigating. Close it explicitly so `back` actually leaves the screen.
+- hideKeyboard
+- back
+- assertVisible: "Replenish"        # on Tend home
+
+- tapOn: "Replenish"
+- assertVisible: "How much water did you take in?"
+- assertVisible: "16"               # input reset to default — no cached state from prior visit

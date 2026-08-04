@@ -1,6 +1,10 @@
 appId: com.haven.app
 ---
-- launchApp
+# clearState is required: add-focus-pill renders after every existing focus
+# pill in a horizontal ScrollView, so focuses left behind by an earlier flow
+# push it off-screen and it can no longer be tapped.
+- launchApp:
+    clearState: true
 
 # Ensure Tend tab is visible
 - assertVisible:
@@ -28,11 +32,11 @@ appId: com.haven.app
     id: "focus-edit-name-input"
 
 # Clear name and type a new one
-- clearText:
-    id: "focus-edit-name-input"
 - tapOn:
     id: "focus-edit-name-input"
+- eraseText
 - inputText: "Renamed Focus"
+- hideKeyboard
 
 # Tap save
 - tapOn:

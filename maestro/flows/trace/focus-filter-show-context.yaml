@@ -22,26 +22,29 @@ name: Trace — focus filter show context (context view mode)
 
 # Log a Food entry linked to the focus
 - tapOn:
-    text: "Food"
+    id: "tile-food"
 - tapOn:
     text: "Oats"
 - tapOn:
     id: "focus-toggle"
 - tapOn:
     text: "Context Test Focus"
+- hideKeyboard                # keyboard otherwise covers the save button
 - tapOn:
     id: "food-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
 
 # Log a Sleep entry in the same session (no focus link — will appear as context)
 - tapOn:
-    text: "Sleep"
+    id: "tile-sleep"
 - tapOn:
     id: "sleep-hours-input"
 - inputText: "7"
 - tapOn:
     id: "sleep-save-button"
-- assertVisible: "Entry saved."
+- assertVisible:
+    id: "tile-food"        # back on Tend home — save succeeded
 
 # Navigate to Trace
 - tapOn:
